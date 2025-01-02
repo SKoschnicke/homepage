@@ -1,18 +1,1 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>DarkUnicorns Lair</title>
-    <link>https://example.org/</link>
-    <description>Recent content on DarkUnicorns Lair</description>
-    <generator>Hugo</generator>
-    <language>en</language>
-    <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Hello World</title>
-      <link>https://example.org/posts/hello-world/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://example.org/posts/hello-world/</guid>
-      <description>Shipping is a feature, and because I don&amp;rsquo;t have much time these days, I&amp;rsquo;ll start with a minimal viable product and get this homepage published as fast as possible. You&amp;rsquo;ll find my thoughts and insights here soon. Mostly about technology and software development. But I can&amp;rsquo;t say how often or when.</description>
-    </item>
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>DarkUnicorns Lair</title><link>https://skoschnicke.github.io/homepage/</link><description>Recent content on DarkUnicorns Lair</description><generator>Hugo</generator><language>en</language><atom:link href="https://skoschnicke.github.io/homepage/index.xml" rel="self" type="application/rss+xml"/><item><title>Hello World</title><link>https://skoschnicke.github.io/homepage/posts/hello-world/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://skoschnicke.github.io/homepage/posts/hello-world/</guid><description>Shipping is a feature, and because I don&amp;rsquo;t have much time these days, I&amp;rsquo;ll start with a minimal viable product and get this homepage published as fast as possible. You&amp;rsquo;ll find my thoughts and insights here soon. Mostly about technology and software development. But I can&amp;rsquo;t say how often or when.</description></item></channel></rss>
