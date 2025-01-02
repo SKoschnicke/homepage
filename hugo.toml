@@ -1,0 +1,57 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'DarkUnicorns Lair'
+theme = 'poison'
+
+defaultContentLanguage = 'en'
+[languages]
+  [languages.de]
+    languageName = 'Deutsch'
+    weight = 2
+  [languages.en]
+    languageName = 'English'
+    weight = 1
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[params]
+    brand = "DarkUnicorn"                      # name of your site - appears in the sidebar
+    # remote_brand_image = 'https://github.com/USERNAME.png' # path to a remote file
+    # brand_image = "/images/test.jpg"    # path to the image shown in the sidebar
+    description = "Update this description..." # Used as default meta description if not specified in front matter
+    # dark_mode = true                      # optional - defaults to false
+    # favicon = "favicon.png"             # path to favicon (defaults to favicon.png)
+
+    front_page_content = ["posts"] # Equivalent to the default value, add page bundle names to include them on the front page.
+
+    # MENU PLACEHOLDER
+    # Menu dict keys:
+        # Name:         The name to display on the menu.
+        # URL:          The directory relative to the content directory.
+        # HasChildren:  If the directory's files should be listed.  Default is true.
+        # Limit:        If the files should be listed, how many should be shown.
+    menu = [
+        {Name = "About", URL = "/about/", HasChildren = false},
+        {Name = "Posts", URL = "/posts/", Pre = "Recent", HasChildren = true, Limit = 5},
+    ]
+
+    # Links to your socials.  Comment or delete any you don't need/use.
+    discord_url = "https://discord.com"
+    email_url = "mailto://user@domain"
+    github_url = "https://github.com"
+    #gitlab_url = "https://gitlab.com"
+    linkedin_url = "https://linkedin.com"
+    mastodon_url = "https://mastodon.social"
+    #matrix_url = "https://matrix.org"
+    #telegram_url = "https://telegram.org"
+    tryhackme_url = "https://tryhackme.com"
+    #xmpp_url = "https://xmpp.org"
+    #youtube_url = "https://youtube.com"
+    #signal_url = "https://signal.org"
+
+    # NOTE: If you don't want to use RSS, comment or delete the following lines
+    # Adds an RSS icon to the end of the socials which links to {{ .Site.BaseURL }}/index.xml
+    rss_icon = true
+    # Which section the RSS icon links to, defaults to all content. See https://gohugo.io/templates/rss/#section-rss
+    rss_section = "posts"
