@@ -1,6 +1,6 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://sven.guru/'
 languageCode = 'en-us'
-title = 'sven.guru'
+title = 'Sven Koschnicke'
 theme = 'poison'
 
 defaultContentLanguage = 'en'
@@ -37,15 +37,15 @@ defaultContentLanguage = 'en'
     ]
 
     # Links to your socials.  Comment or delete any you don't need/use.
-    discord_url = "https://discord.com"
-    email_url = "mailto://user@domain"
-    github_url = "https://github.com"
+    #discord_url = "https://discord.com"
+    email_url = "mailto://s.koschnicke@gfxpro.com"
+    github_url = "https://github.com/SKoschnicke"
     #gitlab_url = "https://gitlab.com"
-    linkedin_url = "https://linkedin.com"
-    mastodon_url = "https://mastodon.social"
+    linkedin_url = "https://www.linkedin.com/in/svenkoschnicke/"
+    mastodon_url = "https://chaos.social/@darkunicorn"
     #matrix_url = "https://matrix.org"
     #telegram_url = "https://telegram.org"
-    tryhackme_url = "https://tryhackme.com"
+    #tryhackme_url = "https://tryhackme.com"
     #xmpp_url = "https://xmpp.org"
     #youtube_url = "https://youtube.com"
     #signal_url = "https://signal.org"
