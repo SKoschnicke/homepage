@@ -1,0 +1,86 @@
+/* Dark parchment-like background with a subtle magical glow */
+body {
+    background: #1a1a24 url('/images/dark-library-bg.png') fixed;
+    color: #e0d6c6;
+}
+
+/* Make content areas look like floating magical tomes */
+.content {
+    background: rgba(20, 20, 30, 0.95);
+    border: 1px solid #483d2d;
+    box-shadow: 0 0 15px rgba(146, 104, 242, 0.2);
+    padding: 2rem;
+    border-radius: 5px;
+}
+
+/* Style headers like magical runes */
+h1, h2, h3, h4, h5 {
+    font-family: 'Press Start 2P', cursive;
+    color: #c0a080;
+    text-shadow: 0 0 5px #6b4ba3;
+}
+
+/* Links appear as magical inscriptions */
+a {
+    color: #9268f2;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #c9b037;
+    text-shadow: 0 0 8px #9268f2;
+}
+
+/* Code blocks styled as ancient scrolls */
+pre {
+    background: #2a2a34;
+    border: 1px solid #483d2d;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+code {
+    font-family: 'Source Code Pro', monospace;
+    color: #98e024;
+}
+
+/* Navigation styled as magical tome indices */
+.sidebar {
+    background: rgba(26, 26, 36, 0.97);
+    border-right: 1px solid #483d2d;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+}
+
+/* Add floating magical particles effect */
+.sidebar::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: url('/images/magic-particles.png');
+    opacity: 0.1;
+    animation: float 20s infinite linear;
+}
+
+@keyframes float {
+    from { background-position: 0 0; }
+    to { background-position: 100% 100%; }
+}
+
+/* Style blockquotes as magical scrolls */
+blockquote {
+    border-left: 4px solid #9268f2;
+    background: rgba(146, 104, 242, 0.1);
+    margin: 1.5em 0;
+    padding: 1em;
+    font-style: italic;
+}
+
+/* Add magical glow to images */
+img {
+    border-radius: 5px;
+    box-shadow: 0 0 20px rgba(146, 104, 242, 0.3);
+} 

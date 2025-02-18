@@ -1,0 +1,92 @@
+/* Sidebar header image */
+.sidebar-header {
+    width: 100%;
+    max-width: 18rem; /* Match sidebar width */
+    height: 200px;
+    object-fit: contain;
+    opacity: 1; /* Full opacity */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0; /* Ensure it stays behind sidebar content */
+}
+
+/* Theme-specific styles */
+:root {
+    --sidebar-bg: #f8f9fa;
+    --content-bg: #fff;
+    --text-color: #1a1a1a;          /* Much darker text for better contrast */
+    --link-color: #515151;
+    --heading-color: #313131;
+    --sidebar-text-color: #2a2a2a;   /* Darker sidebar text */
+}
+
+.dark-theme {
+    --sidebar-bg: rgba(26, 26, 36, 0.97);
+    --content-bg: rgba(20, 20, 30, 0.97);
+    --text-color: #e0d6c6;
+    --link-color: #9268f2;
+    --heading-color: #c0a080;
+    --sidebar-text-color: #e0d6c6;
+}
+
+/* Apply theme colors with more specific selectors */
+.sidebar {
+    position: relative;
+    overflow: hidden;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text-color);
+}
+
+.content.container {
+    background: var(--content-bg);
+}
+
+/* More specific selectors for text content */
+.content.container p,
+.content.container li,
+.content.container div,
+.post-date,
+.post time,
+.content.container td,
+.content.container th,
+.content.container blockquote {
+    color: var(--text-color);
+}
+
+/* Style links and headings */
+.content a {
+    color: var(--link-color);
+}
+
+.content h1, .content h2, .content h3, .content h4, .content h5 {
+    color: var(--heading-color);
+}
+
+.sidebar a {
+    color: var(--link-color);
+}
+
+/* Adjust sidebar padding to accommodate the image */
+.sidebar-sticky {
+    padding-top: 180px;
+    position: relative;
+    z-index: 1; /* Place content above the image */
+}
+
+/* Ensure sidebar container properly contains the image */
+.sidebar {
+    position: relative;
+    overflow: hidden; /* Contain the absolute positioned image */
+}
+
+/* Hide image and remove extra padding on mobile */
+@media (max-width: 48em) {
+    .sidebar-header {
+        display: none;
+    }
+    
+    .sidebar-sticky {
+        padding-top: 1rem;
+    }
+} 

@@ -32,9 +32,8 @@
  */
 
 html {
-  font-family: "Fira Sans", sans-serif;
-    font-weight:300;
-
+  font-family: "Source Code Pro", monospace;
+  font-weight: 300;
 }
 @media (min-width: 48em) {
   html {
@@ -61,7 +60,8 @@ pre {
 .sidebar {
   text-align: center;
   padding: 2rem 1rem;
-  color: rgba(255,255,255,.5);
+  color: #e0d6c6;
+  background: rgba(26, 26, 36, 0.97);
   flex-shrink: 0;
 }
 @media (min-width: 48em) {
@@ -98,20 +98,26 @@ pre {
 
 /* Sidebar links */
 .sidebar a, li {
-  color: var(--sidebar-a-color);
+  color: #9268f2;
+}
+
+.sidebar a:hover {
+  color: #c9b037;
+  text-shadow: 0 0 8px #9268f2;
 }
 
 /* About section */
 .sidebar-about {
   text-align: center;
-  color: var(--sidebar-p-color);
+  color: #e0d6c6;
 }
 .sidebar-about h1 {
-  color: var(--sidebar-h1-color);
+  color: #c0a080;
   margin-top: 0;
-  font-weight:300;
+  font-weight: 300;
   font-size: 1.5em;
-  font-family: "Abril Fatface", serif;
+  font-family: 'Press Start 2P', cursive;
+  text-shadow: 0 0 5px #6b4ba3;
 }
 
 /* Sidebar nav */
