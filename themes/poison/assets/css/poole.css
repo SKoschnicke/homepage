@@ -35,10 +35,9 @@
  * Update the foundational and global aspects of the page.
  */
 
+/* Reset and base styles */
 * {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html,
@@ -47,19 +46,17 @@ body {
   padding: 0;
 }
 
+/* Typography base styles */
 html {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
 }
-@media (min-width: 38em) {
-  html {
-    font-size: 20px;
-  }
-}
 
+/* Basic elements */
 body {
-  color: #515151;
+  color: var(--text-color);
+  background-color: var(--body-bg);
   -webkit-text-size-adjust: 100%;
       -ms-text-size-adjust: 100%;
 }
@@ -106,7 +103,7 @@ p {
 }
 
 strong {
-  color: #303030;
+  color: var(--heading-color);
 }
 
 
@@ -266,10 +263,10 @@ img {
 .masthead-title {
   margin-top: 0;
   margin-bottom: 0;
-  color: #505050;
+  color: var(--text-color);
 }
 .masthead-title a {
-  color: #505050;
+  color: var(--text-color);
 }
 .masthead-title small {
   font-size: 75%;

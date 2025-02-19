@@ -2,38 +2,39 @@ const btn = document.querySelector(".btn-light-dark");
 const moon = document.querySelector(".moon");
 const sun = document.querySelector(".sun");
 
-const themeFromLS = localStorage.getItem("theme")
-const themeFromHugo = document.body.classList.contains("dark-theme") ? "dark" : null
-const currentTheme = themeFromLS ? themeFromLS : themeFromHugo;
+// Check for saved theme preference or system preference
+const themeFromLS = localStorage.getItem("theme");
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const currentTheme = themeFromLS || (prefersDark ? "dark" : "light");
 
-if (currentTheme == "dark") {
-    document.body.classList.add("dark-theme");
+// Set initial theme
+document.documentElement.setAttribute('data-theme', currentTheme);
+// Remove dark-theme class usage
+document.body.classList.remove('dark-theme');
+
+// Update icons
+if (currentTheme === "dark") {
     moon.style.display = 'none';
     sun.style.display = 'block';
 } else {
-    document.body.classList.remove("dark-theme");
     moon.style.display = 'block';
     sun.style.display = 'none';
 }
 
 btn.addEventListener("click", function () {
-    document.body.classList.toggle("dark-theme");
-    let hasComments = document.getElementById("remark42");
-    let theme = "light";
-
-    if (document.body.classList.contains("dark-theme")) {
-        theme = "dark";
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    
+    // Update theme
+    document.documentElement.setAttribute('data-theme', newTheme);
+    
+    // Update icons and save preference
+    if (newTheme === "dark") {
         moon.style.display = 'none';
         sun.style.display = 'block';
-        if (hasComments) {
-            window.REMARK42.changeTheme("dark");
-        }
     } else {
         moon.style.display = 'block';
         sun.style.display = 'none';
-        if (hasComments) {
-            window.REMARK42.changeTheme("light");
-        }
     }
-    localStorage.setItem("theme", theme);
+    localStorage.setItem("theme", newTheme);
 });

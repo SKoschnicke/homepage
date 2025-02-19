@@ -1,3 +1,115 @@
+/* Default theme (no data-theme attribute) */
+:root {
+  /* Default values for configurable variables */
+  --default-text-color: #515151;
+  --default-body-bg: #fff;
+  --default-link-color: #268bd2;
+  --default-sidebar-bg-color: #202020;
+  --default-sidebar-text-color: #fff;
+  --default-sidebar-socials-color: #fff;
+  --default-heading-color: #313131;
+  --default-body-color: #515151;
+  --default-background-image: none;
+  --default-background-blend-mode: normal;
+  --default-content-bg-color: #fff;
+  --default-moon-sun-color: #515151;
+  --default-moon-sun-background-color: #f8f9fa;
+  --default-code-color: #515151;
+  --default-code-bg: #f9f9f9;
+  --default-border-color: #e5e5e5;
+  --default-pre-bg: #f9f9f9;
+  --default-sidebar-p-color: #515151;
+  --default-sidebar-img-border-color: #e5e5e5;
+  --default-date-color: #9a9a9a;
+  --default-table-border-color: #e5e5e5;
+  --default-table-stripe-color: #F9F9F9;
+  --default-code-block-color: #fff;
+  --default-code-block-background-color: #272822;
+  --default-post-title-color: #303030;
+  --default-list-color: #5a5a5a;
+  --default-sidebar-h1-color: #fff;
+  --default-sidebar-a-color: #fff;
+
+  /* Current theme values */
+  --text-color: var(--default-text-color);
+  --body-bg: var(--default-body-bg);
+  --link-color: var(--default-link-color);
+  --sidebar-bg-color: var(--default-sidebar-bg-color);
+  --sidebar-text-color: var(--default-sidebar-text-color);
+  --sidebar-socials-color: var(--default-sidebar-socials-color);
+  --heading-color: var(--default-heading-color);
+  --body-color: var(--default-body-color);
+  --background-image: var(--default-background-image);
+  --background-blend-mode: var(--default-background-blend-mode);
+  --content-bg-color: var(--default-content-bg-color);
+  --moon-sun-color: var(--default-moon-sun-color);
+  --moon-sun-background-color: var(--default-moon-sun-background-color);
+  --code-color: var(--default-code-color);
+  --code-bg: var(--default-code-bg);
+  --border-color: var(--default-border-color);
+  --pre-bg: var(--default-pre-bg);
+  --sidebar-p-color: var(--default-sidebar-p-color);
+  --sidebar-img-border-color: var(--default-sidebar-img-border-color);
+  --date-color: var(--default-date-color);
+  --table-border-color: var(--default-table-border-color);
+  --default-sidebar-bg-color: var(--default-sidebar-bg-color);
+  --default-sidebar-img-border-color: var(--default-sidebar-img-border-color);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --text-color: #e0d6c6;
+  --body-bg: #1a1a24;
+  --link-color: #2a9fd6;
+  --sidebar-bg-color: #121212;
+  --sidebar-text-color: #fff;
+  --sidebar-socials-color: #fff;
+  --heading-color: #c0a080;
+  --body-color: #e0d6c6;
+  --background-image: url('/images/dark-library-bg.png');
+  --background-blend-mode: multiply;
+  --content-bg-color: rgba(20, 20, 30, 0.97);
+  --moon-sun-color: #fff;
+  --moon-sun-background-color: #202020;
+  --code-color: #98e024;
+  --code-bg: #2a2a34;
+  --border-color: #483d2d;
+  --pre-bg: #2a2a34;
+  --sidebar-p-color: #d2d2d2;
+  --sidebar-img-border-color: #483d2d;
+  --date-color: #757575;
+  --table-border-color: #483d2d;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --text-color: #515151;
+  --body-bg: #fff;
+  --link-color: #268bd2;
+  --sidebar-bg-color: #f8f9fa;
+  --sidebar-text-color: #515151;
+  --sidebar-socials-color: #515151;
+  --body-color: #515151;
+  --background-image: none;
+  --background-blend-mode: normal;
+  --content-bg-color: #fff;
+  --moon-sun-color: #515151;
+  --moon-sun-background-color: #f8f9fa;
+  --code-color: #515151;
+  --code-bg: #f9f9f9;
+  --border-color: #e5e5e5;
+  --pre-bg: #f9f9f9;
+  --sidebar-p-color: #515151;
+  --sidebar-img-border-color: #e5e5e5;
+  --date-color: #9a9a9a;
+  --table-border-color: #e5e5e5;
+}
+
+/* Theme-specific styles */
+.theme-poison .sidebar {
+  font-size: 0.9rem;
+}
+
 body.layout-reverse .container.content {
    direction: rtl;
 }
@@ -25,7 +137,7 @@ body.layout-reverse .wrapper {
         margin: auto;
         width: 20px;
         height: 20px;
-        color: black;
+        color: var(--moon-sun-color);
     }
     .container.content {
         overflow-y: auto;
@@ -52,41 +164,45 @@ body.layout-reverse .wrapper {
         margin: auto;
         width: 20px;
         height: 20px;
-        color: black;
+        color: var(--moon-sun-color);
     }
 }
 
  /* Handles dark/light themes */
 h1, h2, h3, h4, h5, strong {
     font-family: 'Press Start 2P', cursive;
-    color: #c0a080;
+    color: var(--heading-color);
     text-shadow: 0 0 5px #6b4ba3;
 }
-.content div, p, table {
-    color: #e0d6c6;
+.content.container p,
+.content.container li,
+.content.container div,
+.post-date,
+.post time,
+.content.container td,
+.content.container th,
+.content.container blockquote {
+    color: var(--text-color);
 }
 .page-title, .post-title, .post-title a {
-    color: #c0a080;
+    color: var(--heading-color);
     text-shadow: 0 0 5px #6b4ba3;
-}
-.content li, li > p {
-    color: #e0d6c6;
 }
 .content code {
     font-family: 'Source Code Pro', monospace;
-    color: #98e024;
-    background-color: #2a2a34 !important;
+    color: var(--code-color);
+    background-color: var(--code-bg) !important;
 }
 .content a code{
     color: var(--link-color);
 }
 .content pre {
-    background: #2a2a34;
-    border: 1px solid #483d2d;
+    background: var(--pre-bg);
+    border: 1px solid var(--border-color);
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
 }
 .content pre code {
-  color: var(--code-block-color);
+  color: var(--code-color);
   background-color: transparent !important;
 }
 .btn-light-dark .moon {
@@ -110,24 +226,29 @@ h1, h2, h3, h4, h5, strong {
 body {
     overflow: hidden;
     height: 100vh;
-    background: #1a1a24 url('/images/dark-library-bg.png') fixed;
-    color: #e0d6c6;
-    background-blend-mode: multiply;
+    background: var(--body-bg) var(--background-image) fixed;
+    color: var(--body-color);
+    background-blend-mode: var(--background-blend-mode);
     background-size: cover;
 }
 body > .wrapper {
     display: flex;
     height: 100%;
+    position: relative;
 }
 .container.content {
-    background: rgba(20, 20, 30, 0.97);
-    border: 1px solid #483d2d;
+    background: var(--content-bg-color);
+    border: 1px solid var(--table-border-color);
     box-shadow: 0 0 15px rgba(146, 104, 242, 0.2);
     border-radius: 5px;
     overflow-y: auto;
     flex-grow: 1;
+    margin-left: 18rem;
+    width: calc(100% - 18rem);
 }
 .layout-reverse .container.content {
+    margin-left: 0;
+    margin-right: 18rem;
     padding-right: 0;
     padding-left: 2rem;
 }
@@ -142,8 +263,12 @@ body > .wrapper {
 }
 
 .sidebar {
-    background: rgba(26, 26, 36, 0.97);
-    border-right: 1px solid #483d2d;
+    position: fixed;
+    width: 18rem;
+    height: 100%;
+    z-index: 1;
+    background: var(--sidebar-bg-color);
+    border-right: 1px solid var(--border-color);
     box-shadow: 5px 0 15px rgba(0,0,0,0.3);
 }
 .lead {
@@ -159,7 +284,7 @@ body > .wrapper {
     height: 180px;
     width: 180px;
 }
-.social {
+.sidebar .social {
     margin-right: 0.5em;
     text-decoration: none !important;
     color: var(--sidebar-socials-color) !important;
@@ -401,4 +526,42 @@ a {
 a:hover {
     color: #c9b037;
     text-shadow: 0 0 8px #9268f2;
+}
+
+/* Make the selector more specific */
+html[data-theme="dark"] body .content.container {
+    color: var(--text-color);
+}
+
+html[data-theme="dark"] .content.container p,
+html[data-theme="dark"] .content.container li,
+html[data-theme="dark"] .content.container div,
+html[data-theme="dark"] .post-date,
+html[data-theme="dark"] .post time,
+html[data-theme="dark"] .content.container td,
+html[data-theme="dark"] .content.container th,
+html[data-theme="dark"] .content.container blockquote {
+    color: var(--text-color);
+}
+
+body.layout-reverse .sidebar {
+    right: 0;
+}
+
+@media (max-width: 48em) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .container.content {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+
+    body.layout-reverse .container.content {
+        margin-right: 0;
+    }
 }

@@ -2,12 +2,10 @@
 {{ if ne (.Page.Scratch.Get "hasMermaid") true }}
 <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-
-    const lsTheme = localStorage.getItem("theme")
-    const hugoTheme = document.body.classList.contains("dark-theme") ? "dark" : null
-    const currTheme = lsTheme ? lsTheme : hugoTheme;
-    const mermaidTheme = currTheme == "light" ? "default" : "dark"
-
+    
+    const currTheme = document.documentElement.getAttribute('data-theme');
+    const mermaidTheme = currTheme === "light" ? "default" : "dark";
+    
     mermaid.initialize({theme: mermaidTheme});
 </script>
 

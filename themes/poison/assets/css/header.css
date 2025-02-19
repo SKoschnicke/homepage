@@ -21,7 +21,7 @@
     --sidebar-text-color: #2a2a2a;   /* Darker sidebar text */
 }
 
-.dark-theme {
+[data-theme="dark"] {
     --sidebar-bg: rgba(26, 26, 36, 0.97);
     --content-bg: rgba(20, 20, 30, 0.97);
     --text-color: #e0d6c6;
@@ -89,4 +89,16 @@
     .sidebar-sticky {
         padding-top: 1rem;
     }
+}
+
+/* Header specific styles */
+.site-header {
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.site-title {
+  font-size: 1.5rem;
+  font-weight: bold;
 } 

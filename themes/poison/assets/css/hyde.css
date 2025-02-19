@@ -58,11 +58,15 @@ pre {
  */
 
 .sidebar {
-  text-align: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 18rem;
+  text-align: left;
   padding: 2rem 1rem;
-  color: #e0d6c6;
-  background: rgba(26, 26, 36, 0.97);
-  flex-shrink: 0;
+  color: var(--sidebar-text-color);
+  background-color: var(--sidebar-bg-color);
 }
 @media (min-width: 48em) {
   .sidebar {
@@ -165,15 +169,15 @@ a.sidebar-nav-item:focus {
  */
 
 .content {
-  padding-top:    2rem;
-  padding-bottom: 2rem;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
 }
 
 @media (min-width: 48em) {
   .content {
     max-width: 38rem;
-    margin-left: 2rem;
-    margin-right: 1.75rem;
+    margin-left: 20rem;
+    margin-right: 2rem;
   }
 }
 
@@ -238,73 +242,73 @@ a.sidebar-nav-item:focus {
 /* Base16 (http://chriskempson.github.io/base16/#default) */
 
 /* Red */
-.theme-base-08 .sidebar {
+[data-theme="red"] .sidebar {
   background-color: #ac4142;
 }
-.theme-base-08 .content a,
-.theme-base-08 .related-posts li a:hover {
+[data-theme="red"] .content a,
+[data-theme="red"] .related-posts li a:hover {
   color: #ac4142;
 }
 
 /* Orange */
-.theme-base-09 .sidebar {
+[data-theme="orange"] .sidebar {
   background-color: #d28445;
 }
-.theme-base-09 .content a,
-.theme-base-09 .related-posts li a:hover {
+[data-theme="orange"] .content a,
+[data-theme="orange"] .related-posts li a:hover {
   color: #d28445;
 }
 
 /* Yellow */
-.theme-base-0a .sidebar {
+[data-theme="yellow"] .sidebar {
   background-color: #f4bf75;
 }
-.theme-base-0a .content a,
-.theme-base-0a .related-posts li a:hover {
+[data-theme="yellow"] .content a,
+[data-theme="yellow"] .related-posts li a:hover {
   color: #f4bf75;
 }
 
 /* Green */
-.theme-base-0b .sidebar {
+[data-theme="green"] .sidebar {
   background-color: #90a959;
 }
-.theme-base-0b .content a,
-.theme-base-0b .related-posts li a:hover {
+[data-theme="green"] .content a,
+[data-theme="green"] .related-posts li a:hover {
   color: #90a959;
 }
 
 /* Cyan */
-.theme-base-0c .sidebar {
+[data-theme="cyan"] .sidebar {
   background-color: #75b5aa;
 }
-.theme-base-0c .content a,
-.theme-base-0c .related-posts li a:hover {
+[data-theme="cyan"] .content a,
+[data-theme="cyan"] .related-posts li a:hover {
   color: #75b5aa;
 }
 
 /* Blue */
-.theme-base-0d .sidebar {
+[data-theme="blue"] .sidebar {
   background-color: #6a9fb5;
 }
-.theme-base-0d .content a,
-.theme-base-0d .related-posts li a:hover {
+[data-theme="blue"] .content a,
+[data-theme="blue"] .related-posts li a:hover {
   color: #6a9fb5;
 }
 
 /* Magenta */
-.theme-base-0e .sidebar {
+[data-theme="magenta"] .sidebar {
   background-color: #aa759f;
 }
-.theme-base-0e .content a,
-.theme-base-0e .related-posts li a:hover {
+[data-theme="magenta"] .content a,
+[data-theme="magenta"] .related-posts li a:hover {
   color: #aa759f;
 }
 
 /* Brown */
-.theme-base-0f .sidebar {
+[data-theme="brown"] .sidebar {
   background-color: #8f5536;
 }
-.theme-base-0f .content a,
-.theme-base-0f .related-posts li a:hover {
+[data-theme="brown"] .content a,
+[data-theme="brown"] .related-posts li a:hover {
   color: #8f5536;
 }

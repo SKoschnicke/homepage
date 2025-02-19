@@ -1,7 +1,17 @@
-/* Style the tabs */
+/* Tab component styles */
 .tabs {
-  overflow: hidden;
-  border-bottom: 1px solid var(--text-color);
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-bottom: 2px solid var(--link-color);
 }
 
 @media (min-width: 48em) {
@@ -9,7 +19,7 @@
     .tabs button {
         font-family: Menlo, Monaco, "Courier New", monospace;
         font-size: 0.8em;
-    background-color: var(--bkg-color);
+    background-color: var(--body-bg);
     color: var(--text-color);
     float: left;
     border-top: 1px solid var(--text-color);
@@ -22,6 +32,7 @@
     cursor: pointer;
     padding: 0.5em 1em;
     transition: 0.3s;
+    border: 1px solid var(--border-color);
     }
 }
 
@@ -30,7 +41,7 @@
     .tabs button {
         font-family: Menlo, Monaco, "Courier New", monospace;
         font-size: 0.8em;
-    background-color: var(--bkg-color);
+    background-color: var(--body-bg);
     color: var(--text-color);
     float: left;
     border-top: 1px solid var(--text-color);
@@ -43,6 +54,7 @@
     cursor: pointer;
     padding: 0.7em 1.3em;
     transition: 0.3s;
+    border: 1px solid var(--border-color);
     }
 
 }
