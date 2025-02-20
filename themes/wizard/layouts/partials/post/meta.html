@@ -1,0 +1,28 @@
+{{ $dateFormat := "January 2, 2006" }}
+<div class="post-meta">
+    {{ with .Date }}
+    <time datetime="{{ .Format "2006-01-02" }}" class="post-date">
+        {{ .Format $dateFormat }}
+    </time>
+    {{ end }}
+    
+    {{ with .Params.tags }}
+    <div class="post-tags">
+        {{ range . }}
+        <a href="{{ "tags/" | absURL }}{{ . | urlize }}" class="post-tag">#{{ . }}</a>
+        {{ end }}
+    </div>
+    {{ end }}
+    
+    {{ if .IsTranslated }}
+    <div class="post-translations">
+        {{ range .Translations }}
+        <a href="{{ .Permalink }}" class="translation-link" lang="{{ .Language.Lang }}">{{ .Language.LanguageName }}</a>
+        {{ end }}
+    </div>
+    {{ end }}
+    
+    {{ with .ReadingTime }}
+    <span class="reading-time">{{ . }} min read</span>
+    {{ end }}
+</div> 

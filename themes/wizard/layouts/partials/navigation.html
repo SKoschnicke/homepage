@@ -1,0 +1,18 @@
+{{ $menu := .Site.Params.menu }}
+<ul class="nav-list">
+    {{ range $menu }}
+    <li class="nav-item{{ if .HasChildren }} has-children{{ end }}">
+        <a href="{{ .URL }}" class="nav-link">{{ .Name }}</a>
+        {{ if and .HasChildren .Limit }}
+        <ul class="subnav-list">
+            {{ $url := .URL }}
+            {{ range first .Limit ($.Site.GetPage .URL).Pages }}
+            <li class="subnav-item">
+                <a href="{{ .RelPermalink }}" class="subnav-link">{{ .Title }}</a>
+            </li>
+            {{ end }}
+        </ul>
+        {{ end }}
+    </li>
+    {{ end }}
+</ul> 

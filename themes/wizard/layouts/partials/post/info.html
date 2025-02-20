@@ -1,0 +1,10 @@
+<div class="post-info">
+    <span class="post-date">{{ .Date.Format "January 2, 2006" }}</span>
+    {{ with .Params.tags }}
+    <span class="post-tags">
+        {{ range . }}
+        <a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">#{{ . }}</a>
+        {{ end }}
+    </span>
+    {{ end }}
+</div> 

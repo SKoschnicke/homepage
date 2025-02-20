@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
+        
+        <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+        
+        {{ $style := resources.Get "css/style.css" }}
+        {{ $style = $style | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
+        
+        <link rel="canonical" href="{{ .Permalink }}">
+        {{ range .AlternativeOutputFormats -}}
+            {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
+        {{ end -}}
+    </head>
+    <body>
+        <div class="container">
+            <header class="site-header">
+                {{ partial "sidebar/title.html" . }}
+                <nav class="main-nav">
+                    {{ partial "navigation.html" . }}
+                </nav>
+            </header>
+
+            <main id="content">
+                {{ block "main" . }}{{ end }}
+            </main>
+
+            <footer class="site-footer">
+                {{ partial "sidebar/socials.html" . }}
+                <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }}</p>
+            </footer>
+        </div>
+    </body>
+</html> 
