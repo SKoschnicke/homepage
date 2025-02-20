@@ -15,11 +15,19 @@
         {{ range .AlternativeOutputFormats -}}
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
         {{ end -}}
+
+        <!-- Theme toggle script -->
+        {{ $lightDark := resources.Get "js/light_dark.js" }}
+        {{ $lightDark = $lightDark | resources.Minify | resources.Fingerprint }}
+        <script src="{{ $lightDark.RelPermalink }}" integrity="{{ $lightDark.Data.Integrity }}"></script>
     </head>
     <body>
         <div class="container">
             <header class="site-header">
-                {{ partial "sidebar/title.html" . }}
+                <div class="header-content">
+                    {{ partial "sidebar/title.html" . }}
+                    {{ partial "light_dark.html" . }}
+                </div>
                 <nav class="main-nav">
                     {{ partial "navigation.html" . }}
                 </nav>

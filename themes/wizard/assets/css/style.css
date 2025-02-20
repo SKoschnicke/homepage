@@ -1,5 +1,6 @@
 /* Base styles */
 :root {
+    /* Light theme (default) */
     --primary-color: #333;
     --background-color: #fff;
     --text-color: #333;
@@ -7,6 +8,20 @@
     --link-hover-color: #003366;
     --border-color: #ddd;
     --max-width: 800px;
+    --header-bg: #fff;
+    --footer-text: #666;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --primary-color: #e0d6c6;
+    --background-color: #1a1a24;
+    --text-color: #e0d6c6;
+    --link-color: #a389f4;
+    --link-hover-color: #c4b3f7;
+    --border-color: #483d2d;
+    --header-bg: #121212;
+    --footer-text: #999;
 }
 
 body {
@@ -16,6 +31,7 @@ body {
     background: var(--background-color);
     margin: 0;
     padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -29,6 +45,14 @@ body {
     margin-bottom: 2rem;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 1rem;
+    background: var(--header-bg);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 /* Navigation */
@@ -49,6 +73,16 @@ body {
     color: var(--link-hover-color);
 }
 
+/* Make all links consistent */
+a, a:visited {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--link-hover-color);
+}
+
 /* Posts */
 .post-summary {
     margin-bottom: 2rem;
@@ -58,6 +92,7 @@ body {
 
 .post-title {
     margin: 0 0 1rem;
+    color: var(--primary-color);
 }
 
 .post-title a {
@@ -67,7 +102,7 @@ body {
 
 .post-meta {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-color);
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
@@ -102,5 +137,20 @@ body {
 
 .copyright {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--footer-text);
+}
+
+/* Theme toggle button */
+.btn-light-dark {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-light-dark:hover {
+    background-color: var(--border-color);
+}
+
+.btn-light-dark svg {
+    color: var(--text-color);
 } 

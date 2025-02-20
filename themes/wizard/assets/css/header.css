@@ -1,0 +1,48 @@
+/* Header layout */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.light-dark {
+    margin-left: 1rem;
+}
+
+/* Theme toggle button */
+.btn-light-dark {
+    padding: 0.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--background-color);
+    cursor: pointer;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.btn-light-dark:hover {
+    background-color: var(--border-color);
+}
+
+.btn-light-dark svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--text-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 48em) {
+    .header-content {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .light-dark {
+        margin-left: 0.5rem;
+    }
+} 
