@@ -40,6 +40,14 @@ body {
     padding: 1rem;
 }
 
+/* Code blocks */
+pre {
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
 /* Header */
 .site-header {
     margin-bottom: 2rem;
