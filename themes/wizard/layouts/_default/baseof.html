@@ -11,6 +11,11 @@
         {{ $style = $style | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
         
+        <!-- Memory Game styles -->
+        {{ $memoryGameCSS := resources.Get "css/memory-game.css" }}
+        {{ $memoryGameCSS = $memoryGameCSS | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $memoryGameCSS.RelPermalink }}" integrity="{{ $memoryGameCSS.Data.Integrity }}">
+        
         <link rel="canonical" href="{{ .Permalink }}">
         {{ range .AlternativeOutputFormats -}}
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
@@ -20,6 +25,11 @@
         {{ $lightDark := resources.Get "js/light_dark.js" }}
         {{ $lightDark = $lightDark | resources.Minify | resources.Fingerprint }}
         <script src="{{ $lightDark.RelPermalink }}" integrity="{{ $lightDark.Data.Integrity }}"></script>
+        
+        <!-- Memory Game script -->
+        {{ $memoryGame := resources.Get "js/memory-game.js" }}
+        {{ $memoryGame = $memoryGame | resources.Minify | resources.Fingerprint }}
+        <script src="{{ $memoryGame.RelPermalink }}" integrity="{{ $memoryGame.Data.Integrity }}"></script>
     </head>
     <body>
         <div class="container">
@@ -39,6 +49,8 @@
 
             <footer class="site-footer">
                 {{ partial "sidebar/socials.html" . }}
+                <div id="memory-game"></div>
+                <button id="reset-game" class="reset-button">Reset</button>
                 <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }}</p>
             </footer>
         </div>

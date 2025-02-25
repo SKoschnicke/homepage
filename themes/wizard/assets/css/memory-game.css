@@ -1,0 +1,139 @@
+/* Memory Game Styles */
+
+.memory-game-title {
+  margin: 20px 0 10px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#memory-game {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 10px;
+  width: 280px;
+  margin: 20px auto;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgba(240, 242, 255, 0.7);
+}
+
+html.dark #memory-game {
+  background-color: rgba(26, 26, 46, 0.7);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.memory-card {
+  position: relative;
+  height: 60px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transform: scale(1);
+  transition: transform 0.5s;
+  perspective: 1000px;
+}
+
+.memory-card:active {
+  transform: scale(0.95);
+  transition: transform 0.2s;
+}
+
+.memory-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.front-face,
+.back-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.front-face {
+  transform: rotateY(180deg);
+  background-color: #f5f5f5;
+  font-size: 26px;
+  border: 2px solid #ff0066;
+}
+
+.back-face {
+  background-color: #2980b9;
+  border: 2px solid #1f618d;
+  transform: rotateY(0deg);
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.confetti {
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 20px;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Dark theme support */
+html.dark .front-face {
+  background-color: #3a3a3a;
+  color: #ffffff;
+  border-color: #ff0066;
+}
+
+html.dark .back-face {
+  background-color: #1a1a2e;
+  border-color: #16213e;
+}
+
+.reset-button {
+  margin: 15px auto;
+  padding: 8px 16px;
+  background-color: #ff0066;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+  display: block;
+}
+
+.reset-button:hover {
+  background-color: #cc0052;
+}
+
+html.dark .reset-button {
+  background-color: #6600ff;
+}
+
+html.dark .reset-button:hover {
+  background-color: #5500d4;
+} 
