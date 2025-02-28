@@ -18,6 +18,30 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: rgba(240, 242, 255, 0.7);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+#memory-game:hover {
+  transform: scale(1.02);
+}
+
+#memory-game::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  border: 2px dashed transparent;
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+
+#memory-game:hover::before {
+  border-color: var(--primary-color);
 }
 
 html.dark #memory-game {

@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lockBoard = false;
   let firstCard, secondCard;
   let matchedPairs = 0;
+  let gameStarted = false;
   
   // First, show all cards briefly then flip them
   function initialCardReveal() {
@@ -30,11 +31,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Then flip them back
     setTimeout(() => {
       cards.forEach(card => card.classList.remove('flipped'));
+      // Enable clicking on cards after the initial reveal
+      lockBoard = false;
     }, 1500);
   }
   
   // Initialize the game
   initGame();
+  
+  // Add a click event to the game container to start the game on first interaction
+  gameContainer.addEventListener('click', startGameOnFirstClick);
+  
+  function startGameOnFirstClick(e) {
+    if (!gameStarted) {
+      gameStarted = true;
+      // Remove this event listener as it's no longer needed
+      gameContainer.removeEventListener('click', startGameOnFirstClick);
+      // Start the initial card reveal
+      initialCardReveal();
+      
+      // Prevent the first click from selecting a card
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }
   
   // Reset button event listener
   if (resetButton) {
@@ -48,10 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Reset game state
     hasFlippedCard = false;
-    lockBoard = false;
+    lockBoard = true; // Lock the board until first click
     firstCard = null;
     secondCard = null;
     matchedPairs = 0;
+    gameStarted = false;
     
     // Shuffle the symbols
     const shuffledSymbols = [...allSymbols].sort(() => 0.5 - Math.random());
@@ -76,9 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
       card.addEventListener('click', flipCard);
       gameContainer.appendChild(card);
     });
-    
-    // Show cards briefly then flip them back
-    setTimeout(initialCardReveal, 300);
   }
   
   // Reset the game
@@ -91,10 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Re-initialize the game
     initGame();
+    
+    // Immediately start the game without requiring activation
+    gameStarted = true;
+    initialCardReveal();
   }
   
   // Card flip function
-  function flipCard() {
+  function flipCard(e) {
     if (lockBoard) return;
     if (this === firstCard) return;
     
