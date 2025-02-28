@@ -11,6 +11,10 @@
         {{ $style = $style | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
         
+        {{ $headerCSS := resources.Get "css/header.css" }}
+        {{ $headerCSS = $headerCSS | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $headerCSS.RelPermalink }}" integrity="{{ $headerCSS.Data.Integrity }}">
+        
         <!-- Memory Game styles -->
         {{ $memoryGameCSS := resources.Get "css/memory-game.css" }}
         {{ $memoryGameCSS = $memoryGameCSS | resources.Minify | resources.Fingerprint }}
@@ -34,6 +38,7 @@
     <body>
         <div class="container">
             <header class="site-header">
+                <div class="header-image"></div>
                 <div class="header-content">
                     {{ partial "sidebar/title.html" . }}
                     {{ partial "light_dark.html" . }}

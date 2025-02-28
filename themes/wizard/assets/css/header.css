@@ -1,4 +1,25 @@
 /* Header layout */
+.site-header {
+    position: relative;
+    margin-bottom: 2rem;
+    border-bottom: var(--pixel-border);
+    padding: 0;
+    background: var(--header-bg);
+    box-shadow: var(--neon-glow);
+    overflow: hidden;
+}
+
+.header-image {
+    width: 100%;
+    height: 250px;
+    background-image: url('/images/header-tower.png');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    margin-bottom: 1rem;
+    border-bottom: var(--pixel-border);
+}
+
 .header-content {
     display: flex;
     justify-content: space-between;
@@ -115,6 +136,10 @@
 
 /* Responsive adjustments */
 @media (max-width: 48em) {
+    .header-image {
+        height: 150px;
+    }
+    
     .header-content {
         flex-direction: row;
         align-items: center;

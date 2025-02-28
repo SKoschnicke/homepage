@@ -18,7 +18,7 @@
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: rgba(240, 242, 255, 0.7);
+  background-color: rgba(245, 245, 230, 0.7);
   cursor: pointer;
   position: relative;
   transition: transform 0.3s ease;
@@ -46,7 +46,7 @@
 }
 
 html.dark #memory-game {
-  background-color: rgba(26, 26, 46, 0.7);
+  background-color: rgba(26, 42, 51, 0.7);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -87,12 +87,12 @@ html.dark #memory-game {
   transform: rotateY(180deg);
   background-color: #f5f5f5;
   font-size: 26px;
-  border: 2px solid #ff0066;
+  border: 2px solid #3AAFB9;
 }
 
 .back-face {
-  background-color: #2980b9;
-  border: 2px solid #1f618d;
+  background-color: #59C265;
+  border: 2px solid #3AAFB9;
   transform: rotateY(0deg);
 }
 
@@ -128,20 +128,20 @@ html.dark #memory-game {
 
 /* Dark theme support */
 html.dark .front-face {
-  background-color: #3a3a3a;
+  background-color: #2A3B47;
   color: #ffffff;
-  border-color: #ff0066;
+  border-color: #3AAFB9;
 }
 
 html.dark .back-face {
-  background-color: #1a1a2e;
-  border-color: #16213e;
+  background-color: #1A2A33;
+  border-color: #3AAFB9;
 }
 
 .reset-button {
   margin: 15px auto;
   padding: 8px 16px;
-  background-color: #ff0066;
+  background-color: #3AAFB9;
   color: white;
   border: none;
   border-radius: 4px;
@@ -153,13 +153,13 @@ html.dark .back-face {
 }
 
 .reset-button:hover {
-  background-color: #cc0052;
+  background-color: #59C265;
 }
 
 html.dark .reset-button {
-  background-color: #6600ff;
+  background-color: #3AAFB9;
 }
 
 html.dark .reset-button:hover {
-  background-color: #5500d4;
+  background-color: #59C265;
 } 

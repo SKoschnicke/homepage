@@ -4,41 +4,45 @@
 
 :root {
     /* Light theme (default) */
-    --primary-color: #ff0066;
-    --background-color: #f0f2ff;
-    --text-color: #1a1a24;
-    --link-color: #6600ff;
-    --link-hover-color: #9933ff;
-    --border-color: #ff0066;
+    --primary-color: #3AAFB9; /* Teal from the sky */
+    --secondary-color: #59C265; /* Green from the tree */
+    --accent-color: #8B5D3B; /* Brown from the tree trunk */
+    --background-color: #F5F5E6; /* Light cream background */
+    --text-color: #2A3B47; /* Dark blue-gray */
+    --link-color: #3AAFB9; /* Teal from the sky */
+    --link-hover-color: #59C265; /* Green from the tree */
+    --border-color: #3AAFB9; /* Teal from the sky */
     --max-width: 800px;
-    --header-bg: #ffffff;
-    --footer-text: #1a1a24;
-    --neon-glow: 0 0 5px rgba(255, 0, 102, 0.5),
-                 0 0 10px rgba(255, 0, 102, 0.3),
-                 0 0 15px rgba(255, 0, 102, 0.1);
+    --header-bg: #F5F5E6;
+    --footer-text: #2A3B47;
+    --neon-glow: 0 0 5px rgba(58, 175, 185, 0.5),
+                 0 0 10px rgba(58, 175, 185, 0.3),
+                 0 0 15px rgba(58, 175, 185, 0.1);
     --pixel-border: 2px solid var(--border-color);
-    --cyber-bg: linear-gradient(45deg, #f0f2ff 0%, #ffffff 100%);
+    --cyber-bg: linear-gradient(45deg, #F5F5E6 0%, #ffffff 100%);
     --container-bg: rgba(255, 255, 255, 0.9);
-    --code-bg: rgba(240, 242, 255, 0.95);
+    --code-bg: rgba(245, 245, 230, 0.95);
     --heading-font: 'Press Start 2P', monospace;
     --body-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* Dark theme */
 [data-theme="dark"] {
-    --primary-color: #00ff9f;
-    --background-color: #0a0a12;
-    --text-color: #e0e0ff;
-    --link-color: #00ff9f;
-    --link-hover-color: #66ffc2;
-    --border-color: #00ff9f;
-    --header-bg: #0a0a12;
-    --footer-text: #00ff9f;
-    --neon-glow: 0 0 5px rgba(0, 255, 159, 0.5),
-                 0 0 10px rgba(0, 255, 159, 0.3),
-                 0 0 15px rgba(0, 255, 159, 0.1);
-    --cyber-bg: linear-gradient(45deg, #0a0a12 0%, #1a1a24 100%);
-    --container-bg: rgba(10, 10, 18, 0.8);
+    --primary-color: #3AAFB9; /* Teal from the sky */
+    --secondary-color: #59C265; /* Green from the tree */
+    --accent-color: #8B5D3B; /* Brown from the tree trunk */
+    --background-color: #1A2A33; /* Dark blue-gray */
+    --text-color: #E0E6EB; /* Light gray-blue */
+    --link-color: #3AAFB9; /* Teal from the sky */
+    --link-hover-color: #59C265; /* Green from the tree */
+    --border-color: #3AAFB9; /* Teal from the sky */
+    --header-bg: #1A2A33;
+    --footer-text: #3AAFB9;
+    --neon-glow: 0 0 5px rgba(58, 175, 185, 0.5),
+                 0 0 10px rgba(58, 175, 185, 0.3),
+                 0 0 15px rgba(58, 175, 185, 0.1);
+    --cyber-bg: linear-gradient(45deg, #1A2A33 0%, #2A3B47 100%);
+    --container-bg: rgba(26, 42, 51, 0.8);
     --code-bg: rgba(0, 0, 0, 0.7);
 }
 

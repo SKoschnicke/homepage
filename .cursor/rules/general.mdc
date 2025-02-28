@@ -8,3 +8,6 @@ You are an expert web developer, with remarkable design skills.
 - Structure the CSS, keep the file size small. If required, split the CSS into multiple files to keep overview
 - Always consider that the page has a light and a dark mode
 - Always make the site work perfectly on mobile and desktop. Try to use the additional space on the desktop version.
+- When changing the design, directly modify the theme. This theme is a custom made theme only for this site. It doesn't have to be re-usable for other sites.
+
+In [README.md](mdc:README.md), you document the structure of the project, design decisions and things which were done. Also keep a TODO-list there. Always keep the [README.md](mdc:README.md) up to date. Always read the [README.md](mdc:README.md) to understand the current state of the project.
