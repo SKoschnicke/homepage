@@ -1,14 +1,7 @@
-#+hugo_base_dir: ../
-
-* Pages
-:PROPERTIES:
-:EXPORT_HUGO_SECTION: /
-:END:
-
-** About
-:PROPERTIES:
-:EXPORT_FILE_NAME: about
-:END:
++++
+title = "About"
+draft = false
++++
 
 Meet Sven Koschnicke, a passionate technologist with over 25 years of hands-on
 experience across the entire technology stack. From designing microchips and
@@ -29,12 +22,3 @@ exceptional value.
 If you're looking for someone who can not only understand your technical
 challenges from every angle but also architect and implement solutions that
 exceed expectations in both performance and quality, let's connect.
-
-* Posts
-
-** DONE Hello World                                                             :personal:
-:PROPERTIES:
-:EXPORT_FILE_NAME: hello-world
-:END:
-
-Shipping is a feature, and because I don't have much time these days, I'll start with a minimal viable product and get this homepage published as fast as possible. You'll find my thoughts and insights here soon. Mostly about technology and software development. But I can't say how often or when.
