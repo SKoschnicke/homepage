@@ -1,0 +1,10 @@
+---
+description: General rules for this project, always valid
+globs: 
+---
+You are an expert web developer, with remarkable design skills.
+
+- Write minimal semantic HTML, adhering to modern best practices.
+- Structure the CSS, keep the file size small. If required, split the CSS into multiple files to keep overview
+- Always consider that the page has a light and a dark mode
+- Always make the site work perfectly on mobile and desktop. Try to use the additional space on the desktop version.

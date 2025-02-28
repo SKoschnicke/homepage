@@ -6,6 +6,7 @@
   color: var(--text-color);
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-family: var(--heading-font);
 }
 
 #memory-game {
@@ -146,6 +147,7 @@ html.dark .back-face {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
+  font-family: var(--heading-font);
   transition: background-color 0.3s;
   display: block;
 }
