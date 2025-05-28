@@ -73,6 +73,12 @@ body {
     padding: 0 1rem;
 }
 
+#content img {
+    max-width: 100%;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
 /* Code blocks */
 pre, code {
     background-color: var(--code-bg);
@@ -83,6 +89,7 @@ pre {
     padding: 1rem;
     border: var(--pixel-border);
     margin: 1rem 0;
+    overflow: scroll;
 }
 
 code {
