@@ -40,7 +40,7 @@ exceed expectations in both performance and quality, let's connect.
 
 Shipping is a feature, and because I don't have much time these days, I'll start with a minimal viable product and get this homepage published as fast as possible. You'll find my thoughts and insights here soon. Mostly about technology and software development. But I can't say how often or when.
 
-** STARTED Magic Wormhole                                                      :ATTACH:
+** DONE Magic Wormhole                                                         :software:
 :PROPERTIES:
 :EXPORT_FILE_NAME: magic-wormhole
 :ID:       d25b0e33-8bd4-44cc-9249-dcfd4eff5b1a
