@@ -54,7 +54,6 @@ body {
     margin: 0;
     padding: 0;
     transition: all 0.3s ease;
-    text-shadow: 0 0 1px var(--text-color);
     font-size: 16px;
 }
 
@@ -75,12 +74,24 @@ body {
 }
 
 /* Code blocks */
+pre, code {
+    background-color: var(--code-bg);
+    font-family: 'Courier New', monospace;
+}
+
 pre {
     padding: 1rem;
     border: var(--pixel-border);
-    background: var(--code-bg);
-    font-family: 'Courier New', monospace;
     margin: 1rem 0;
+}
+
+code {
+    padding: 1pt 3pt;
+
+}
+
+code.language-text {
+    background: transparent;
 }
 
 /* Header */
@@ -333,10 +344,6 @@ h4, h5, h6 {
     color: var(--primary-color);
 }
 
-pre, code {
-    font-family: 'Courier New', monospace;
-}
-
 .site-title a {
     font-family: var(--heading-font);
     color: var(--primary-color);
@@ -356,4 +363,4 @@ pre, code {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-} 
+}
