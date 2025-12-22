@@ -1,2 +1,5 @@
 /public/
 /resources/_gen/
+/server/target/
+/server/src/assets.rs
+/.claude/

@@ -1,0 +1,17 @@
+{
+  "Args": [],
+  "Env": {
+    "PORT": "3000"
+  },
+  "Dirs": [],
+  "Files": [],
+  "MapDirs": {},
+  "Boot": "./target/release/static-server",
+  "Kernel": "4.19.0",
+  "Mkfs": "ext4",
+  "NameServer": "8.8.8.8",
+  "RunConfig": {
+    "Memory": "256m",
+    "Ports": ["3000"]
+  }
+}
