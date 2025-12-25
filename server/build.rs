@@ -1,6 +1,6 @@
 use std::fs::{self, File};
-use std::io::{Write as IoWrite, Read};
-use std::path::{Path, PathBuf};
+use std::io::Write as IoWrite;
+use std::path::Path;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use sha2::{Sha256, Digest};
@@ -162,7 +162,7 @@ fn compress_brotli(data: &[u8]) -> Vec<u8> {
 
 fn sanitize_ident(path: &str) -> String {
     path.chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '_' })
+        .map(|c| if c.is_alphanumeric() { c.to_ascii_uppercase() } else { '_' })
         .collect()
 }
 
