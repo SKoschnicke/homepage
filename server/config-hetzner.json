@@ -1,12 +1,13 @@
 {
+  "Uefi": true,
   "CloudConfig": {
-    "Platform": "do",
-    "Zone": "nyc3",
+    "Platform": "hetzner",
+    "Zone": "fsn1",
     "BucketName": "homepage-unikernel"
   },
   "RunConfig": {
     "InstanceName": "homepage-unikernel",
-    "Flavor": "s-1vcpu-1gb",
+    "Flavor": "cx23",
     "Memory": "256m",
     "Ports": ["80:3000"]
   },

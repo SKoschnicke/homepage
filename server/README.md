@@ -268,55 +268,60 @@ Expected results (on modern hardware):
 
 Compare with nginx serving the same content for baseline.
 
-## Unikernel Deployment to DigitalOcean
+## Unikernel Deployment to Hetzner Cloud
 
-Deploy as a true unikernel directly to DigitalOcean using ops.
+Deploy as a true unikernel directly to Hetzner Cloud using ops.
 
 ### Prerequisites
 
 - [ops](https://ops.city/) installed: `curl https://ops.city/get.sh -sSfL | sh`
-- DigitalOcean account at [cloud.digitalocean.com](https://cloud.digitalocean.com/)
-- DigitalOcean API token and Spaces credentials
+- Hetzner Cloud account at [console.hetzner.cloud](https://console.hetzner.cloud/)
+- Hetzner Cloud API token and Object Storage credentials
 
-### Setup DigitalOcean Credentials
+### Setup Hetzner Credentials
 
 1. **Create API Token**
-   - Go to [DigitalOcean API page](https://cloud.digitalocean.com/account/api/tokens)
-   - Generate a new Personal Access Token with read/write permissions
+   - Go to [Hetzner Cloud Console](https://console.hetzner.cloud/)
+   - Navigate to Security → API Tokens
+   - Generate a new token with Read & Write permissions
    - Copy the token
 
-2. **Create a Space for image storage**
-   - Go to [Spaces](https://cloud.digitalocean.com/spaces)
-   - Create a new Space (e.g., "homepage-unikernel")
-   - Note the region (e.g., nyc3, sfo3)
+2. **Create Object Storage Bucket**
+   - Go to [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/projects)
+   - Create a new bucket (e.g., "homepage-unikernel")
+   - Select region (e.g., Falkenstein `fsn1`, Helsinki `hel1`, Nuremberg `nbg1`)
+   - Note the Object Storage endpoint (e.g., `fsn1.your-objectstorage.com`)
 
-3. **Generate Spaces Access Keys**
-   - Go to [API → Spaces Keys](https://cloud.digitalocean.com/account/api/spaces)
-   - Generate a new key pair
-   - Copy the Access Key and Secret Key
+3. **Generate Object Storage Keys**
+   - In the bucket settings, create Access Keys
+   - Copy the Access Key (public) and Secret Key (private)
 
 4. **Export credentials**
 ```bash
-export DO_TOKEN=<your-digitalocean-api-token>
-export SPACES_KEY=<your-spaces-access-key>
-export SPACES_SECRET=<your-spaces-secret-key>
+export HCLOUD_TOKEN=<your-hetzner-api-token>
+export OBJECT_STORAGE_DOMAIN=fsn1.your-objectstorage.com
+export OBJECT_STORAGE_KEY=<your-storage-access-key>
+export OBJECT_STORAGE_SECRET=<your-storage-secret-key>
 ```
 
 ### Configure and Deploy
 
-1. **Edit config-digitalocean.json**
+1. **Edit config-hetzner.json**
 
-Update the `BucketName` to match your Space name and `Zone` to match your Space region:
+Update the `BucketName` to match your bucket name and `Zone` to match your preferred region:
 
 ```json
 {
+  "Uefi": true,
   "CloudConfig": {
-    "Platform": "do",
-    "Zone": "nyc3",
+    "Platform": "hetzner",
+    "Zone": "fsn1",
     "BucketName": "homepage-unikernel"
   }
 }
 ```
+
+**Important:** `"Uefi": true` is required for Hetzner Cloud deployment.
 
 2. **Build and deploy**
 
@@ -326,21 +331,21 @@ cargo build --release
 
 # Create the unikernel image
 ops image create target/release/static-server \
-  -c config-digitalocean.json \
-  -t do \
+  -c config-hetzner.json \
+  -t hetzner \
   -i homepage-unikernel
 
 # Create an instance from the image
-ops instance create -t do \
-  -c config-digitalocean.json \
+ops instance create -t hetzner \
+  -c config-hetzner.json \
   -i homepage-unikernel
 ```
 
 This will:
 1. Build a bootable unikernel image from your Rust binary
-2. Upload the image to DigitalOcean Spaces
-3. Create a custom image in DigitalOcean
-4. Launch a droplet instance (s-1vcpu-1gb, ~$6/month)
+2. Upload the image to Hetzner Object Storage
+3. Create a custom image in Hetzner Cloud
+4. Launch a server instance (CX23, €3.49/month)
 5. Boot your unikernel
 6. Map port 80 (external) → 3000 (internal)
 
@@ -348,22 +353,22 @@ This will:
 
 **List instances:**
 ```bash
-ops instance list -t do -c config-digitalocean.json
+ops instance list -t hetzner -c config-hetzner.json
 ```
 
 **List images:**
 ```bash
-ops image list -t do -c config-digitalocean.json
+ops image list -t hetzner -c config-hetzner.json
 ```
 
 **Delete instance:**
 ```bash
-ops instance delete homepage-unikernel -t do -c config-digitalocean.json
+ops instance delete homepage-unikernel -t hetzner -c config-hetzner.json
 ```
 
 **Delete image:**
 ```bash
-ops image delete homepage-unikernel -t do -c config-digitalocean.json
+ops image delete homepage-unikernel -t hetzner -c config-hetzner.json
 ```
 
 ### Update Deployment
@@ -378,23 +383,23 @@ cd server
 cargo build --release
 
 # Delete old instance and image
-ops instance delete homepage-unikernel -t do -c config-digitalocean.json
-ops image delete homepage-unikernel -t do -c config-digitalocean.json
+ops instance delete homepage-unikernel -t hetzner -c config-hetzner.json
+ops image delete homepage-unikernel -t hetzner -c config-hetzner.json
 
 # Create new image and instance
-ops image create target/release/static-server -c config-digitalocean.json -t do -i homepage-unikernel
-ops instance create -t do -c config-digitalocean.json -i homepage-unikernel
+ops image create target/release/static-server -c config-hetzner.json -t hetzner -i homepage-unikernel
+ops instance create -t hetzner -c config-hetzner.json -i homepage-unikernel
 ```
 
 ### Configure DNS
 
-Point your domain to the droplet IP:
+Point your domain to the server IP:
 
 ```
-A Record: sven.guru → <droplet-ip>
+A Record: sven.guru → <server-ip>
 ```
 
-Get the IP from `ops instance list -t do -c config-digitalocean.json`
+Get the IP from `ops instance list -t hetzner -c config-hetzner.json`
 
 ### HTTPS / TLS
 
@@ -405,45 +410,47 @@ For HTTPS, you have two options:
 - Enable Cloudflare proxy
 - Cloudflare provides free HTTPS
 
-**Option 2: DigitalOcean Load Balancer**
+**Option 2: Hetzner Load Balancer**
 - Create a Load Balancer with Let's Encrypt certificate
-- Point load balancer to your droplet
-- Adds ~$12/month cost
+- Point load balancer to your unikernel instance
+- Adds ~€5/month cost
 
 ### Cost
 
-**DigitalOcean Pricing:**
-- **s-1vcpu-1gb** (1 vCPU, 1GB RAM): ~$6/month
-- **Spaces** (image storage): $5/month (250GB included)
-- Includes 1TB outbound transfer
+**Hetzner Cloud Pricing:**
+- **CX23** (2 vCPU, 4GB RAM): €3.49/month
+- **Object Storage**: €4.99/month (1TB storage + 1TB egress included)
+- Includes 20TB outbound transfer per server
 
-**Total:** ~$11/month for unikernel deployment (or $6/month if you use the free Spaces trial)
+**Total:** ~€8.48/month (~$9.20) for unikernel deployment
 
-### Available Droplet Sizes
+### Available Server Sizes
 
-Common droplet sizes you can use (edit `Flavor` in config):
-- `s-1vcpu-1gb`: 1 vCPU, 1GB RAM (~$6/month) - minimal
-- `s-1vcpu-2gb`: 1 vCPU, 2GB RAM (~$12/month) - recommended
-- `s-2vcpu-2gb`: 2 vCPU, 2GB RAM (~$18/month) - high traffic
+Common server sizes you can use (edit `Flavor` in config):
+- `cx23`: 2 vCPU, 4GB RAM (€3.49/month) - cheapest, cost-optimized
+- `cpx11`: 2 vCPU, 2GB RAM (€4.75/month) - regular performance
+- `cx32`: 4 vCPU, 8GB RAM (€11.49/month) - high traffic
+
+**Zones:** `fsn1` (Falkenstein), `nbg1` (Nuremberg), `hel1` (Helsinki)
 
 ### Monitor Instance
 
 ```bash
 # List instances with status
-ops instance list -t do -c config-digitalocean.json
+ops instance list -t hetzner -c config-hetzner.json
 
-# Note: Instance logs via ops are currently in development
-# Use DigitalOcean console for droplet monitoring
+# Note: Instance logs via ops are currently not supported on Hetzner
+# Use Hetzner Cloud Console for server monitoring
 ```
 
 ### Cleanup
 
 ```bash
 # Delete instance
-ops instance delete homepage-unikernel -t do -c config-digitalocean.json
+ops instance delete homepage-unikernel -t hetzner -c config-hetzner.json
 
 # Delete image
-ops image delete homepage-unikernel -t do -c config-digitalocean.json
+ops image delete homepage-unikernel -t hetzner -c config-hetzner.json
 ```
 
 ## Troubleshooting

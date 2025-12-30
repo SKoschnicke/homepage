@@ -209,29 +209,30 @@ systemctl reload nginx
 certbot --nginx -d sven.guru -d www.sven.guru
 ```
 
-## Option 3: True Unikernel Deployment (DigitalOcean)
+## Option 3: True Unikernel Deployment (Hetzner Cloud)
 
-For true unikernel deployment, use **DigitalOcean** which is natively supported by ops.
+For true unikernel deployment, use **Hetzner Cloud** which is natively supported by ops.
 
-**Note:** Hetzner doesn't support unikernel deployment via ops. For Hetzner, use Docker or binary deployment (Options 1-2 above).
-
-See the main **README.md** for complete DigitalOcean unikernel deployment instructions, including:
-- Setting up DigitalOcean credentials (API token, Spaces keys)
+See the main **README.md** for complete Hetzner Cloud unikernel deployment instructions, including:
+- Setting up Hetzner credentials (API token, Object Storage keys)
 - Creating and deploying unikernel images
 - Managing instances
-- Cost estimates (~$6-11/month)
+- Cost estimates (~€8.48/month)
 
 Quick reference:
 ```bash
 # Set credentials
-export DO_TOKEN=<your-token>
-export SPACES_KEY=<your-key>
-export SPACES_SECRET=<your-secret>
+export HCLOUD_TOKEN=<your-token>
+export OBJECT_STORAGE_DOMAIN=fsn1.your-objectstorage.com
+export OBJECT_STORAGE_KEY=<your-key>
+export OBJECT_STORAGE_SECRET=<your-secret>
 
 # Deploy
-ops image create target/release/static-server -c config-digitalocean.json -t do -i homepage-unikernel
-ops instance create -t do -c config-digitalocean.json -i homepage-unikernel
+ops image create target/release/static-server -c config-hetzner.json -t hetzner -i homepage-unikernel
+ops instance create -t hetzner -c config-hetzner.json -i homepage-unikernel
 ```
+
+**Alternative:** Oracle Cloud offers a free tier with 4 ARM cores + 24GB RAM (always free). See ops documentation for OCI deployment.
 
 ## DNS Configuration
 
