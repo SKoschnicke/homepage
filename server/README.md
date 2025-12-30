@@ -290,7 +290,7 @@ Deploy as a true unikernel directly to Hetzner Cloud using ops.
    - Go to [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/projects)
    - Create a new bucket (e.g., "homepage-unikernel")
    - Select region (e.g., Falkenstein `fsn1`, Helsinki `hel1`, Nuremberg `nbg1`)
-   - Note the Object Storage endpoint (e.g., `fsn1.your-objectstorage.com`)
+   - Note the Object Storage endpoint (e.g., `hel1.your-objectstorage.com`)
 
 3. **Generate Object Storage Keys**
    - In the bucket settings, create Access Keys
@@ -299,7 +299,7 @@ Deploy as a true unikernel directly to Hetzner Cloud using ops.
 4. **Export credentials**
 ```bash
 export HCLOUD_TOKEN=<your-hetzner-api-token>
-export OBJECT_STORAGE_DOMAIN=fsn1.your-objectstorage.com
+export OBJECT_STORAGE_DOMAIN=hel1.your-objectstorage.com
 export OBJECT_STORAGE_KEY=<your-storage-access-key>
 export OBJECT_STORAGE_SECRET=<your-storage-secret-key>
 ```
@@ -338,7 +338,7 @@ ops image create target/release/static-server \
 # Create an instance from the image
 ops instance create -t hetzner \
   -c config-hetzner.json \
-  -i homepage-unikernel
+  homepage-unikernel
 ```
 
 This will:
