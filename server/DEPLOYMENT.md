@@ -209,42 +209,29 @@ systemctl reload nginx
 certbot --nginx -d sven.guru -d www.sven.guru
 ```
 
-## Option 3: True Unikernel Deployment
+## Option 3: True Unikernel Deployment (DigitalOcean)
 
-Hetzner doesn't natively support unikernels, but you can try custom images.
+For true unikernel deployment, use **DigitalOcean** which is natively supported by ops.
 
-### 1. Build unikernel with ops
+**Note:** Hetzner doesn't support unikernel deployment via ops. For Hetzner, use Docker or binary deployment (Options 1-2 above).
 
+See the main **README.md** for complete DigitalOcean unikernel deployment instructions, including:
+- Setting up DigitalOcean credentials (API token, Spaces keys)
+- Creating and deploying unikernel images
+- Managing instances
+- Cost estimates (~$6-11/month)
+
+Quick reference:
 ```bash
-# Install ops
-curl https://ops.city/get.sh -sSfL | sh
+# Set credentials
+export DO_TOKEN=<your-token>
+export SPACES_KEY=<your-key>
+export SPACES_SECRET=<your-secret>
 
-# Build unikernel
-cd server
-cargo build --release
-ops build target/release/static-server -c config.json
-
-# This creates a bootable image
+# Deploy
+ops image create target/release/static-server -c config-digitalocean.json -t do -i homepage-unikernel
+ops instance create -t do -c config-digitalocean.json -i homepage-unikernel
 ```
-
-### 2. Convert to qcow2 for Hetzner
-
-```bash
-# ops creates a raw image, convert it
-qemu-img convert -f raw -O qcow2 static-server.img static-server.qcow2
-```
-
-### 3. Upload to Hetzner (complex)
-
-Hetzner doesn't have a simple custom image upload API like AWS. You'd need to:
-
-1. Create a snapshot server
-2. Boot from rescue mode
-3. Upload and write the image
-4. Create snapshot
-5. Use snapshot to boot new servers
-
-**This is complex and not recommended for testing.** Use Docker or binary deployment instead.
 
 ## DNS Configuration
 

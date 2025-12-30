@@ -1,13 +1,12 @@
 {
   "CloudConfig": {
-    "Platform": "hcloud",
-    "ProjectID": "",
-    "Zone": "fsn1",
-    "BucketName": ""
+    "Platform": "do",
+    "Zone": "nyc3",
+    "BucketName": "homepage-unikernel"
   },
   "RunConfig": {
     "InstanceName": "homepage-unikernel",
-    "Flavor": "cx11",
+    "Flavor": "s-1vcpu-1gb",
     "Memory": "256m",
     "Ports": ["80:3000"]
   },
