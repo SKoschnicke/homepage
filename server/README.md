@@ -268,6 +268,130 @@ Expected results (on modern hardware):
 
 Compare with nginx serving the same content for baseline.
 
+## Unikernel Deployment to Hetzner Cloud
+
+Deploy as a true unikernel directly to Hetzner Cloud using ops.
+
+### Prerequisites
+
+- [ops](https://ops.city/) installed: `curl https://ops.city/get.sh -sSfL | sh`
+- Hetzner Cloud API token with Read & Write permissions
+
+### Get Hetzner API Token
+
+1. Go to [Hetzner Cloud Console](https://console.hetzner.cloud/)
+2. Navigate to Security → API Tokens
+3. Generate new token with Read & Write permissions
+4. Copy the token
+
+### Deploy Unikernel
+
+```bash
+# Set your Hetzner API token
+export HCLOUD_TOKEN=<your-hetzner-api-token>
+
+# Build the Rust binary (already done if you ran ./build.sh)
+cargo build --release
+
+# Build and deploy unikernel to Hetzner
+ops instance create target/release/static-server \
+  -c config-hetzner.json \
+  -t hcloud \
+  --hcloud-token $HCLOUD_TOKEN
+```
+
+This will:
+1. Build a bootable unikernel image from your Rust binary
+2. Upload the image to Hetzner Cloud
+3. Create a VM instance (CX11, ~€4/month)
+4. Boot your unikernel
+5. Map port 80 (external) → 3000 (internal)
+
+### Get Instance IP
+
+```bash
+# List running instances
+ops instance list -t hcloud
+
+# The output shows the public IP address
+```
+
+### Test Deployment
+
+```bash
+# Replace with your instance IP
+curl http://<instance-ip>/
+```
+
+### Update Deployment
+
+When you update content:
+
+```bash
+# Rebuild Hugo site and Rust binary
+cd /home/sven/development/homepage
+hugo --minify
+cd server
+cargo build --release
+
+# Delete old instance
+ops instance delete homepage-unikernel -t hcloud
+
+# Create new instance with updated binary
+ops instance create target/release/static-server \
+  -c config-hetzner.json \
+  -t hcloud \
+  --hcloud-token $HCLOUD_TOKEN
+```
+
+### Configure DNS
+
+Point your domain to the instance IP:
+
+```
+A Record: sven.guru → <instance-ip>
+```
+
+### HTTPS / TLS
+
+For HTTPS, you have two options:
+
+**Option 1: Add Cloudflare in front**
+- Point DNS to Cloudflare
+- Enable Cloudflare proxy
+- Cloudflare provides free HTTPS
+
+**Option 2: Hetzner Load Balancer**
+- Create Hetzner Load Balancer with Let's Encrypt certificate
+- Point load balancer to your unikernel instance
+- Adds ~€5/month cost
+
+### Cost
+
+**Hetzner Cloud Pricing:**
+- **CX11** (1 vCPU, 2GB RAM): €4.15/month
+- Includes 20TB traffic/month
+- No additional costs for unikernel deployment
+
+**Total:** ~€4/month for production unikernel deployment
+
+### Monitor Instance
+
+```bash
+# View instance logs (if available)
+ops instance logs homepage-unikernel -t hcloud
+
+# Check instance status
+ops instance list -t hcloud
+```
+
+### Cleanup
+
+```bash
+# Delete instance when done
+ops instance delete homepage-unikernel -t hcloud
+```
+
 ## Troubleshooting
 
 ### Build fails with "public directory not found"
