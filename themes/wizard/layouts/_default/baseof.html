@@ -19,21 +19,34 @@
         {{ $memoryGameCSS := resources.Get "css/memory-game.css" }}
         {{ $memoryGameCSS = $memoryGameCSS | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $memoryGameCSS.RelPermalink }}" integrity="{{ $memoryGameCSS.Data.Integrity }}">
+
+        <!-- Metrics Dashboard styles -->
+        {{ $metricsDashboardCSS := resources.Get "css/metrics-dashboard.css" }}
+        {{ $metricsDashboardCSS = $metricsDashboardCSS | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $metricsDashboardCSS.RelPermalink }}" integrity="{{ $metricsDashboardCSS.Data.Integrity }}">
         
         <link rel="canonical" href="{{ .Permalink }}">
         {{ range .AlternativeOutputFormats -}}
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
         {{ end -}}
 
+        <!-- Chart.js for metrics visualization -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
         <!-- Theme toggle script -->
         {{ $lightDark := resources.Get "js/light_dark.js" }}
         {{ $lightDark = $lightDark | resources.Minify | resources.Fingerprint }}
         <script src="{{ $lightDark.RelPermalink }}" integrity="{{ $lightDark.Data.Integrity }}"></script>
-        
+
         <!-- Memory Game script -->
         {{ $memoryGame := resources.Get "js/memory-game.js" }}
         {{ $memoryGame = $memoryGame | resources.Minify | resources.Fingerprint }}
         <script src="{{ $memoryGame.RelPermalink }}" integrity="{{ $memoryGame.Data.Integrity }}"></script>
+
+        <!-- Metrics Dashboard script -->
+        {{ $metricsDashboard := resources.Get "js/metrics-dashboard.js" }}
+        {{ $metricsDashboard = $metricsDashboard | resources.Minify | resources.Fingerprint }}
+        <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}"></script>
     </head>
     <body>
         <div class="container">
@@ -54,6 +67,7 @@
 
             <footer class="site-footer">
                 {{ partial "sidebar/socials.html" . }}
+                <div id="metrics-dashboard"></div>
                 <div id="memory-game"></div>
                 <button id="reset-game" class="reset-button">Reset Game</button>
                 <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }}</p>

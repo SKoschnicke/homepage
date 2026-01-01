@@ -1,7 +1,11 @@
 use hyper::{Body, Request, Response, StatusCode, header};
 use std::convert::Infallible;
 use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Instant;
 use crate::assets::{Asset, get_routes};
+use crate::metrics::Metrics;
+use crate::websocket;
 
 lazy_static::lazy_static! {
     static ref ROUTES: HashMap<&'static str, &'static Asset> = get_routes();
@@ -11,48 +15,85 @@ pub fn route_count() -> usize {
     ROUTES.len()
 }
 
-pub async fn route(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+pub async fn route(req: Request<Body>, metrics: Arc<Metrics>) -> Result<Response<Body>, Infallible> {
     let path = req.uri().path();
 
-    // Try exact match first
-    if let Some(asset) = ROUTES.get(path) {
-        return Ok(serve_asset(asset, &req, path));
+    // Check for WebSocket metrics endpoint
+    if path == "/__metrics__/ws" {
+        return match websocket::handle_websocket(req, Arc::clone(&metrics)).await {
+            Ok(response) => Ok(response),
+            Err(e) => {
+                eprintln!("WebSocket upgrade error: {}", e);
+                Ok(Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("WebSocket upgrade failed"))
+                    .unwrap())
+            }
+        };
     }
 
-    // Try with /index.html appended for directory routes
-    let with_index = if path.ends_with('/') {
-        format!("{}index.html", path)
-    } else {
-        format!("{}/index.html", path)
+    let start = Instant::now();
+    metrics.increment_connections();
+
+    let response = {
+        // Try exact match first
+        if let Some(asset) = ROUTES.get(path) {
+            serve_asset(asset, &req, path)
+        }
+        // Try with /index.html appended for directory routes
+        else if let Some(asset) = {
+            let with_index = if path.ends_with('/') {
+                format!("{}index.html", path)
+            } else {
+                format!("{}/index.html", path)
+            };
+            ROUTES.get(with_index.as_str())
+        } {
+            let with_index = if path.ends_with('/') {
+                format!("{}index.html", path)
+            } else {
+                format!("{}/index.html", path)
+            };
+            serve_asset(asset, &req, &with_index)
+        }
+        // Try removing trailing slash
+        else if path.ends_with('/') && path.len() > 1 {
+            let without_slash = &path[..path.len() - 1];
+            if let Some(asset) = ROUTES.get(without_slash) {
+                serve_asset(asset, &req, without_slash)
+            } else {
+                // 404
+                serve_404()
+            }
+        }
+        // 404
+        else {
+            serve_404()
+        }
     };
 
-    if let Some(asset) = ROUTES.get(with_index.as_str()) {
-        return Ok(serve_asset(asset, &req, &with_index));
-    }
+    metrics.record_request(start.elapsed());
+    metrics.decrement_connections();
 
-    // Try removing trailing slash and adding index.html
-    if path.ends_with('/') && path.len() > 1 {
-        let without_slash = &path[..path.len() - 1];
-        if let Some(asset) = ROUTES.get(without_slash) {
-            return Ok(serve_asset(asset, &req, without_slash));
-        }
-    }
+    Ok(response)
+}
 
-    // 404 - check if we have a custom 404.html
+fn serve_404() -> Response<Body> {
+    // Check if we have a custom 404.html
     if let Some(not_found_asset) = ROUTES.get("/404.html") {
-        return Ok(Response::builder()
+        Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header(header::CONTENT_TYPE, not_found_asset.content_type)
             .body(Body::from(not_found_asset.content_raw))
-            .unwrap());
+            .unwrap()
+    } else {
+        // Default 404
+        Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
+            .body(Body::from("404 Not Found"))
+            .unwrap()
     }
-
-    // Default 404
-    Ok(Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .header(header::CONTENT_TYPE, "text/plain; charset=utf-8")
-        .body(Body::from("404 Not Found"))
-        .unwrap())
 }
 
 fn serve_asset(asset: &Asset, req: &Request<Body>, path: &str) -> Response<Body> {
