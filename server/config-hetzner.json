@@ -4,6 +4,11 @@
     "BucketName": "homepage-unikernel"
   },
   "Env": {
-    "PORT": "80"
+    "DOMAIN": "sven.guru",
+    "ACME_CONTACT_EMAIL": "s.koschnicke@gfxpro.com",
+    "S3_ENDPOINT": "https://fsn1.your-objectstorage.com",
+    "S3_BUCKET": "homepage-certs",
+    "S3_ACCESS_KEY": "your-access-key",
+    "S3_SECRET_KEY": "your-secret-key"
   }
 }

@@ -1,0 +1,29 @@
+[tasks.dev]
+description = "Build and run server locally with self-signed cert"
+run = """
+#!/usr/bin/env bash
+set -e
+
+echo "Building release binary..."
+cargo build --release
+
+echo "Setting capabilities..."
+sudo setcap 'cap_net_bind_service=+ep' target/release/static-server
+
+echo "Starting server..."
+DOMAIN=localhost \
+LOCAL_DEV=true \
+ACME_CONTACT_EMAIL=s.koschnicke@gfxpro.com \
+./target/release/static-server
+"""
+
+[tasks.build]
+description = "Build release binary and set capabilities"
+run = """
+#!/usr/bin/env bash
+set -e
+
+cargo build --release
+sudo setcap 'cap_net_bind_service=+ep' target/release/static-server
+echo "✓ Binary built and capabilities set"
+"""

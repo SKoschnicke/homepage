@@ -23,9 +23,14 @@ Hugo builds site → build.rs embeds assets → Rust binary → unikernel image
 **Key components:**
 
 - `build.rs` - Walks `../public/`, compresses text assets, generates `assets.rs` with all routes
-- `main.rs` - hyper HTTP server with mimalloc allocator
+- `main.rs` - Dual HTTP/HTTPS server with TLS, certificate management
 - `router.rs` - Content negotiation, ETag handling, cache headers
-- `assets.rs` - Generated file with 89 embedded routes (HTML, CSS, JS, images, XML)
+- `assets.rs` - Generated file with 94 embedded routes (HTML, CSS, JS, images, XML)
+- `acme.rs` - Let's Encrypt ACME client, HTTP-01 challenge, self-signed cert generation
+- `config.rs` - Environment variable configuration parsing and validation
+- `s3_storage.rs` - Certificate persistence in S3-compatible storage
+- `metrics.rs` - Real-time metrics collection and WebSocket streaming
+- `websocket.rs` - WebSocket protocol handling for live metrics
 
 ## Build & Run
 
@@ -42,12 +47,23 @@ Hugo builds site → build.rs embeds assets → Rust binary → unikernel image
 cd ..
 hugo --minify
 
-# Run the server
+# Run the server with mise (recommended)
 cd server
-cargo run --release
+mise run dev
 ```
 
-Server starts on `http://localhost:3000` (or set `PORT` env var).
+This will:
+1. Build the release binary
+2. Set Linux capabilities to bind to ports 80/443
+3. Generate a self-signed certificate for localhost
+4. Start the server on `http://localhost:80` and `https://localhost:443`
+
+Server will display a certificate warning in the browser - accept it to proceed.
+
+**Alternative (manual):**
+```bash
+DOMAIN=localhost LOCAL_DEV=true ACME_CONTACT_EMAIL=your@email.com cargo run --release
+```
 
 ### Production Build
 
@@ -143,27 +159,27 @@ const ASSET_INDEX_HTML: Asset = Asset {
 
 ## Configuration
 
-### Server Port
-
-Set `PORT` environment variable (default: 3000):
-
-```bash
-PORT=8080 cargo run --release
-```
+The server uses environment variables for configuration (see "HTTPS with Let's Encrypt" section above for details).
 
 ### Unikernel Config
 
-Edit `config.json`:
+Edit `config.json` for local testing or `config-hetzner.json` for production:
 
 ```json
 {
-  "Boot": "./target/release/static-server",
+  "Env": {
+    "DOMAIN": "localhost",
+    "LOCAL_DEV": "true",
+    "ACME_CONTACT_EMAIL": "your@email.com"
+  },
   "RunConfig": {
     "Memory": "256m",
-    "Ports": ["3000"]
+    "Ports": ["80", "443"]
   }
 }
 ```
+
+**Note:** Ports are now hardcoded to 80 (HTTP) and 443 (HTTPS). The `PORT` environment variable is no longer used.
 
 Adjust memory based on site size. Current site (~6.4MB) + compression (~12MB embedded) + runtime overhead = 256MB is plenty.
 
@@ -197,9 +213,23 @@ To update the site content:
 The server logs to stdout:
 
 ```
-Static server running on http://0.0.0.0:3000
-Serving 89 routes
+Configuration loaded:
+  Domain: sven.guru
+  Local Dev Mode: false
+  ACME Contact: s.koschnicke@gfxpro.com
+  ACME Staging: false
+  S3 Bucket: homepage-certs
+
+Obtaining TLS certificate...
+Certificate is valid (> 30 days remaining), using cached cert
+
+Server running:
+  HTTP:  http://0.0.0.0:80 (redirects to HTTPS)
+  HTTPS: https://sven.guru:443
+  Routes: 94
 ```
+
+**Real-time metrics:** Access `https://yourdomain/__metrics__` for live WebSocket metrics dashboard.
 
 For production monitoring, pipe to your logging system:
 
@@ -237,10 +267,18 @@ server/
 ### Dependencies
 
 **Runtime:**
-- `hyper` - HTTP server (direct, no framework overhead)
+- `hyper` - HTTP/HTTPS server (direct, no framework overhead)
 - `tokio` - Async runtime
 - `lazy_static` - Static route map initialization
 - `mimalloc` - High-performance allocator
+- `rustls` - TLS implementation
+- `tokio-rustls` - Async TLS integration
+- `instant-acme` - ACME client for Let's Encrypt
+- `aws-sdk-s3` - S3 client for certificate storage
+- `rcgen` - Self-signed certificate generation
+- `x509-parser` - Certificate expiry checking
+- `tokio-tungstenite` - WebSocket implementation
+- `parking_lot` - High-performance locks
 
 **Build-time:**
 - `mime_guess` - Content-Type detection
@@ -401,19 +439,93 @@ A Record: sven.guru → <server-ip>
 
 Get the IP from `ops instance list -t hetzner -c config-hetzner.json`
 
-### HTTPS / TLS
+### HTTPS with Let's Encrypt
 
-For HTTPS, you have two options:
+The server includes **automatic HTTPS** with Let's Encrypt certificate generation and renewal.
 
-**Option 1: Add Cloudflare in front (recommended)**
-- Point DNS to Cloudflare
-- Enable Cloudflare proxy
-- Cloudflare provides free HTTPS
+**Features:**
+- Automatic certificate acquisition via ACME HTTP-01 challenge
+- Certificate persistence in S3-compatible storage (Hetzner Object Storage)
+- Automatic certificate validation on startup (only renews if < 30 days remaining)
+- Dual HTTP/HTTPS listeners (port 80 redirects to 443)
+- Local development mode with self-signed certificates
 
-**Option 2: Hetzner Load Balancer**
-- Create a Load Balancer with Let's Encrypt certificate
-- Point load balancer to your unikernel instance
-- Adds ~€5/month cost
+#### Production Setup
+
+**1. Create S3 Bucket for Certificate Storage**
+
+In [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/projects):
+- Create a new bucket (e.g., "homepage-certs")
+- Generate Access Keys (public + secret)
+- Note the endpoint URL (e.g., `https://fsn1.your-objectstorage.com`)
+
+**2. Update config-hetzner.json**
+
+```json
+{
+  "Uefi": true,
+  "CloudConfig": {
+    "Platform": "hetzner",
+    "Zone": "fsn1",
+    "BucketName": "homepage-unikernel"
+  },
+  "Env": {
+    "DOMAIN": "sven.guru",
+    "ACME_CONTACT_EMAIL": "s.koschnicke@gfxpro.com",
+    "S3_ENDPOINT": "https://fsn1.your-objectstorage.com",
+    "S3_BUCKET": "homepage-certs",
+    "S3_ACCESS_KEY": "your-access-key",
+    "S3_SECRET_KEY": "your-secret-key"
+  }
+}
+```
+
+**Environment Variables:**
+- `DOMAIN` - Domain for TLS certificate (e.g., sven.guru) [required]
+- `ACME_CONTACT_EMAIL` - Let's Encrypt contact email [required]
+- `ACME_STAGING` - Use Let's Encrypt staging (default: false)
+- `S3_ENDPOINT` - S3-compatible endpoint URL [required]
+- `S3_BUCKET` - S3 bucket name for certificates [required]
+- `S3_ACCESS_KEY` - S3 access key [required]
+- `S3_SECRET_KEY` - S3 secret key [required]
+- `S3_REGION` - S3 region (default: us-east-1)
+- `LOCAL_DEV` - Use self-signed cert for local testing (default: false)
+
+**3. Deploy**
+
+The server will automatically:
+1. Check S3 for existing certificate
+2. If missing or expiring soon (< 30 days), request new certificate from Let's Encrypt
+3. Complete ACME HTTP-01 challenge on port 80
+4. Save certificate to S3 for future use
+5. Start HTTP (port 80, redirects) and HTTPS (port 443) servers
+
+**Important:** DNS must point to your server before deployment for ACME validation to succeed.
+
+#### Certificate Renewal
+
+Certificates are stored in S3 at `certs/{domain}/cert.pem` and `certs/{domain}/privkey.pem`.
+
+On each server restart:
+- Checks certificate expiry
+- If > 30 days remaining: Uses cached certificate (instant startup)
+- If < 30 days remaining: Requests new certificate from Let's Encrypt
+
+**No manual renewal needed** - just restart the server monthly or when deploying updates.
+
+#### Local Development Mode
+
+For local testing without DNS/S3 setup:
+
+```bash
+# Using mise
+mise run dev
+
+# Or manually
+DOMAIN=localhost LOCAL_DEV=true ACME_CONTACT_EMAIL=your@email.com ./target/release/static-server
+```
+
+This generates a self-signed certificate (bypasses Let's Encrypt and S3).
 
 ### Cost
 
@@ -478,13 +590,44 @@ This is expected. The binary embeds:
 
 Total: ~13-15MB stripped, ~20MB with debug symbols.
 
-### Port 3000 already in use
+### Port 80 or 443 already in use
 
-Change port:
+Another service is using the HTTP/HTTPS ports. Stop it first:
 
 ```bash
-PORT=8080 cargo run --release
+# Find what's using the port
+sudo lsof -i :80
+sudo lsof -i :443
+
+# Stop the service (example: nginx)
+sudo systemctl stop nginx
 ```
+
+### Certificate acquisition fails
+
+**Error: "DNS record does not point to this server"**
+- Verify DNS: `dig yourdomain.com +short`
+- Ensure it points to your server's IP address
+- Wait for DNS propagation (can take up to 48 hours)
+
+**Error: "Port 80 is blocked"**
+- Check firewall: `sudo ufw status` or `iptables -L`
+- Ensure port 80 is open for inbound connections
+- Check if another service is using port 80
+
+**Error: "S3 bucket doesn't exist or is inaccessible"**
+- Verify S3_BUCKET name matches actual bucket
+- Check S3_ACCESS_KEY and S3_SECRET_KEY are correct
+- Verify S3_ENDPOINT URL is correct
+
+**Error: "Let's Encrypt rate limit reached"**
+- Use staging environment: Set `ACME_STAGING=true`
+- Wait for rate limit to reset (usually 1 week)
+- Check existing certificates in S3 - they're cached to avoid this
+
+### WebSocket connection fails
+
+Ensure `.with_upgrades()` is called on the hyper connection handler (already implemented). If metrics dashboard shows "Connecting..." indefinitely, check browser console for WebSocket errors.
 
 ## License
 

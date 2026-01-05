@@ -1,8 +1,12 @@
 {
   "Args": [],
   "Env": {
-    "PORT": "3000"
+    "DOMAIN": "localhost",
+    "LOCAL_DEV": "true",
+    "ACME_CONTACT_EMAIL": "s.koschnicke@gfxpro.com",
+    "ACME_STAGING": "true"
   },
+  "Comment": "LOCAL_DEV mode uses self-signed certificates. S3 env vars are optional in this mode. For production, set LOCAL_DEV=false and configure S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY",
   "Dirs": [],
   "Files": [],
   "MapDirs": {},
@@ -12,6 +16,6 @@
   "NameServer": "8.8.8.8",
   "RunConfig": {
     "Memory": "256m",
-    "Ports": ["3000"]
+    "Ports": ["80", "443"]
   }
 }
