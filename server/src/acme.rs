@@ -52,37 +52,61 @@ pub async fn get_or_create_certificate(
     bucket: &str,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error>> {
     println!("Checking S3 for existing certificate...");
+    println!("  Bucket: {}", bucket);
+    println!("  Domain: {}", domain);
 
     // Try to load existing certificate from S3
-    if let Ok(Some(cert_data)) = s3_storage::load_certificate(s3_client, bucket, domain).await {
-        println!("Found certificate in S3, checking expiry...");
+    match s3_storage::load_certificate(s3_client, bucket, domain).await {
+        Ok(Some(cert_data)) => {
+            println!("Found certificate in S3, checking expiry...");
 
-        // Check if certificate is still valid
-        if s3_storage::cert_is_valid(&cert_data.cert_pem, MIN_DAYS_REMAINING) {
-            println!("Certificate is valid (> {} days remaining), using cached cert", MIN_DAYS_REMAINING);
-            return build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem);
-        } else {
-            println!("Certificate expires soon (< {} days), requesting new one", MIN_DAYS_REMAINING);
+            // Check if certificate is still valid
+            if s3_storage::cert_is_valid(&cert_data.cert_pem, MIN_DAYS_REMAINING) {
+                println!("Certificate is valid (> {} days remaining), using cached cert", MIN_DAYS_REMAINING);
+                return build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem);
+            } else {
+                println!("Certificate expires soon (< {} days), requesting new one", MIN_DAYS_REMAINING);
+            }
         }
-    } else {
-        println!("No certificate found in S3, requesting new one");
+        Ok(None) => {
+            println!("No certificate found in S3, requesting new one");
+        }
+        Err(e) => {
+            eprintln!("Error checking S3 for certificate: {}", e);
+            eprintln!("Will attempt to request new certificate from Let's Encrypt");
+        }
     }
 
     // Request new certificate
     println!("Requesting new certificate from Let's Encrypt{}...",
         if staging { " (STAGING)" } else { "" });
 
-    let cert_data = request_new_certificate(domain, email, staging).await?;
+    let cert_data = match request_new_certificate(domain, email, staging).await {
+        Ok(data) => {
+            println!("Certificate obtained successfully from Let's Encrypt");
+            data
+        }
+        Err(e) => {
+            eprintln!("Failed to obtain certificate from Let's Encrypt: {}", e);
+            return Err(e);
+        }
+    };
 
     // Save to S3
     println!("Saving certificate to S3...");
-    s3_storage::save_certificate(
+    match s3_storage::save_certificate(
         s3_client,
         bucket,
         domain,
         &cert_data.cert_pem,
         &cert_data.privkey_pem,
-    ).await?;
+    ).await {
+        Ok(_) => println!("Certificate saved to S3 successfully"),
+        Err(e) => {
+            eprintln!("Warning: Failed to save certificate to S3: {}", e);
+            eprintln!("Continuing with certificate anyway...");
+        }
+    }
 
     // Build TLS config
     build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem)

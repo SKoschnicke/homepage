@@ -19,7 +19,21 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
+    // Set up panic hook to log panics before crashing
+    std::panic::set_hook(Box::new(|panic_info| {
+        eprintln!("\n!!! PANIC !!!");
+        eprintln!("The application panicked: {}", panic_info);
+        if let Some(location) = panic_info.location() {
+            eprintln!("Panic occurred in file '{}' at line {}", location.file(), location.line());
+        }
+        eprintln!("This is a bug - the application should handle errors gracefully.");
+        eprintln!("!!! END PANIC !!!\n");
+    }));
+
+    println!("=== Static Server Starting ===");
+
     // 1. Parse environment config
+    println!("\nLoading configuration from environment...");
     let config = match config::Config::load_from_env() {
         Ok(cfg) => cfg,
         Err(e) => {
@@ -50,16 +64,39 @@ async fn main() {
         // Local development: Use self-signed certificate
         println!("\n[LOCAL DEV MODE] Generating self-signed certificate...");
         match acme::generate_self_signed_certificate(&config.domain).await {
-            Ok(cfg) => cfg,
+            Ok(cfg) => {
+                println!("Self-signed certificate generated successfully");
+                cfg
+            }
             Err(e) => {
                 eprintln!("\nFATAL: Failed to generate self-signed certificate: {}", e);
+                eprintln!("Error details: {:?}", e);
                 std::process::exit(1);
             }
         }
     } else {
         // Production: Use Let's Encrypt with S3 storage
         println!("\nInitializing S3 client...");
-        let s3_client = s3_storage::init_s3_client(&config).await;
+        println!("  S3 Endpoint: {}", config.s3_endpoint);
+        println!("  S3 Bucket: {}", config.s3_bucket);
+        println!("  S3 Region: {}", config.s3_region);
+
+        let s3_client = match s3_storage::init_s3_client(&config).await {
+            Ok(client) => {
+                println!("S3 client initialized successfully");
+                client
+            }
+            Err(e) => {
+                eprintln!("\nFATAL: Failed to initialize S3 client: {}", e);
+                eprintln!("Error details: {:?}", e);
+                eprintln!("\nCheck your S3 configuration:");
+                eprintln!("  S3_ENDPOINT: {}", config.s3_endpoint);
+                eprintln!("  S3_BUCKET: {}", config.s3_bucket);
+                eprintln!("  S3_ACCESS_KEY: {}", if config.s3_access_key.is_empty() { "NOT SET" } else { "***" });
+                eprintln!("  S3_SECRET_KEY: {}", if config.s3_secret_key.is_empty() { "NOT SET" } else { "***" });
+                std::process::exit(1);
+            }
+        };
 
         println!("\nObtaining TLS certificate...");
         match acme::get_or_create_certificate(
@@ -71,14 +108,19 @@ async fn main() {
         )
         .await
         {
-            Ok(cfg) => cfg,
+            Ok(cfg) => {
+                println!("TLS certificate obtained successfully");
+                cfg
+            }
             Err(e) => {
                 eprintln!("\nFATAL: Failed to obtain TLS certificate: {}", e);
+                eprintln!("Error details: {:?}", e);
                 eprintln!("\nPossible causes:");
                 eprintln!("  1. DNS record for {} does not point to this server", config.domain);
                 eprintln!("  2. Port 80 is blocked by firewall or already in use");
                 eprintln!("  3. S3 bucket '{}' doesn't exist or is inaccessible", config.s3_bucket);
-                eprintln!("  4. Let's Encrypt rate limit reached (try ACME_STAGING=true)");
+                eprintln!("  4. S3 credentials are invalid");
+                eprintln!("  5. Let's Encrypt rate limit reached (try ACME_STAGING=true)");
                 eprintln!("\nVerify DNS with: dig {} +short", config.domain);
                 std::process::exit(1);
             }
@@ -86,18 +128,24 @@ async fn main() {
     };
 
     // 4. Initialize metrics
+    println!("\nInitializing metrics...");
     let metrics = metrics::Metrics::new();
+    println!("Metrics initialized");
 
     // 5. Start HTTP server (port 80) - redirects to HTTPS
+    println!("\nStarting HTTP redirect server on port 80...");
     let http_metrics = Arc::clone(&metrics);
     let http_domain = config.domain.clone();
     let http_server = tokio::spawn(async move {
+        println!("HTTP server task started");
         start_http_redirect_server(http_metrics, http_domain).await
     });
 
     // 6. Start HTTPS server (port 443) - main content
+    println!("Starting HTTPS server on port 443...");
     let https_metrics = Arc::clone(&metrics);
     let https_server = tokio::spawn(async move {
+        println!("HTTPS server task started");
         start_https_server(tls_config, https_metrics).await
     });
 

@@ -12,7 +12,8 @@ pub struct CertificateData {
     pub privkey_pem: String,
 }
 
-pub async fn init_s3_client(config: &Config) -> Client {
+pub async fn init_s3_client(config: &Config) -> Result<Client, Box<dyn std::error::Error>> {
+    println!("Creating S3 credentials...");
     let credentials = Credentials::new(
         &config.s3_access_key,
         &config.s3_secret_key,
@@ -21,15 +22,31 @@ pub async fn init_s3_client(config: &Config) -> Client {
         "static"
     );
 
+    println!("Setting S3 region: {}", config.s3_region);
     let region = Region::new(config.s3_region.clone());
 
+    println!("Building S3 config with endpoint: {}", config.s3_endpoint);
     let s3_config = aws_sdk_s3::Config::builder()
         .credentials_provider(credentials)
         .region(region)
         .endpoint_url(&config.s3_endpoint)
         .build();
 
-    Client::from_conf(s3_config)
+    println!("Creating S3 client...");
+    let client = Client::from_conf(s3_config);
+
+    // Test connectivity with a simple list_buckets call
+    println!("Testing S3 connectivity...");
+    match client.list_buckets().send().await {
+        Ok(_) => {
+            println!("S3 connectivity test passed");
+            Ok(client)
+        }
+        Err(e) => {
+            eprintln!("S3 connectivity test failed: {:?}", e);
+            Err(format!("Failed to connect to S3: {}", e).into())
+        }
+    }
 }
 
 pub async fn load_certificate(

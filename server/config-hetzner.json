@@ -1,14 +1,19 @@
 {
   "Uefi": true,
   "CloudConfig": {
-    "BucketName": "homepage-unikernel"
+    "BucketName": "homepage"
+  },
+  "RunConfig": {
+    "Memory": "256m",
+    "Ports": ["80", "443"]
   },
   "Env": {
     "DOMAIN": "sven.guru",
     "ACME_CONTACT_EMAIL": "s.koschnicke@gfxpro.com",
-    "S3_ENDPOINT": "https://fsn1.your-objectstorage.com",
-    "S3_BUCKET": "homepage-certs",
-    "S3_ACCESS_KEY": "your-access-key",
-    "S3_SECRET_KEY": "your-secret-key"
+    "ACME_STAGING": "true",
+    "S3_ENDPOINT": "https://hel1.your-objectstorage.com",
+    "S3_BUCKET": "homepage",
+    "S3_ACCESS_KEY": "L3PS2MIBP4VS8OZMBEE4",
+    "S3_SECRET_KEY": "8kPeZnNliu8cpK1kDaQHRoM1hacRnjwrwZlHK7Aj"
   }
 }
