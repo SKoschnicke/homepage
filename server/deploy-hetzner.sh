@@ -112,17 +112,37 @@ cleanup_image() {
     fi
 }
 
+# Inject S3 credentials into config
+inject_s3_credentials() {
+    echo_info "Injecting S3 credentials into config..."
+
+    # Create temporary config with real credentials
+    TEMP_CONFIG=$(mktemp /tmp/config-hetzner-XXXXXX.json)
+
+    # Replace placeholder values with real credentials
+    cat $CONFIG | \
+        sed "s|PLACEHOLDER_WILL_BE_SET_BY_DEPLOY_SCRIPT|${OBJECT_STORAGE_KEY}|" | \
+        jq --arg secret "$OBJECT_STORAGE_SECRET" \
+           --arg endpoint "https://$OBJECT_STORAGE_DOMAIN" \
+           '.Env.S3_SECRET_KEY = $secret | .Env.S3_ENDPOINT = $endpoint' \
+        > "$TEMP_CONFIG"
+
+    CONFIG="$TEMP_CONFIG"
+    echo_info "Using temporary config: $CONFIG"
+}
+
 # Create new unikernel image
 create_image() {
     echo_info "Creating unikernel image..."
-    $OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME"
+    $OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME" 2>&1 | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed)" || true
+    echo_info "Image creation complete"
 }
 
 # Create new instance
 create_instance() {
     echo_info "Creating instance..."
-    local output=$($OPS instance create "$IMAGE_NAME" -t hetzner -c $CONFIG)
-    echo "$output"
+    local output=$($OPS instance create "$IMAGE_NAME" -t hetzner -c $CONFIG 2>&1 | grep -v "^\[")
+    echo "$output" | grep -E "(created|error|Error|failed|Failed)"
 
     # Extract instance name from output
     INSTANCE_NAME=$(echo "$output" | grep "created..." | sed "s/hetzner instance '\(.*\)' created.../\1/")
@@ -134,7 +154,15 @@ create_instance() {
     echo_info "Instance created: $INSTANCE_NAME"
 }
 
-# Get instance IP
+# Start the instance
+start_instance() {
+    echo_info "Starting instance..."
+    $OPS instance start "$INSTANCE_NAME" -t hetzner -c $CONFIG 2>&1 | grep -v "^\[" | grep -E "(started|error|Error|failed|Failed)" || true
+    echo_info "Instance start command sent"
+    sleep 5  # Give it a moment to actually start
+}
+
+# Get instance IP and verify instance is running
 get_instance_ip() {
     echo_info "Getting instance IP..."
 
@@ -143,12 +171,18 @@ get_instance_ip() {
     local max_attempts=30
 
     while [ $attempt -lt $max_attempts ]; do
-        IP=$($OPS instance list -t hetzner -c $CONFIG | grep "$INSTANCE_NAME" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        local instance_info=$($OPS instance list -t hetzner -c $CONFIG | grep "$INSTANCE_NAME")
+        IP=$(echo "$instance_info" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 
         # Check if we got a valid IP
         if [ -n "$IP" ]; then
             echo_info "Instance IP: $IP"
-            return 0
+
+            # Verify instance appears in list (basic health check)
+            if echo "$instance_info" | grep -q "$INSTANCE_NAME"; then
+                echo_info "Instance is created and listed"
+                return 0
+            fi
         fi
 
         attempt=$((attempt + 1))
@@ -157,6 +191,8 @@ get_instance_ip() {
     done
 
     echo_error "Failed to get instance IP after ${max_attempts} attempts"
+    echo_error "Instance may have failed to start. Check Hetzner Cloud Console for details."
+    exit 1
 }
 
 # Update or create DNS record via Hetzner Cloud API
@@ -240,6 +276,7 @@ wait_for_server() {
     local attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
+        # Check if server responds (accept any HTTP response including 404)
         if curl -s -I --connect-timeout 2 "http://$IP" >/dev/null 2>&1; then
             echo_info "Server is responding!"
             return 0
@@ -251,6 +288,8 @@ wait_for_server() {
     done
 
     echo_error "Server failed to start after 2 minutes"
+    echo_error "Instance created but not responding on port 80. Check Hetzner Cloud Console for details."
+    exit 1
 }
 
 # Main deployment flow
@@ -260,14 +299,21 @@ main() {
 
     load_secrets
     get_dns_zone_id
+    inject_s3_credentials
     cleanup_instances
     cleanup_image
     create_image
     create_instance
+    start_instance
     get_instance_ip
     update_dns
     wait_for_dns
     wait_for_server
+
+    # Cleanup temp config
+    if [ -f "$TEMP_CONFIG" ]; then
+        rm -f "$TEMP_CONFIG"
+    fi
 
     echo ""
     echo_info "Deployment complete!"

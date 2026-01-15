@@ -18,7 +18,7 @@ const MIN_DAYS_REMAINING: u64 = 30;
 
 pub async fn generate_self_signed_certificate(
     domain: &str,
-) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error>> {
+) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Generating self-signed certificate for local development...");
 
     // Generate self-signed certificate using rcgen
@@ -50,7 +50,7 @@ pub async fn get_or_create_certificate(
     staging: bool,
     s3_client: &S3Client,
     bucket: &str,
-) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error>> {
+) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Checking S3 for existing certificate...");
     println!("  Bucket: {}", bucket);
     println!("  Domain: {}", domain);
@@ -116,7 +116,7 @@ async fn request_new_certificate(
     domain: &str,
     email: &str,
     staging: bool,
-) -> Result<CertificateData, Box<dyn std::error::Error>> {
+) -> Result<CertificateData, Box<dyn std::error::Error + Send + Sync>> {
     // Choose ACME directory (staging or production)
     let url = if staging {
         LetsEncrypt::Staging.url()
@@ -231,19 +231,36 @@ async fn request_new_certificate(
         challenge_server.abort();
     }
 
-    // Generate private key
+    // Generate private key and CSR
     println!("Generating private key...");
-    let private_key = rcgen::generate_simple_self_signed(vec![domain.to_string()])?;
-    let private_key_der = private_key.get_key_pair().serialize_der();
+
+    // Create certificate params with the correct domain
+    let mut params = rcgen::CertificateParams::new(vec![domain.to_string()]);
+    params.distinguished_name = rcgen::DistinguishedName::new();
+    params.distinguished_name.push(
+        rcgen::DnType::CommonName,
+        domain.to_string(),
+    );
+
+    // Generate key pair
+    let key_pair = rcgen::KeyPair::generate(&rcgen::PKCS_ECDSA_P256_SHA256)?;
+    let key_pair_der = key_pair.serialize_der();
+
+    // Set the key pair in params before creating certificate
+    params.key_pair = Some(key_pair);
+
+    // Generate certificate with the configured params
+    let cert = rcgen::Certificate::from_params(params)?;
+
     use base64::Engine;
     let private_key_pem = format!(
         "-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----\n",
-        base64::engine::general_purpose::STANDARD.encode(&private_key_der)
+        base64::engine::general_purpose::STANDARD.encode(&key_pair_der)
     );
 
-    // Finalize order
+    // Finalize order with properly configured CSR
     println!("Finalizing certificate order...");
-    let csr_der = private_key.serialize_request_der()?;
+    let csr_der = cert.serialize_request_der()?;
     order.finalize(&csr_der).await?;
 
     // Download certificate
@@ -320,7 +337,7 @@ async fn handle_challenge_request(
 fn build_tls_config(
     cert_pem: &str,
     privkey_pem: &str,
-) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error>> {
+) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     // Parse certificates
     let mut cert_cursor = Cursor::new(cert_pem.as_bytes());
     let cert_chain: Vec<Certificate> = rustls_pemfile::certs(&mut cert_cursor)?

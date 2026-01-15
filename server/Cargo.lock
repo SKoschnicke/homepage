@@ -149,6 +149,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a88aab2464f1f25453baa7a07c84c5b7684e274054ba06817f382357f77a288"
 dependencies = [
  "aws-lc-sys",
+ "untrusted 0.7.1",
  "zeroize",
 ]
 
@@ -1914,6 +1915,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c665f33d38cea657d9614f766881e4d510e0eda4239891eea56b4cadcf01801b"
 dependencies = [
  "aws-lc-rs",
+ "log",
  "once_cell",
  "ring 0.17.14",
  "rustls-pki-types",
@@ -2248,6 +2250,7 @@ name = "static-server"
 version = "0.1.0"
 dependencies = [
  "aws-config",
+ "aws-lc-rs",
  "aws-sdk-s3",
  "base64 0.21.7",
  "base64ct",
@@ -2263,6 +2266,7 @@ dependencies = [
  "parking_lot",
  "rcgen",
  "rustls 0.19.1",
+ "rustls 0.23.36",
  "rustls-pemfile",
  "serde",
  "serde_json",

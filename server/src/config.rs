@@ -66,8 +66,8 @@ impl Config {
             return Err("Invalid DOMAIN format".to_string());
         }
 
-        // Validate email format (basic check)
-        if !acme_contact.contains('@') || !acme_contact.contains('.') {
+        // Validate email format (basic check) - skip in local dev mode
+        if !local_dev && !acme_contact.contains('@') {
             return Err("Invalid ACME_CONTACT_EMAIL format".to_string());
         }
 

@@ -1,10 +1,14 @@
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response, Server, StatusCode};
 use std::convert::Infallible;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
+
+// Import rustls 0.23 as rustls23 for AWS SDK crypto provider
+extern crate rustls23;
 
 mod acme;
 mod assets;
@@ -17,6 +21,15 @@ mod websocket;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+// Macro to ensure output is flushed before potentially crashing operations
+macro_rules! debug_checkpoint {
+    ($msg:expr) => {
+        eprintln!("[DEBUG CHECKPOINT] {}", $msg);
+        let _ = std::io::stderr().flush();
+        let _ = std::io::stdout().flush();
+    };
+}
+
 #[tokio::main]
 async fn main() {
     // Set up panic hook to log panics before crashing
@@ -28,227 +41,301 @@ async fn main() {
         }
         eprintln!("This is a bug - the application should handle errors gracefully.");
         eprintln!("!!! END PANIC !!!\n");
+        let _ = std::io::stderr().flush();
     }));
 
+    // Install default crypto provider for rustls 0.23 (required for AWS SDK)
+    // This must be done before any rustls 0.23 operations (AWS SDK uses rustls 0.23)
+    // Note: We use rustls23 (0.23) for AWS SDK, rustls (0.19) for our own TLS
+    let _ = rustls23::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .map_err(|e| {
+            eprintln!("Warning: Failed to install default crypto provider: {:?}", e);
+            eprintln!("This is usually OK if already installed by another part of the application");
+        });
+
+    debug_checkpoint!("Application starting");
     println!("=== Static Server Starting ===");
+    let _ = std::io::stdout().flush();
 
-    // 1. Parse environment config
-    println!("\nLoading configuration from environment...");
-    let config = match config::Config::load_from_env() {
-        Ok(cfg) => cfg,
-        Err(e) => {
-            eprintln!("FATAL: Configuration error: {}", e);
-            eprintln!("\nRequired environment variables:");
-            eprintln!("  DOMAIN - Domain for TLS certificate (e.g., sven.guru)");
-            eprintln!("  ACME_CONTACT_EMAIL - Let's Encrypt contact email");
-            eprintln!("  S3_ENDPOINT - S3-compatible endpoint (e.g., https://fsn1.your-objectstorage.com)");
-            eprintln!("  S3_BUCKET - S3 bucket name for certificates");
-            eprintln!("  S3_ACCESS_KEY - S3 access key");
-            eprintln!("  S3_SECRET_KEY - S3 secret key");
-            eprintln!("\nOptional:");
-            eprintln!("  ACME_STAGING - Set to 'true' to use Let's Encrypt staging (default: false)");
-            eprintln!("  S3_REGION - S3 region (default: us-east-1)");
-            std::process::exit(1);
-        }
-    };
+    // Check if HTTPS is enabled via environment
+    let https_enabled = std::env::var("ENABLE_HTTPS").unwrap_or_default() == "true";
 
-    println!("Configuration loaded:");
-    println!("  Domain: {}", config.domain);
-    println!("  Local Dev Mode: {}", config.local_dev);
-    println!("  ACME Contact: {}", config.acme_contact);
-    println!("  ACME Staging: {}", config.acme_staging);
-    println!("  S3 Bucket: {}", config.s3_bucket);
+    if https_enabled {
+        println!("\n[HTTPS MODE ENABLED]");
+        println!("Attempting to start HTTPS server...");
 
-    // 2. Get TLS certificate (local dev mode or production)
-    let tls_config = if config.local_dev {
-        // Local development: Use self-signed certificate
-        println!("\n[LOCAL DEV MODE] Generating self-signed certificate...");
-        match acme::generate_self_signed_certificate(&config.domain).await {
-            Ok(cfg) => {
-                println!("Self-signed certificate generated successfully");
-                cfg
+        match run_https_server().await {
+            Ok(_) => {
+                println!("HTTPS server exited normally");
             }
             Err(e) => {
-                eprintln!("\nFATAL: Failed to generate self-signed certificate: {}", e);
-                eprintln!("Error details: {:?}", e);
-                std::process::exit(1);
+                eprintln!("HTTPS server failed: {}", e);
+                eprintln!("Falling back to simple HTTP server...");
+                if let Err(e) = run_simple_server().await {
+                    eprintln!("Simple HTTP server also failed: {}", e);
+                    std::process::exit(1);
+                }
             }
         }
     } else {
-        // Production: Use Let's Encrypt with S3 storage
-        println!("\nInitializing S3 client...");
-        println!("  S3 Endpoint: {}", config.s3_endpoint);
-        println!("  S3 Bucket: {}", config.s3_bucket);
-        println!("  S3 Region: {}", config.s3_region);
+        println!("\n[SIMPLE HTTP MODE]");
+        println!("HTTPS is disabled. Set ENABLE_HTTPS=true to enable.");
 
-        let s3_client = match s3_storage::init_s3_client(&config).await {
-            Ok(client) => {
-                println!("S3 client initialized successfully");
-                client
-            }
-            Err(e) => {
-                eprintln!("\nFATAL: Failed to initialize S3 client: {}", e);
-                eprintln!("Error details: {:?}", e);
-                eprintln!("\nCheck your S3 configuration:");
-                eprintln!("  S3_ENDPOINT: {}", config.s3_endpoint);
-                eprintln!("  S3_BUCKET: {}", config.s3_bucket);
-                eprintln!("  S3_ACCESS_KEY: {}", if config.s3_access_key.is_empty() { "NOT SET" } else { "***" });
-                eprintln!("  S3_SECRET_KEY: {}", if config.s3_secret_key.is_empty() { "NOT SET" } else { "***" });
-                std::process::exit(1);
-            }
-        };
-
-        println!("\nObtaining TLS certificate...");
-        match acme::get_or_create_certificate(
-            &config.domain,
-            &config.acme_contact,
-            config.acme_staging,
-            &s3_client,
-            &config.s3_bucket,
-        )
-        .await
-        {
-            Ok(cfg) => {
-                println!("TLS certificate obtained successfully");
-                cfg
-            }
-            Err(e) => {
-                eprintln!("\nFATAL: Failed to obtain TLS certificate: {}", e);
-                eprintln!("Error details: {:?}", e);
-                eprintln!("\nPossible causes:");
-                eprintln!("  1. DNS record for {} does not point to this server", config.domain);
-                eprintln!("  2. Port 80 is blocked by firewall or already in use");
-                eprintln!("  3. S3 bucket '{}' doesn't exist or is inaccessible", config.s3_bucket);
-                eprintln!("  4. S3 credentials are invalid");
-                eprintln!("  5. Let's Encrypt rate limit reached (try ACME_STAGING=true)");
-                eprintln!("\nVerify DNS with: dig {} +short", config.domain);
-                std::process::exit(1);
-            }
-        }
-    };
-
-    // 4. Initialize metrics
-    println!("\nInitializing metrics...");
-    let metrics = metrics::Metrics::new();
-    println!("Metrics initialized");
-
-    // 5. Start HTTP server (port 80) - redirects to HTTPS
-    println!("\nStarting HTTP redirect server on port 80...");
-    let http_metrics = Arc::clone(&metrics);
-    let http_domain = config.domain.clone();
-    let http_server = tokio::spawn(async move {
-        println!("HTTP server task started");
-        start_http_redirect_server(http_metrics, http_domain).await
-    });
-
-    // 6. Start HTTPS server (port 443) - main content
-    println!("Starting HTTPS server on port 443...");
-    let https_metrics = Arc::clone(&metrics);
-    let https_server = tokio::spawn(async move {
-        println!("HTTPS server task started");
-        start_https_server(tls_config, https_metrics).await
-    });
-
-    // 7. Display startup message
-    println!("\n========================================");
-    println!("Server running:");
-    println!("  HTTP:  http://0.0.0.0:80 (redirects to HTTPS)");
-    println!("  HTTPS: https://{}:443", config.domain);
-    println!("  Routes: {}", router::route_count());
-    println!("========================================\n");
-
-    // 8. Run both servers concurrently
-    match tokio::try_join!(http_server, https_server) {
-        Ok(_) => {}
-        Err(e) => {
+        if let Err(e) = run_simple_server().await {
             eprintln!("Server error: {}", e);
             std::process::exit(1);
         }
     }
 }
 
-async fn start_http_redirect_server(_metrics: Arc<metrics::Metrics>, domain: String) {
-    let addr = SocketAddr::from(([0, 0, 0, 0], 80));
+async fn run_simple_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("\nStarting simple HTTP server...");
+
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(80);
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+
+    // Initialize metrics collector
+    let metrics = metrics::Metrics::new();
 
     let make_svc = make_service_fn(move |_conn| {
-        let domain = domain.clone();
+        let metrics = Arc::clone(&metrics);
         async move {
-            Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
-                let domain = domain.clone();
-                async move { handle_http_redirect(req, domain).await }
+            Ok::<_, Infallible>(service_fn(move |req| {
+                let metrics = Arc::clone(&metrics);
+                router::route(req, metrics)
             }))
         }
     });
 
-    let server = Server::bind(&addr).serve(make_svc);
+    let server = Server::bind(&addr)
+        .serve(make_svc);
 
-    println!("HTTP redirect server listening on {}", addr);
+    println!("✓ HTTP server listening on http://{}", addr);
+    println!("✓ Serving {} routes", router::route_count());
+    println!();
 
-    if let Err(e) = server.await {
-        eprintln!("HTTP server error: {}", e);
-        std::process::exit(1);
-    }
+    server.await.map_err(|e| e.into())
 }
 
-async fn handle_http_redirect(
-    req: Request<Body>,
+async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    debug_checkpoint!("Entering run_https_server");
+    println!("\n=== HTTPS Setup ===");
+    eprintln!("[DEBUG] run_https_server: Starting");
+
+    // Step 1: Load configuration
+    debug_checkpoint!("Loading configuration");
+    println!("[1/5] Loading configuration...");
+    eprintln!("[DEBUG] About to load config from env");
+
+    let config = match config::Config::load_from_env() {
+        Ok(c) => {
+            eprintln!("[DEBUG] Config loaded successfully");
+            c
+        }
+        Err(e) => {
+            eprintln!("[FATAL] Failed to load configuration: {}", e);
+            eprintln!("[DEBUG] Config error details: {}", e);
+            let _ = std::io::stderr().flush();
+            return Err(e.into());
+        }
+    };
+
+    println!("  ✓ Domain: {}", config.domain);
+    println!("  ✓ Local Dev Mode: {}", config.local_dev);
+    println!("  ✓ ACME Staging: {}", config.acme_staging);
+    println!("  ✓ S3 Bucket: {}", config.s3_bucket);
+    debug_checkpoint!("Config loaded and printed successfully");
+
+    // Step 2: Get TLS certificate
+    debug_checkpoint!("Starting TLS certificate acquisition");
+    println!("\n[2/5] Obtaining TLS certificate...");
+    eprintln!("[DEBUG] About to obtain TLS certificate");
+
+    let tls_config = if config.local_dev {
+        debug_checkpoint!("Using local dev mode - self-signed cert");
+        println!("  Local dev mode: generating self-signed certificate...");
+        eprintln!("[DEBUG] Calling generate_self_signed_certificate");
+        match acme::generate_self_signed_certificate(&config.domain).await {
+            Ok(cfg) => {
+                eprintln!("[DEBUG] Self-signed certificate generated successfully");
+                cfg
+            }
+            Err(e) => {
+                eprintln!("[FATAL] Failed to generate self-signed certificate: {}", e);
+                let _ = std::io::stderr().flush();
+                return Err(e);
+            }
+        }
+    } else {
+        debug_checkpoint!("Using production mode - S3 and Let's Encrypt");
+        println!("  Production mode: checking S3 and Let's Encrypt...");
+        eprintln!("[DEBUG] Production mode - will use S3 and Let's Encrypt");
+
+        println!("  Initializing S3 client...");
+        debug_checkpoint!("About to initialize S3 client - this may hang/crash");
+        eprintln!("[DEBUG] About to call init_s3_client");
+
+        let s3_client = match s3_storage::init_s3_client(&config).await {
+            Ok(client) => {
+                debug_checkpoint!("S3 client initialized successfully");
+                eprintln!("[DEBUG] S3 client initialized successfully");
+                client
+            }
+            Err(e) => {
+                eprintln!("[FATAL] Failed to initialize S3 client: {}", e);
+                let _ = std::io::stderr().flush();
+                return Err(e);
+            }
+        };
+        println!("  ✓ S3 client initialized");
+
+        println!("  Obtaining certificate...");
+        debug_checkpoint!("About to call get_or_create_certificate");
+        eprintln!("[DEBUG] About to call get_or_create_certificate");
+
+        match acme::get_or_create_certificate(
+            &config.domain,
+            &config.acme_contact,
+            config.acme_staging,
+            &s3_client,
+            &config.s3_bucket,
+        ).await {
+            Ok(cert) => {
+                debug_checkpoint!("Certificate obtained successfully");
+                eprintln!("[DEBUG] Certificate obtained successfully");
+                cert
+            }
+            Err(e) => {
+                eprintln!("[FATAL] Failed to obtain certificate: {}", e);
+                let _ = std::io::stderr().flush();
+                return Err(e);
+            }
+        }
+    };
+    debug_checkpoint!("TLS certificate ready");
+    println!("  ✓ TLS certificate ready");
+    eprintln!("[DEBUG] TLS config ready");
+
+    // Step 3: Initialize metrics
+    println!("\n[3/5] Initializing metrics...");
+    let metrics = metrics::Metrics::new();
+    println!("  ✓ Metrics initialized");
+
+    // Determine ports based on local dev mode
+    let (http_port, https_port) = if config.local_dev {
+        (8080, 8443)
+    } else {
+        (80, 443)
+    };
+
+    // Step 4: Start HTTP redirect server
+    println!("\n[4/5] Starting HTTP redirect server (port {})...", http_port);
+    let http_metrics = Arc::clone(&metrics);
+    let http_domain = config.domain.clone();
+    let http_server = tokio::spawn(async move {
+        start_http_redirect_server(http_metrics, http_domain, http_port).await
+    });
+    println!("  ✓ HTTP redirect server started");
+
+    // Step 5: Start HTTPS server
+    println!("\n[5/5] Starting HTTPS server (port {})...", https_port);
+    let https_metrics = Arc::clone(&metrics);
+    let https_server = tokio::spawn(async move {
+        start_https_server(tls_config, https_metrics, https_port).await
+    });
+    println!("  ✓ HTTPS server started");
+
+    println!("\n========================================");
+    println!("✓ HTTPS Server Ready!");
+    println!("  HTTP:  http://0.0.0.0:{} (→ HTTPS)", http_port);
+    println!("  HTTPS: https://{}:{}", config.domain, https_port);
+    println!("  Routes: {}", router::route_count());
+    println!("========================================\n");
+
+    // Wait for both servers
+    let (http_result, https_result) = tokio::try_join!(http_server, https_server)
+        .map_err(|e| format!("Server task failed: {}", e))?;
+
+    http_result?;
+    https_result?;
+
+    Ok(())
+}
+
+async fn start_http_redirect_server(
+    metrics: Arc<metrics::Metrics>,
     domain: String,
-) -> Result<Response<Body>, Infallible> {
-    let path = req.uri().path();
-    let query = req.uri().query().map(|q| format!("?{}", q)).unwrap_or_default();
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
-    // Allow ACME HTTP-01 challenges (for future cert renewal)
-    if path.starts_with("/.well-known/acme-challenge/") {
-        return Ok(Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body(Body::from("Not Found"))
-            .unwrap());
-    }
+    let make_svc = make_service_fn(move |_conn| {
+        let metrics = Arc::clone(&metrics);
+        let domain = domain.clone();
+        async move {
+            Ok::<_, Infallible>(service_fn(move |req: Request<Body>| {
+                let metrics = Arc::clone(&metrics);
+                let domain = domain.clone();
+                async move {
+                    let start = std::time::Instant::now();
 
-    // Redirect all other requests to HTTPS
-    let https_url = format!("https://{}{}{}", domain, path, query);
+                    // Check for ACME challenge
+                    let response = if req.uri().path().starts_with("/.well-known/acme-challenge/") {
+                        Response::builder()
+                            .status(StatusCode::NOT_FOUND)
+                            .body(Body::from("Not found"))
+                            .unwrap()
+                    } else {
+                        // Redirect to HTTPS
+                        let location = format!("https://{}{}", domain, req.uri());
+                        Response::builder()
+                            .status(StatusCode::MOVED_PERMANENTLY)
+                            .header("Location", location)
+                            .body(Body::empty())
+                            .unwrap()
+                    };
 
-    Ok(Response::builder()
-        .status(StatusCode::MOVED_PERMANENTLY)
-        .header("location", https_url)
-        .body(Body::from("Redirecting to HTTPS"))
-        .unwrap())
+                    metrics.record_request(start.elapsed());
+                    Ok::<_, Infallible>(response)
+                }
+            }))
+        }
+    });
+
+    Server::bind(&addr)
+        .serve(make_svc)
+        .await
+        .map_err(|e| e.into())
 }
 
 async fn start_https_server(
-    tls_config: Arc<rustls::ServerConfig>,
+    tls_config: Arc<tokio_rustls::rustls::ServerConfig>,
     metrics: Arc<metrics::Metrics>,
-) {
-    let addr = SocketAddr::from(([0, 0, 0, 0], 443));
-    let listener = TcpListener::bind(&addr).await.unwrap();
-
-    println!("HTTPS server listening on {}", addr);
-
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    let listener = TcpListener::bind(&addr).await?;
     let tls_acceptor = TlsAcceptor::from(tls_config);
 
     loop {
-        let (stream, _peer_addr) = match listener.accept().await {
-            Ok(conn) => conn,
-            Err(e) => {
-                eprintln!("TCP accept error: {}", e);
-                continue;
-            }
-        };
-
+        let (stream, _peer_addr) = listener.accept().await?;
         let tls_acceptor = tls_acceptor.clone();
         let metrics = Arc::clone(&metrics);
 
         tokio::spawn(async move {
-            // Wrap in TLS
             let tls_stream = match tls_acceptor.accept(stream).await {
-                Ok(stream) => stream,
+                Ok(s) => s,
                 Err(e) => {
                     eprintln!("TLS accept error: {}", e);
                     return;
                 }
             };
 
-            // Serve HTTP over TLS
             let service = service_fn(move |req| {
                 let metrics = Arc::clone(&metrics);
                 router::route(req, metrics)
