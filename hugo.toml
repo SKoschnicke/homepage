@@ -18,7 +18,7 @@ defaultContentLanguage = 'en'
 [params]
     brand = "sven.guru"
     description = "Thoughts about tech"
-    
+
     # Simplified menu structure
     menu = [
         {Name = "About", URL = "/about/", HasChildren = false},
@@ -26,7 +26,7 @@ defaultContentLanguage = 'en'
     ]
 
     # Essential social links only
-    email_url = "mailto://s.koschnicke@gfxpro.com"
+    email_url = "mailto:s.koschnicke@gfxpro.com"
     github_url = "https://github.com/SKoschnicke"
     linkedin_url = "https://www.linkedin.com/in/svenkoschnicke/"
     mastodon_url = "https://chaos.social/@darkunicorn"
