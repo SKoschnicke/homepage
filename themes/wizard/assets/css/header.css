@@ -17,6 +17,9 @@
     position: relative;
     margin-bottom: 0;
     border-bottom: var(--pixel-border);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 .header-content {
