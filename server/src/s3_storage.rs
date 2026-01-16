@@ -256,3 +256,97 @@ pub fn cert_is_valid(cert_pem: &str, min_days_remaining: u64) -> bool {
         }
     }
 }
+
+pub async fn test_s3_storage(
+    client: &Client,
+    bucket: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    debug_checkpoint!("Testing S3 storage connectivity");
+    let test_key = ".test/connectivity-check";
+    let test_content = b"S3 storage connectivity test";
+
+    // Test 1: Write
+    debug_checkpoint!("S3 test: Writing test object");
+    let write_result = tokio::time::timeout(
+        Duration::from_secs(10),
+        client.put_object()
+            .bucket(bucket)
+            .key(test_key)
+            .body(test_content.to_vec().into())
+            .send()
+    ).await;
+
+    match write_result {
+        Ok(Ok(_)) => {
+            debug_checkpoint!("S3 test: Write successful");
+        }
+        Ok(Err(e)) => {
+            let _ = std::io::stderr().flush();
+            return Err(format!("S3 write test failed: {}", e).into());
+        }
+        Err(_) => {
+            let _ = std::io::stderr().flush();
+            return Err("S3 write test timed out after 10 seconds".into());
+        }
+    }
+
+    // Test 2: Read
+    debug_checkpoint!("S3 test: Reading test object");
+    let read_result = tokio::time::timeout(
+        Duration::from_secs(10),
+        client.get_object()
+            .bucket(bucket)
+            .key(test_key)
+            .send()
+    ).await;
+
+    let body = match read_result {
+        Ok(Ok(output)) => {
+            debug_checkpoint!("S3 test: Read successful");
+            output.body.collect().await
+                .map_err(|e| format!("Failed to read S3 test object body: {}", e))?
+                .into_bytes()
+        }
+        Ok(Err(e)) => {
+            let _ = std::io::stderr().flush();
+            return Err(format!("S3 read test failed: {}", e).into());
+        }
+        Err(_) => {
+            let _ = std::io::stderr().flush();
+            return Err("S3 read test timed out after 10 seconds".into());
+        }
+    };
+
+    if &body[..] != test_content {
+        let _ = std::io::stderr().flush();
+        return Err("S3 read-back verification failed: content mismatch".into());
+    }
+    debug_checkpoint!("S3 test: Content verification successful");
+
+    // Test 3: Delete
+    debug_checkpoint!("S3 test: Deleting test object");
+    let delete_result = tokio::time::timeout(
+        Duration::from_secs(10),
+        client.delete_object()
+            .bucket(bucket)
+            .key(test_key)
+            .send()
+    ).await;
+
+    match delete_result {
+        Ok(Ok(_)) => {
+            debug_checkpoint!("S3 test: Delete successful");
+        }
+        Ok(Err(e)) => {
+            let _ = std::io::stderr().flush();
+            return Err(format!("S3 delete test failed: {}", e).into());
+        }
+        Err(_) => {
+            let _ = std::io::stderr().flush();
+            return Err("S3 delete test timed out after 10 seconds".into());
+        }
+    }
+
+    debug_checkpoint!("S3 storage test completed successfully");
+    Ok(())
+}

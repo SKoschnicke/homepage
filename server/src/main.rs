@@ -151,52 +151,71 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  ✓ S3 Bucket: {}", config.s3_bucket);
     debug_checkpoint!("Config loaded and printed successfully");
 
-    // Step 2: Get TLS certificate
+    // Step 2: Initialize S3 client (always - needed for both dev and production)
+    debug_checkpoint!("Initializing S3 client");
+    println!("\n[2/5] Initializing S3 storage...");
+    eprintln!("[DEBUG] About to initialize S3 client");
+
+    let s3_client = match s3_storage::init_s3_client(&config).await {
+        Ok(client) => {
+            debug_checkpoint!("S3 client initialized successfully");
+            eprintln!("[DEBUG] S3 client initialized successfully");
+            println!("  ✓ S3 client initialized");
+            client
+        }
+        Err(e) => {
+            eprintln!("Failed to initialize S3 client: {}", e);
+            eprintln!("Cannot use HTTPS without S3 storage.");
+            eprintln!("Falling back to simple HTTP mode...");
+            let _ = std::io::stderr().flush();
+            return run_simple_server().await;
+        }
+    };
+
+    // Step 2b: Test S3 storage connectivity
+    debug_checkpoint!("Testing S3 storage");
+    println!("  Testing S3 storage...");
+    eprintln!("[DEBUG] About to test S3 storage");
+
+    if let Err(e) = s3_storage::test_s3_storage(&s3_client, &config.s3_bucket).await {
+        eprintln!("S3 storage test failed: {}", e);
+        eprintln!("Cannot persist certificates without working S3 storage.");
+        eprintln!("Falling back to simple HTTP mode...");
+        let _ = std::io::stderr().flush();
+        return run_simple_server().await;
+    }
+    println!("  ✓ S3 storage is working");
+    debug_checkpoint!("S3 storage test passed");
+
+    // Step 3: Get TLS certificate (safe now - S3 verified)
     debug_checkpoint!("Starting TLS certificate acquisition");
-    println!("\n[2/5] Obtaining TLS certificate...");
+    println!("\n[3/5] Obtaining TLS certificate...");
     eprintln!("[DEBUG] About to obtain TLS certificate");
 
     let tls_config = if config.local_dev {
-        debug_checkpoint!("Using local dev mode - self-signed cert");
-        println!("  Local dev mode: generating self-signed certificate...");
-        eprintln!("[DEBUG] Calling generate_self_signed_certificate");
-        match acme::generate_self_signed_certificate(&config.domain).await {
+        debug_checkpoint!("Using local dev mode - self-signed cert with S3 caching");
+        println!("  Local dev mode: self-signed certificate with S3 caching...");
+        eprintln!("[DEBUG] Calling get_or_create_self_signed_certificate");
+
+        match acme::get_or_create_self_signed_certificate(
+            &config.domain,
+            &s3_client,
+            &config.s3_bucket,
+        ).await {
             Ok(cfg) => {
-                eprintln!("[DEBUG] Self-signed certificate generated successfully");
+                eprintln!("[DEBUG] Self-signed certificate ready");
                 cfg
             }
             Err(e) => {
-                eprintln!("[FATAL] Failed to generate self-signed certificate: {}", e);
+                eprintln!("[FATAL] Failed to get/create self-signed certificate: {}", e);
                 let _ = std::io::stderr().flush();
                 return Err(e);
             }
         }
     } else {
-        debug_checkpoint!("Using production mode - S3 and Let's Encrypt");
-        println!("  Production mode: checking S3 and Let's Encrypt...");
-        eprintln!("[DEBUG] Production mode - will use S3 and Let's Encrypt");
-
-        println!("  Initializing S3 client...");
-        debug_checkpoint!("About to initialize S3 client - this may hang/crash");
-        eprintln!("[DEBUG] About to call init_s3_client");
-
-        let s3_client = match s3_storage::init_s3_client(&config).await {
-            Ok(client) => {
-                debug_checkpoint!("S3 client initialized successfully");
-                eprintln!("[DEBUG] S3 client initialized successfully");
-                client
-            }
-            Err(e) => {
-                eprintln!("[FATAL] Failed to initialize S3 client: {}", e);
-                let _ = std::io::stderr().flush();
-                return Err(e);
-            }
-        };
-        println!("  ✓ S3 client initialized");
-
-        println!("  Obtaining certificate...");
-        debug_checkpoint!("About to call get_or_create_certificate");
-        eprintln!("[DEBUG] About to call get_or_create_certificate");
+        debug_checkpoint!("Using production mode - Let's Encrypt with S3 caching");
+        println!("  Production mode: Let's Encrypt with S3 caching...");
+        eprintln!("[DEBUG] Calling get_or_create_certificate");
 
         match acme::get_or_create_certificate(
             &config.domain,
@@ -221,8 +240,8 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  ✓ TLS certificate ready");
     eprintln!("[DEBUG] TLS config ready");
 
-    // Step 3: Initialize metrics
-    println!("\n[3/5] Initializing metrics...");
+    // Step 4: Initialize metrics
+    println!("\n[4/5] Initializing metrics...");
     let metrics = metrics::Metrics::new();
     println!("  ✓ Metrics initialized");
 
@@ -233,8 +252,8 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
         (80, 443)
     };
 
-    // Step 4: Start HTTP redirect server
-    println!("\n[4/5] Starting HTTP redirect server (port {})...", http_port);
+    // Step 5: Start HTTP redirect server
+    println!("\n[5/5] Starting HTTP redirect server (port {})...", http_port);
     let http_metrics = Arc::clone(&metrics);
     let http_domain = config.domain.clone();
     let http_server = tokio::spawn(async move {
@@ -242,8 +261,8 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     });
     println!("  ✓ HTTP redirect server started");
 
-    // Step 5: Start HTTPS server
-    println!("\n[5/5] Starting HTTPS server (port {})...", https_port);
+    // Step 6: Start HTTPS server
+    println!("\n[6/6] Starting HTTPS server (port {})...", https_port);
     let https_metrics = Arc::clone(&metrics);
     let https_server = tokio::spawn(async move {
         start_https_server(tls_config, https_metrics, https_port).await

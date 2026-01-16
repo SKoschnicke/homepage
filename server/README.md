@@ -218,7 +218,7 @@ Configuration loaded:
   Local Dev Mode: false
   ACME Contact: s.koschnicke@gfxpro.com
   ACME Staging: false
-  S3 Bucket: homepage-certs
+  S3 Bucket: homepage-unikernel
 
 Obtaining TLS certificate...
 Certificate is valid (> 30 days remaining), using cached cert
@@ -446,18 +446,21 @@ The server includes **automatic HTTPS** with Let's Encrypt certificate generatio
 **Features:**
 - Automatic certificate acquisition via ACME HTTP-01 challenge
 - Certificate persistence in S3-compatible storage (Hetzner Object Storage)
+- **S3 pre-flight test** - Validates storage before requesting certificates (prevents rate limit waste)
+- **Graceful fallback** - Falls back to HTTP-only mode if S3 storage is unavailable
 - Automatic certificate validation on startup (only renews if < 30 days remaining)
 - Dual HTTP/HTTPS listeners (port 80 redirects to 443)
-- Local development mode with self-signed certificates
+- Local development mode with self-signed certificates + S3 caching
 
 #### Production Setup
 
 **1. Create S3 Bucket for Certificate Storage**
 
 In [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/projects):
-- Create a new bucket (e.g., "homepage-certs")
+- Create a new bucket (e.g., "homepage-unikernel")
+- Select region matching your server (e.g., Helsinki `hel1`)
 - Generate Access Keys (public + secret)
-- Note the endpoint URL (e.g., `https://fsn1.your-objectstorage.com`)
+- Note the endpoint URL (e.g., `https://hel1.your-objectstorage.com`)
 
 **2. Update config-hetzner.json**
 
@@ -470,20 +473,24 @@ In [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/proj
     "BucketName": "homepage-unikernel"
   },
   "Env": {
+    "ENABLE_HTTPS": "true",
     "DOMAIN": "sven.guru",
-    "ACME_CONTACT_EMAIL": "s.koschnicke@gfxpro.com",
-    "S3_ENDPOINT": "https://fsn1.your-objectstorage.com",
-    "S3_BUCKET": "homepage-certs",
+    "ACME_CONTACT_EMAIL": "your@email.com",
+    "ACME_STAGING": "false",
+    "S3_ENDPOINT": "https://hel1.your-objectstorage.com",
+    "S3_BUCKET": "homepage-unikernel",
     "S3_ACCESS_KEY": "your-access-key",
-    "S3_SECRET_KEY": "your-secret-key"
+    "S3_SECRET_KEY": "your-secret-key",
+    "S3_REGION": "us-east-1"
   }
 }
 ```
 
 **Environment Variables:**
+- `ENABLE_HTTPS` - Enable HTTPS mode (default: false) [required for HTTPS]
 - `DOMAIN` - Domain for TLS certificate (e.g., sven.guru) [required]
 - `ACME_CONTACT_EMAIL` - Let's Encrypt contact email [required]
-- `ACME_STAGING` - Use Let's Encrypt staging (default: false)
+- `ACME_STAGING` - Use Let's Encrypt staging (default: false, set to "true" for testing)
 - `S3_ENDPOINT` - S3-compatible endpoint URL [required]
 - `S3_BUCKET` - S3 bucket name for certificates [required]
 - `S3_ACCESS_KEY` - S3 access key [required]
@@ -491,7 +498,44 @@ In [Hetzner Cloud Console → Object Storage](https://console.hetzner.cloud/proj
 - `S3_REGION` - S3 region (default: us-east-1)
 - `LOCAL_DEV` - Use self-signed cert for local testing (default: false)
 
+**Important Notes:**
+- **S3 Pre-flight Test**: Server validates S3 storage connectivity before requesting certificates
+- **Graceful Fallback**: If S3 test fails, server automatically falls back to HTTP-only mode on port 80
+- **Rate Limit Protection**: Pre-flight test prevents burning Let's Encrypt rate limits (5 certs/domain/week)
+
 **3. Deploy**
+
+**Option A: Automated Deployment Script (Recommended)**
+
+Use the `deploy-hetzner.sh` script for fully automated deployment:
+
+```bash
+# From repository root
+cd server
+
+# Store credentials in 1Password (one-time setup)
+# - "Hetzner Cloud API Token" → Your API token
+# - "Hetzner Object Storage S3 credentials" → endpoint, access key, secret key
+
+# Sign in to 1Password CLI
+eval $(op signin)
+
+# Deploy with automated script
+bash ./deploy-hetzner.sh
+```
+
+The script automatically:
+1. Loads secrets from 1Password
+2. Fetches DNS zone ID for your domain
+3. Injects S3 credentials into config
+4. Deletes existing instances and images
+5. Creates new unikernel image
+6. Creates and starts new instance
+7. Updates DNS A record to point to new IP
+8. Waits for DNS propagation
+9. Verifies server is responding
+
+**Option B: Manual Deployment**
 
 The server will automatically:
 1. Check S3 for existing certificate
@@ -515,17 +559,31 @@ On each server restart:
 
 #### Local Development Mode
 
-For local testing without DNS/S3 setup:
+For local testing with full S3 integration using MinIO:
 
 ```bash
-# Using mise
+# Automated test script (starts MinIO, runs server with HTTPS)
+bash ./test-local-https.sh
+```
+
+This script:
+1. Starts MinIO S3-compatible storage (podman)
+2. Creates `homepage-unikernel` bucket
+3. Runs server with HTTPS enabled on ports 8080 (HTTP) and 8443 (HTTPS)
+4. Self-signed certificates are cached in MinIO (reused on restart)
+5. Opens MinIO console at http://localhost:9001 (minioadmin/minioadmin)
+
+**Manual local dev (without S3):**
+
+```bash
+# Using mise (falls back to HTTP-only mode without S3)
 mise run dev
 
-# Or manually
+# Or manually (falls back to HTTP-only mode without S3)
 DOMAIN=localhost LOCAL_DEV=true ACME_CONTACT_EMAIL=your@email.com ./target/release/static-server
 ```
 
-This generates a self-signed certificate (bypasses Let's Encrypt and S3).
+**Note:** Without S3 storage configured, the server automatically falls back to simple HTTP-only mode on port 80. Use the test script above for full HTTPS testing with MinIO.
 
 ### Cost
 

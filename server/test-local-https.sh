@@ -30,7 +30,7 @@ podman run --rm --network host \
     -e AWS_SECRET_ACCESS_KEY=minioadmin \
     docker.io/amazon/aws-cli \
     --endpoint-url http://localhost:9000 \
-    s3 mb s3://homepage-certs 2>/dev/null || echo "  Bucket already exists"
+    s3 mb s3://homepage-unikernel 2>/dev/null || echo "  Bucket already exists"
 
 echo ""
 echo "==> MinIO Console: http://localhost:9001 (minioadmin/minioadmin)"
@@ -44,7 +44,7 @@ export DOMAIN=localhost
 export ACME_CONTACT_EMAIL=test@localhost
 export ACME_STAGING=true
 export S3_ENDPOINT=http://localhost:9000
-export S3_BUCKET=homepage-certs
+export S3_BUCKET=homepage-unikernel
 export S3_ACCESS_KEY=minioadmin
 export S3_SECRET_KEY=minioadmin
 export S3_REGION=us-east-1

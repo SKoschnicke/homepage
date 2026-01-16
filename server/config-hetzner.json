@@ -1,7 +1,7 @@
 {
   "Uefi": true,
   "CloudConfig": {
-    "BucketName": "homepage"
+    "BucketName": "homepage-unikernel"
   },
   "RunConfig": {
     "Memory": "256m",
@@ -16,7 +16,7 @@
     "ACME_CONTACT_EMAIL": "sven@sven.guru",
     "ACME_STAGING": "false",
     "S3_ENDPOINT": "https://hel1.your-objectstorage.com",
-    "S3_BUCKET": "homepage-certs",
+    "S3_BUCKET": "homepage-unikernel",
     "S3_ACCESS_KEY": "PLACEHOLDER_WILL_BE_SET_BY_DEPLOY_SCRIPT",
     "S3_SECRET_KEY": "PLACEHOLDER_WILL_BE_SET_BY_DEPLOY_SCRIPT",
     "S3_REGION": "us-east-1"

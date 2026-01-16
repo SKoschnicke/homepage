@@ -18,7 +18,7 @@ const MIN_DAYS_REMAINING: u64 = 30;
 
 pub async fn generate_self_signed_certificate(
     domain: &str,
-) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<CertificateData, Box<dyn std::error::Error + Send + Sync>> {
     println!("Generating self-signed certificate for local development...");
 
     // Generate self-signed certificate using rcgen
@@ -41,7 +41,74 @@ pub async fn generate_self_signed_certificate(
     println!("WARNING: This certificate is NOT trusted by browsers!");
     println!("         Accept the security warning in your browser to proceed.");
 
-    build_tls_config(&cert_pem, &privkey_pem)
+    Ok(CertificateData {
+        cert_pem,
+        privkey_pem,
+    })
+}
+
+pub async fn get_or_create_self_signed_certificate(
+    domain: &str,
+    s3_client: &aws_sdk_s3::Client,
+    bucket: &str,
+) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
+    println!("Checking S3 for existing certificate...");
+    println!("  Bucket: {}", bucket);
+    println!("  Domain: {}", domain);
+
+    // Try to load existing certificate from S3
+    match s3_storage::load_certificate(s3_client, bucket, domain).await {
+        Ok(Some(cert_data)) => {
+            println!("Found certificate in S3, checking expiry...");
+
+            // Check if certificate is still valid
+            if s3_storage::cert_is_valid(&cert_data.cert_pem, MIN_DAYS_REMAINING) {
+                println!("Certificate is valid (> {} days remaining), using cached cert", MIN_DAYS_REMAINING);
+                return build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem);
+            } else {
+                println!("Certificate expires soon (< {} days), generating new one", MIN_DAYS_REMAINING);
+            }
+        }
+        Ok(None) => {
+            println!("No certificate found in S3, generating new one");
+        }
+        Err(e) => {
+            eprintln!("Error checking S3 for certificate: {}", e);
+            eprintln!("Will generate new certificate");
+        }
+    }
+
+    // Generate new self-signed certificate
+    println!("Generating new self-signed certificate...");
+    let cert_data = match generate_self_signed_certificate(domain).await {
+        Ok(data) => {
+            println!("Self-signed certificate generated successfully");
+            data
+        }
+        Err(e) => {
+            eprintln!("Failed to generate self-signed certificate: {}", e);
+            return Err(e);
+        }
+    };
+
+    // Save to S3
+    println!("Saving certificate to S3...");
+    match s3_storage::save_certificate(
+        s3_client,
+        bucket,
+        domain,
+        &cert_data.cert_pem,
+        &cert_data.privkey_pem,
+    ).await {
+        Ok(_) => println!("Certificate saved to S3 successfully"),
+        Err(e) => {
+            eprintln!("Warning: Failed to save certificate to S3: {}", e);
+            eprintln!("Continuing with certificate anyway...");
+        }
+    }
+
+    // Build TLS config
+    build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem)
 }
 
 pub async fn get_or_create_certificate(
