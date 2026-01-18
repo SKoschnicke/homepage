@@ -4,17 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
-        
+
         <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
-        
+
         {{ $style := resources.Get "css/style.css" }}
         {{ $style = $style | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
-        
+
         {{ $headerCSS := resources.Get "css/header.css" }}
         {{ $headerCSS = $headerCSS | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $headerCSS.RelPermalink }}" integrity="{{ $headerCSS.Data.Integrity }}">
-        
+
         <!-- Memory Game styles -->
         {{ $memoryGameCSS := resources.Get "css/memory-game.css" }}
         {{ $memoryGameCSS = $memoryGameCSS | resources.Minify | resources.Fingerprint }}
@@ -24,7 +24,7 @@
         {{ $metricsDashboardCSS := resources.Get "css/metrics-dashboard.css" }}
         {{ $metricsDashboardCSS = $metricsDashboardCSS | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $metricsDashboardCSS.RelPermalink }}" integrity="{{ $metricsDashboardCSS.Data.Integrity }}">
-        
+
         <link rel="canonical" href="{{ .Permalink }}">
         {{ range .AlternativeOutputFormats -}}
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
@@ -74,4 +74,4 @@
             </footer>
         </div>
     </body>
-</html> 
+</html>

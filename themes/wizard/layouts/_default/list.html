@@ -1,11 +1,11 @@
 {{ define "main" }}
     <section class="posts-list">
-        {{ if .Title }}
+        {{ if and .Title (not .IsHome) }}
         <header class="section-header">
             <h1>{{ .Title }}</h1>
         </header>
         {{ end }}
-        
+
         {{ range .Pages }}
         <article class="post-summary">
             <header>
@@ -14,17 +14,17 @@
                 </h2>
                 {{ partial "post/meta.html" . }}
             </header>
-            
+
             {{ with .Description }}
             <div class="post-description">
                 <p>{{ . }}</p>
             </div>
             {{ end }}
-            
+
             <footer class="post-footer">
                 <a href="{{ .RelPermalink }}" class="read-more" aria-label="Read more about {{ .Title }}">Read more →</a>
             </footer>
         </article>
         {{ end }}
     </section>
-{{ end }} 
+{{ end }}
