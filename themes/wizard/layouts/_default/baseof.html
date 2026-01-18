@@ -31,7 +31,9 @@
         {{ end -}}
 
         <!-- Chart.js for metrics visualization -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        {{ $chartJS := resources.Get "js/chart.min.js" }}
+        {{ $chartJS = $chartJS | resources.Fingerprint }}
+        <script src="{{ $chartJS.RelPermalink }}" integrity="{{ $chartJS.Data.Integrity }}"></script>
 
         <!-- Theme toggle script -->
         {{ $lightDark := resources.Get "js/light_dark.js" }}
