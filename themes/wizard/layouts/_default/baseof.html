@@ -30,10 +30,10 @@
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
         {{ end -}}
 
-        <!-- Chart.js for metrics visualization -->
+        <!-- Chart.js URL for lazy loading in metrics dashboard -->
         {{ $chartJS := resources.Get "js/chart.min.js" }}
         {{ $chartJS = $chartJS | resources.Fingerprint }}
-        <script src="{{ $chartJS.RelPermalink }}" integrity="{{ $chartJS.Data.Integrity }}"></script>
+        <script>window.CHART_JS_URL = "{{ $chartJS.RelPermalink }}"; window.CHART_JS_INTEGRITY = "{{ $chartJS.Data.Integrity }}";</script>
 
         <!-- Theme toggle script -->
         {{ $lightDark := resources.Get "js/light_dark.js" }}

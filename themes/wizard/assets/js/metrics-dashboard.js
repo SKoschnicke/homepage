@@ -1,11 +1,125 @@
 (function() {
     'use strict';
 
-    // Wait for DOM and Chart.js to load
+    let chartJsLoaded = false;
+    let chartJsLoading = false;
+    let rpsChart = null;
+    let latencyChart = null;
+    let rpsData = null;
+
+    // Wait for DOM to load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initDashboard);
     } else {
         initDashboard();
+    }
+
+    function loadChartJs() {
+        return new Promise((resolve, reject) => {
+            if (chartJsLoaded) {
+                resolve();
+                return;
+            }
+
+            if (chartJsLoading) {
+                // Already loading, wait for it
+                const checkInterval = setInterval(() => {
+                    if (chartJsLoaded) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 50);
+                return;
+            }
+
+            chartJsLoading = true;
+            const script = document.createElement('script');
+            script.src = window.CHART_JS_URL;
+            script.integrity = window.CHART_JS_INTEGRITY;
+            script.crossOrigin = 'anonymous';
+            script.onload = () => {
+                chartJsLoaded = true;
+                chartJsLoading = false;
+                resolve();
+            };
+            script.onerror = () => {
+                chartJsLoading = false;
+                reject(new Error('Failed to load Chart.js'));
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    function initCharts() {
+        if (rpsChart && latencyChart) return; // Already initialized
+
+        const rpsCtx = document.getElementById('rps-chart').getContext('2d');
+        const latencyCtx = document.getElementById('latency-chart').getContext('2d');
+
+        rpsData = {
+            labels: [],
+            datasets: [{
+                label: 'req/s',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        };
+
+        rpsChart = new Chart(rpsCtx, {
+            type: 'line',
+            data: rpsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: 'inherit' }
+                    },
+                    x: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        latencyChart = new Chart(latencyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['p50', 'p95', 'p99'],
+                datasets: [{
+                    label: 'μs',
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: 'inherit' }
+                    },
+                    x: {
+                        ticks: { color: 'inherit' }
+                    }
+                }
+            }
+        });
     }
 
     function initDashboard() {
@@ -63,75 +177,6 @@
             </div>
         `;
 
-        // Initialize charts
-        const rpsCtx = document.getElementById('rps-chart').getContext('2d');
-        const latencyCtx = document.getElementById('latency-chart').getContext('2d');
-
-        const rpsData = {
-            labels: [],
-            datasets: [{
-                label: 'req/s',
-                data: [],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.4,
-                fill: true
-            }]
-        };
-
-        const rpsChart = new Chart(rpsCtx, {
-            type: 'line',
-            data: rpsData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: 'inherit' }
-                    },
-                    x: {
-                        display: false
-                    }
-                }
-            }
-        });
-
-        const latencyChart = new Chart(latencyCtx, {
-            type: 'bar',
-            data: {
-                labels: ['p50', 'p95', 'p99'],
-                datasets: [{
-                    label: 'μs',
-                    data: [0, 0, 0],
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(255, 99, 132, 0.6)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: 'inherit' }
-                    },
-                    x: {
-                        ticks: { color: 'inherit' }
-                    }
-                }
-            }
-        });
-
         // WebSocket connection
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/__metrics__/ws`;
@@ -183,9 +228,15 @@
         const expandedView = document.getElementById('metrics-expanded');
         let isExpanded = localStorage.getItem('metricsExpanded') === 'true';
 
+        // If previously expanded, load Chart.js and initialize immediately
         if (isExpanded) {
-            expandedView.style.display = 'grid';
-            toggleBtn.textContent = 'Show less ▲';
+            loadChartJs().then(() => {
+                initCharts();
+                expandedView.style.display = 'grid';
+                toggleBtn.textContent = 'Show less ▲';
+            }).catch(err => {
+                console.error('Failed to load Chart.js:', err);
+            });
         }
 
         toggleBtn.addEventListener('click', function(e) {
@@ -194,8 +245,14 @@
             localStorage.setItem('metricsExpanded', isExpanded);
 
             if (isExpanded) {
-                expandedView.style.display = 'grid';
-                toggleBtn.textContent = 'Show less ▲';
+                // Load Chart.js if not already loaded, then show the view
+                loadChartJs().then(() => {
+                    initCharts();
+                    expandedView.style.display = 'grid';
+                    toggleBtn.textContent = 'Show less ▲';
+                }).catch(err => {
+                    console.error('Failed to load Chart.js:', err);
+                });
             } else {
                 expandedView.style.display = 'none';
                 toggleBtn.textContent = 'Show more ▼';
@@ -203,13 +260,16 @@
         });
 
         function updateDashboard(metrics) {
-            // Update compact view
+            // Update compact view (always visible)
             document.getElementById('compact-rps').textContent =
                 metrics.requests_per_sec.toFixed(1);
             document.getElementById('compact-latency').textContent =
                 metrics.p50_micros.toLocaleString() + 'μs';
             document.getElementById('compact-viewers').textContent =
                 metrics.websocket_clients;
+
+            // Only update expanded view if charts are initialized
+            if (!rpsChart || !latencyChart) return;
 
             // Update expanded view (charts and detailed stats)
             const now = new Date().toLocaleTimeString();
