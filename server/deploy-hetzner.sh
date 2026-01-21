@@ -292,11 +292,55 @@ wait_for_server() {
     exit 1
 }
 
+# Build clean production binary
+build_production() {
+    echo_info "Building clean production binary..."
+
+    # Check if hugo server is running
+    if pgrep -f "hugo server" > /dev/null; then
+        echo_error "Hugo development server is running. Stop it before deploying:
+    pkill -f 'hugo server'
+
+Running hugo server interferes with production builds."
+    fi
+
+    # Go to project root (one level up from server/)
+    cd "$(dirname "$0")/.."
+
+    # Clean public directory to ensure no dev artifacts
+    if [ -d "public" ]; then
+        echo_info "Removing existing public/ directory"
+        rm -rf public
+    fi
+
+    # Build fresh production site
+    echo_info "Building Hugo site with --minify"
+    if ! hugo --minify; then
+        echo_error "Hugo build failed"
+    fi
+
+    # Rebuild Rust server with fresh production assets
+    echo_info "Building Rust server (this embeds the Hugo site)"
+    cd server
+    cargo build --release 2>&1 | grep -E "(Compiling|Finished|error|Error)" || true
+
+    if [ ! -f "target/release/static-server" ]; then
+        echo_error "Rust build failed - binary not found"
+    fi
+
+    echo_info "Stripping debug symbols"
+    strip target/release/static-server
+
+    local size=$(du -h target/release/static-server | cut -f1)
+    echo_info "Production binary ready: ${size}"
+}
+
 # Main deployment flow
 main() {
     echo_info "Starting Hetzner deployment for $DOMAIN"
     echo ""
 
+    build_production
     load_secrets
     get_dns_zone_id
     inject_s3_credentials

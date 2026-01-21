@@ -30,6 +30,11 @@
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
         {{ end -}}
 
+        <!-- Pixel art scaling (runs early to avoid layout flash) -->
+        {{ $pixelScale := resources.Get "js/pixel-scale.js" }}
+        {{ $pixelScale = $pixelScale | resources.Minify | resources.Fingerprint }}
+        <script src="{{ $pixelScale.RelPermalink }}" integrity="{{ $pixelScale.Data.Integrity }}"></script>
+
         <!-- Chart.js URL for lazy loading in metrics dashboard -->
         {{ $chartJS := resources.Get "js/chart.min.js" }}
         {{ $chartJS = $chartJS | resources.Fingerprint }}

@@ -22,7 +22,7 @@ defaultContentLanguage = 'en'
     # Simplified menu structure
     menu = [
         {Name = "About", URL = "/about/", HasChildren = false},
-        {Name = "Posts", URL = "/posts/", HasChildren = true, Limit = 5},
+        {Name = "Posts", URL = "/posts/", HasChildren = false},
     ]
 
     # Essential social links only

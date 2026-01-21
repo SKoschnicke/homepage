@@ -5,6 +5,20 @@
 :EXPORT_HUGO_SECTION: /
 :END:
 
+** Home                                                                          :ATTACH:
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:ID:       9ef0075f-3e73-49a7-ab6d-ade5b436f7fa
+:END:
+
+#+DOWNLOADED: screenshot @ 2026-01-20 19:52:46
+#+ATTR_HTML: :class homepage-image
+[[attachment:2026-01-20_19-52-46_screenshot.png]]
+
+Welcome to my corner of the internet. I'm Sven Koschnicke, a technologist with over 25 years of experience across the full technology stack - from hardware design and kernel modules to DevOps, backend services, and frontend applications.
+
+Here you'll find my thoughts on technology, software development, and the occasional deep dive into interesting tools and techniques. Feel free to explore my [[/posts/][posts]] or learn more [[/about/][about me]].
+
 ** About
 :PROPERTIES:
 :EXPORT_FILE_NAME: about

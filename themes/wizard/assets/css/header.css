@@ -10,10 +10,14 @@
 
 .header-image {
     width: 100%;
-    height: 250px;
+    /* Header art is 216x108 pixels */
+    height: calc(108 * var(--art-pixel));
     background-image: url('/images/header-tower.png');
-    background-size: cover;
+    /* Scale to exact art pixel size */
+    background-size: calc(216 * var(--art-pixel)) calc(108 * var(--art-pixel));
     background-position: center;
+    background-repeat: no-repeat;
+    background-color: var(--header-bg);
     position: relative;
     margin-bottom: 0;
     border-bottom: var(--pixel-border);
@@ -138,10 +142,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 48em) {
-    .header-image {
-        height: 150px;
-    }
-    
     .header-content {
         flex-direction: row;
         align-items: center;

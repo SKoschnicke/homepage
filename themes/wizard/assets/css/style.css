@@ -48,6 +48,11 @@
     --border-color: #3AAFB9; /* Teal from the sky */
     --max-width: 800px;
     --header-bg: #F5F5E6;
+
+    /* Pixel art scaling: 1 art pixel = this many screen pixels
+       Target: 4 physical pixels per art pixel
+       CSS provides rough estimates; JS fine-tunes if available */
+    --art-pixel: 4px;  /* 1x displays */
     --footer-text: #2A3B47;
     --neon-glow: 0 0 5px rgba(58, 175, 185, 0.5),
                  0 0 10px rgba(58, 175, 185, 0.3),
@@ -78,6 +83,21 @@
     --cyber-bg: linear-gradient(45deg, #1A2A33 0%, #2A3B47 100%);
     --container-bg: rgba(26, 42, 51, 0.8);
     --code-bg: rgba(0, 0, 0, 0.7);
+}
+
+/* DPR-based art pixel scaling (CSS fallback for no-JS)
+   Target: 4 physical pixels per art pixel */
+@media (min-resolution: 1.5dppx) {
+    :root { --art-pixel: 2.67px; }  /* 4 / 1.5 */
+}
+@media (min-resolution: 2dppx) {
+    :root { --art-pixel: 2px; }     /* 4 / 2 */
+}
+@media (min-resolution: 2.5dppx) {
+    :root { --art-pixel: 1.6px; }   /* 4 / 2.5 */
+}
+@media (min-resolution: 3dppx) {
+    :root { --art-pixel: 1.33px; }  /* 4 / 3 */
 }
 
 body {
@@ -145,7 +165,6 @@ code.language-text {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
 }
 
 /* Links */
@@ -402,4 +421,57 @@ h4, h5, h6 {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+/* Homepage */
+.homepage {
+    padding: 1rem 0;
+}
+
+.homepage-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.homepage-content p {
+    margin-bottom: 1.5rem;
+}
+
+.homepage-image {
+    float: right;
+    max-width: 45%;
+    margin: 0 0 1rem 1.5rem;
+}
+
+.homepage-image img {
+    /* Homepage art is 98x206 pixels - scale to match header pixel size */
+    width: calc(98 * var(--art-pixel));
+    height: calc(206 * var(--art-pixel));
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* Clear float after homepage content */
+.homepage-content::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Mobile: image above text, centered */
+@media (max-width: 600px) {
+    .homepage-image {
+        float: none;
+        max-width: 100%;
+        margin: 0 auto 1.5rem auto;
+    }
+
+    .homepage-image img {
+        /* Use mobile art-pixel size (set in header.css) */
+        width: calc(98 * var(--art-pixel));
+        height: calc(206 * var(--art-pixel));
+        margin: 0 auto;
+    }
 }
