@@ -18,86 +18,77 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Inter Font - Self-hosted (weight 400 used for all weights) */
+/* Monaspace Argon Font - Self-hosted variable font */
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Monaspace Argon';
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('/fonts/inter-400-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('/fonts/inter-400-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url('/fonts/monaspace-argon-variable.woff2') format('woff2-variations');
 }
 
 :root {
-    /* Light theme (default) */
-    --primary-color: #3AAFB9; /* Teal from the sky */
-    --secondary-color: #59C265; /* Green from the tree */
-    --accent-color: #8B5D3B; /* Brown from the tree trunk */
-    --background-color: #F5F5E6; /* Light cream background */
-    --text-color: #2A3B47; /* Dark blue-gray */
-    --link-color: #3AAFB9; /* Teal from the sky */
-    --link-hover-color: #59C265; /* Green from the tree */
-    --border-color: #3AAFB9; /* Teal from the sky */
+    /* Light theme (default) - derived from header pixel art */
+    --primary-color: #5A96E3; /* Bright sky blue */
+    --secondary-color: #D5A047; /* Warm gold from lanterns */
+    --accent-color: #97532C; /* Tower brown */
+    --background-color: #E8EEF7; /* Pale blue-gray (desaturated sky) */
+    --text-color: #1A2A33; /* Dark blue from night sky */
+    --link-color: #5A96E3; /* Bright sky blue */
+    --link-hover-color: #D5A047; /* Warm gold */
+    --border-color: #5168D6; /* Mid sky blue */
     --max-width: 800px;
-    --header-bg: #F5F5E6;
+    --header-bg: #031F25; /* Deep teal-black (matches header edge) */
 
     /* Pixel art scaling: 1 art pixel = this many screen pixels
-       Target: 4 physical pixels per art pixel
+       Target: 2 physical pixels per art pixel
        CSS provides rough estimates; JS fine-tunes if available */
-    --art-pixel: 4px;  /* 1x displays */
-    --footer-text: #2A3B47;
-    --neon-glow: 0 0 5px rgba(58, 175, 185, 0.5),
-                 0 0 10px rgba(58, 175, 185, 0.3),
-                 0 0 15px rgba(58, 175, 185, 0.1);
+    --art-pixel: 2px;  /* 1x displays */
+    --footer-text: #1A2A33;
+    --neon-glow: 0 0 5px rgba(90, 150, 227, 0.5),
+                 0 0 10px rgba(90, 150, 227, 0.3),
+                 0 0 15px rgba(90, 150, 227, 0.1);
     --pixel-border: 2px solid var(--border-color);
-    --cyber-bg: linear-gradient(45deg, #F5F5E6 0%, #ffffff 100%);
+    --cyber-bg: linear-gradient(45deg, #E8EEF7 0%, #ffffff 100%);
     --container-bg: rgba(255, 255, 255, 0.9);
-    --code-bg: rgba(245, 245, 230, 0.95);
+    --code-bg: rgba(232, 238, 247, 0.95);
     --heading-font: 'Press Start 2P', monospace;
-    --body-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --body-font: 'Monaspace Argon', monospace;
 }
 
-/* Dark theme */
+/* Dark theme - derived from header pixel art (night scene) */
 [data-theme="dark"] {
-    --primary-color: #3AAFB9; /* Teal from the sky */
-    --secondary-color: #59C265; /* Green from the tree */
-    --accent-color: #8B5D3B; /* Brown from the tree trunk */
-    --background-color: #1A2A33; /* Dark blue-gray */
-    --text-color: #E0E6EB; /* Light gray-blue */
-    --link-color: #3AAFB9; /* Teal from the sky */
-    --link-hover-color: #59C265; /* Green from the tree */
-    --border-color: #3AAFB9; /* Teal from the sky */
-    --header-bg: #1A2A33;
-    --footer-text: #3AAFB9;
-    --neon-glow: 0 0 5px rgba(58, 175, 185, 0.5),
-                 0 0 10px rgba(58, 175, 185, 0.3),
-                 0 0 15px rgba(58, 175, 185, 0.1);
-    --cyber-bg: linear-gradient(45deg, #1A2A33 0%, #2A3B47 100%);
-    --container-bg: rgba(26, 42, 51, 0.8);
+    --primary-color: #5A96E3; /* Bright sky blue */
+    --secondary-color: #D5A047; /* Warm gold from lanterns */
+    --accent-color: #97532C; /* Tower brown */
+    --background-color: #031F25; /* Deep teal-black from header */
+    --text-color: #A0B6F7; /* Pale moon glow */
+    --link-color: #5A96E3; /* Bright sky blue */
+    --link-hover-color: #D5A047; /* Warm gold */
+    --border-color: #5168D6; /* Mid sky blue */
+    --header-bg: #031F25;
+    --footer-text: #5A96E3;
+    --neon-glow: 0 0 5px rgba(90, 150, 227, 0.5),
+                 0 0 10px rgba(90, 150, 227, 0.3),
+                 0 0 15px rgba(90, 150, 227, 0.1);
+    --cyber-bg: linear-gradient(45deg, #031F25 0%, #131B56 100%);
+    --container-bg: rgba(3, 31, 37, 0.8);
     --code-bg: rgba(0, 0, 0, 0.7);
 }
 
 /* DPR-based art pixel scaling (CSS fallback for no-JS)
-   Target: 4 physical pixels per art pixel */
+   Target: 2 physical pixels per art pixel */
 @media (min-resolution: 1.5dppx) {
-    :root { --art-pixel: 2.67px; }  /* 4 / 1.5 */
+    :root { --art-pixel: 1.33px; }  /* 2 / 1.5 */
 }
 @media (min-resolution: 2dppx) {
-    :root { --art-pixel: 2px; }     /* 4 / 2 */
+    :root { --art-pixel: 1px; }     /* 2 / 2 */
 }
 @media (min-resolution: 2.5dppx) {
-    :root { --art-pixel: 1.6px; }   /* 4 / 2.5 */
+    :root { --art-pixel: 0.8px; }   /* 2 / 2.5 */
 }
 @media (min-resolution: 3dppx) {
-    :root { --art-pixel: 1.33px; }  /* 4 / 3 */
+    :root { --art-pixel: 0.67px; }  /* 2 / 3 */
 }
 
 body {

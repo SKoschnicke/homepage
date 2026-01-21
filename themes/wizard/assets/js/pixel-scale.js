@@ -1,7 +1,7 @@
 // Fine-tune pixel art scaling based on device pixel ratio
 // CSS media queries provide fallback; this gives precise values
 (function() {
-    const PHYSICAL_PIXELS_TARGET = 4;
+    const PHYSICAL_PIXELS_TARGET = 2;
 
     function updateArtPixel() {
         const dpr = window.devicePixelRatio || 1;

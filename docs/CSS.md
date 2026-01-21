@@ -54,13 +54,7 @@ Derived from the pixel art header image:
 :root {
     --max-width: 800px;
     --pixel-border: 2px solid var(--border-color);
-    --art-pixel: 4px;  /* Desktop: 4x scale */
-}
-
-@media (max-width: 48em) {
-    :root {
-        --art-pixel: 2px;  /* Mobile: 2x scale */
-    }
+    --art-pixel: 2px;  /* Desktop: 2x scale */
 }
 ```
 
@@ -88,22 +82,37 @@ JavaScript toggles this attribute and persists to localStorage.
 
 ## Pixel Art Scaling
 
-All pixel art images are stored at **1x native resolution** (1 art pixel = 1 file pixel) and scaled up via CSS. The goal is **4 physical pixels per art pixel** regardless of display density.
+All pixel art images are stored at **1x native resolution** (1 art pixel = 1 file pixel) and scaled up via CSS. The goal is **2 physical pixels per art pixel** regardless of display density.
 
 ### Image Dimensions
 
 | Image | Art pixels | File |
 |-------|-----------|------|
-| Header | 216×108 | `/static/images/header-tower.png` |
+| Header | 766×510 | `/static/images/header-tower.png` |
 | Homepage | 98×206 | `/static/ox-hugo/*.png` |
+
+### Optimizing Pixel Art Images
+
+Use `ppa` (pixel-perfect-art) to convert images to indexed PNG with a limited color palette:
+
+```bash
+ppa -c 256 -w 4 -o output.png input.png
+```
+
+Options:
+- `-c 256` - Limit to 256 colors (indexed palette)
+- `-w 4` - Window size for color quantization
+- `-o output.png` - Output file
+
+This significantly reduces file size while preserving pixel art quality.
 
 ### CSS Implementation
 
 ```css
 .header-image {
-    /* Header art is 216x108 pixels */
-    height: calc(108 * var(--art-pixel));
-    background-size: calc(216 * var(--art-pixel)) calc(108 * var(--art-pixel));
+    /* Header art is 766x510 pixels */
+    height: calc(510 * var(--art-pixel));
+    background-size: calc(766 * var(--art-pixel)) calc(510 * var(--art-pixel));
 
     /* Preserve crisp pixels when scaling */
     image-rendering: pixelated;
@@ -125,25 +134,25 @@ The system uses **CSS media queries as fallback** with **JavaScript for precise 
 
 **CSS fallback** (works without JS):
 ```css
-:root { --art-pixel: 4px; }              /* 1x displays */
+:root { --art-pixel: 2px; }              /* 1x displays */
 
 @media (min-resolution: 1.5dppx) {
-    :root { --art-pixel: 2.67px; }       /* 4 / 1.5 */
+    :root { --art-pixel: 1.33px; }       /* 2 / 1.5 */
 }
 @media (min-resolution: 2dppx) {
-    :root { --art-pixel: 2px; }          /* 4 / 2 (Retina) */
+    :root { --art-pixel: 1px; }          /* 2 / 2 (Retina) */
 }
 @media (min-resolution: 2.5dppx) {
-    :root { --art-pixel: 1.6px; }        /* 4 / 2.5 */
+    :root { --art-pixel: 0.8px; }        /* 2 / 2.5 */
 }
 @media (min-resolution: 3dppx) {
-    :root { --art-pixel: 1.33px; }       /* 4 / 3 */
+    :root { --art-pixel: 0.67px; }       /* 2 / 3 */
 }
 ```
 
 **JavaScript fine-tuning** (`pixel-scale.js`):
 ```javascript
-const PHYSICAL_PIXELS_TARGET = 4;
+const PHYSICAL_PIXELS_TARGET = 2;
 const artPixel = PHYSICAL_PIXELS_TARGET / window.devicePixelRatio;
 document.documentElement.style.setProperty('--art-pixel', artPixel + 'px');
 ```
@@ -152,11 +161,11 @@ The JS calculates exact values for any DPR (not just the fixed breakpoints) and 
 
 | Display DPR | CSS fallback | JS precise | Physical pixels |
 |-------------|--------------|------------|-----------------|
-| 1x | 4px | 4px | 4 |
-| 1.5x | 2.67px | 2.67px | 4 |
-| 2x (Retina) | 2px | 2px | 4 |
-| 2.5x | 1.6px | 1.6px | 4 |
-| 3x | 1.33px | 1.33px | 4 |
+| 1x | 2px | 2px | 2 |
+| 1.5x | 1.33px | 1.33px | 2 |
+| 2x (Retina) | 1px | 1px | 2 |
+| 2.5x | 0.8px | 0.8px | 2 |
+| 3x | 0.67px | 0.67px | 2 |
 
 ## Component Patterns
 
