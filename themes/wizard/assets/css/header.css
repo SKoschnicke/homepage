@@ -4,14 +4,15 @@
     margin-bottom: 2rem;
     border-bottom: var(--pixel-border);
     padding: 0;
-    background: var(--header-bg);
+    background: var(--background-color);
     overflow: hidden;
+    transition: background 0.5s ease;
 }
 
 .header-image {
     width: 100%;
-    /* Header art is 716x503 pixels */
-    height: calc(503 * var(--art-pixel));
+    /* Header art is 716x503, showing middle third (168px tall) */
+    height: calc(168 * var(--art-pixel));
     background-image: url('/images/header-tower-light.png');
     /* Scale to exact art pixel size */
     background-size: calc(716 * var(--art-pixel)) calc(503 * var(--art-pixel));
@@ -26,9 +27,29 @@
     image-rendering: crisp-edges;
 }
 
-/* Dark theme header image */
-[data-theme="dark"] .header-image {
+/* Dark image overlay for crossfade transition */
+.header-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-image: url('/images/header-tower-dark.png');
+    background-size: calc(716 * var(--art-pixel)) calc(503 * var(--art-pixel));
+    background-position: center;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+/* Dark theme: fade in the dark overlay */
+[data-theme="dark"] .header-image::after {
+    opacity: 1;
 }
 
 .header-content {
@@ -183,4 +204,6 @@
 .main-nav {
     padding: 0.5rem 1rem;
     border-bottom: var(--pixel-border);
+    background: var(--background-color);
+    transition: background 0.5s ease;
 } 

@@ -3,7 +3,7 @@ title = "About"
 draft = false
 +++
 
-Hey, I'm Sven Koschnicke, a passionate technologist with over 25 years of hands-on
+Hey, I'm Sven Koschnicke, a computer nerd with over 25 years of hands-on
 experience across the entire technology stack. From designing microchips and
 programming FPGAs to developing high-performance kernel modules, I bring deep
 technical expertise at every level.
