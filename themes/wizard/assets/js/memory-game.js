@@ -213,28 +213,107 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Celebrate with confetti when winning
   function celebrateWin() {
-    // Retro 8-bit confetti effect
+    // Retro 8-bit confetti effect with proper physics
     const confettiCount = 150;
     // Classic NES-inspired palette
     const colors = ['#fc0000', '#00fc00', '#0000fc', '#fcfc00', '#fc00fc', '#00fcfc', '#fcfcfc', '#3AAFB9', '#59C265'];
-    
+    // Pixel-art confetti shapes: square, wide rectangle, tall rectangle
+    const shapes = [
+      { w: 8, h: 8 },   // square
+      { w: 12, h: 6 },  // wide
+      { w: 6, h: 12 },  // tall
+    ];
+
     const confettiContainer = document.createElement('div');
     confettiContainer.classList.add('confetti-container');
     document.body.appendChild(confettiContainer);
-    
+
+    const confettiPieces = [];
+
     for (let i = 0; i < confettiCount; i++) {
       const confetti = document.createElement('div');
       confetti.classList.add('confetti');
+
+      const shape = shapes[Math.floor(Math.random() * shapes.length)];
+      confetti.style.width = shape.w + 'px';
+      confetti.style.height = shape.h + 'px';
       confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-      confetti.style.left = Math.random() * 100 + 'vw';
-      confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-      confetti.style.animationDelay = Math.random() * 5 + 's';
+
+      // Initial position - spread across top
+      const startX = Math.random() * window.innerWidth;
+      confetti.style.left = startX + 'px';
+      confetti.style.top = '-20px';
+
       confettiContainer.appendChild(confetti);
+
+      // Physics properties for each piece
+      confettiPieces.push({
+        el: confetti,
+        x: startX,
+        y: -20 - Math.random() * 100, // stagger start
+        vx: (Math.random() - 0.5) * 3, // horizontal drift
+        vy: Math.random() * 2 + 1,     // fall speed
+        rotateX: Math.random() * 360,
+        rotateY: Math.random() * 360,
+        rotateZ: Math.random() * 360,
+        spinX: (Math.random() - 0.5) * 15,  // rotation speed
+        spinY: (Math.random() - 0.5) * 15,
+        spinZ: (Math.random() - 0.5) * 10,
+        wobblePhase: Math.random() * Math.PI * 2,
+        wobbleSpeed: Math.random() * 0.1 + 0.05,
+        wobbleAmount: Math.random() * 2 + 1,
+      });
     }
-    
-    // Remove confetti after animation
-    setTimeout(() => {
-      confettiContainer.remove();
-    }, 10000);
+
+    // Animate with requestAnimationFrame for smooth 8-bit tumbling
+    let frame = 0;
+    const maxFrames = 600; // ~10 seconds at 60fps
+
+    function animateConfetti() {
+      frame++;
+      let allDone = true;
+
+      confettiPieces.forEach(piece => {
+        // Update physics
+        piece.wobblePhase += piece.wobbleSpeed;
+        piece.x += piece.vx + Math.sin(piece.wobblePhase) * piece.wobbleAmount;
+        piece.y += piece.vy;
+        piece.vy += 0.03; // gravity
+
+        // Air resistance on horizontal movement
+        piece.vx *= 0.99;
+
+        // Tumbling rotation
+        piece.rotateX += piece.spinX;
+        piece.rotateY += piece.spinY;
+        piece.rotateZ += piece.spinZ;
+
+        // Apply transform - using steps for that chunky pixel feel
+        const stepX = Math.round(piece.x);
+        const stepY = Math.round(piece.y);
+        const stepRX = Math.round(piece.rotateX / 15) * 15; // snap to 15-degree increments
+        const stepRY = Math.round(piece.rotateY / 15) * 15;
+        const stepRZ = Math.round(piece.rotateZ / 15) * 15;
+
+        piece.el.style.transform = `translate(${stepX}px, ${stepY}px) rotateX(${stepRX}deg) rotateY(${stepRY}deg) rotateZ(${stepRZ}deg)`;
+
+        // Fade out near bottom
+        if (piece.y > window.innerHeight - 100) {
+          piece.el.style.opacity = Math.max(0, 1 - (piece.y - (window.innerHeight - 100)) / 100);
+        }
+
+        if (piece.y < window.innerHeight + 50) {
+          allDone = false;
+        }
+      });
+
+      if (!allDone && frame < maxFrames) {
+        requestAnimationFrame(animateConfetti);
+      } else {
+        confettiContainer.remove();
+      }
+    }
+
+    requestAnimationFrame(animateConfetti);
   }
 }); 

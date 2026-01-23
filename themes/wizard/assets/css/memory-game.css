@@ -155,28 +155,19 @@
   pointer-events: none;
   z-index: 1000;
   image-rendering: pixelated;
+  perspective: 800px;
+  overflow: hidden;
 }
 
 .confetti {
   position: absolute;
-  top: -25px;
-  width: 8px;
-  height: 8px;
   /* Square pixels, no rounded corners */
   border-radius: 0;
-  animation: confetti-fall steps(30) forwards;
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(360deg);
-    opacity: 0;
-  }
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  /* Keeps the chunky pixel aesthetic during rotation */
+  image-rendering: pixelated;
 }
 
 /* Dark theme support */
