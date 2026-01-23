@@ -1,5 +1,6 @@
 +++
 title = "Magic Wormhole"
+date = 2025-05-07
 tags = ["software"]
 draft = false
 +++

@@ -45,11 +45,85 @@ If you're looking for someone who can not only understand your technical
 challenges from every angle but also architect and implement solutions that
 exceed expectations in both performance and quality, let's connect.
 
+*** Contact
+
+You can reach me by email: [[mailto:s.koschnicke@gfxpro.com][s.koschnicke@gfxpro.com]].
+
+My postal address:
+
+#+begin_quote
+GFXpro, z. Hd. Sven Koschnicke\\
+Tannenstraße 16\\
+24229 Schwedeneck\\
+Germany
+#+end_quote
+
+Bank account:
+
+#+begin_quote
+bunq\\
+IBAN: NL02 BUNQ 2057 0845 58\\
+BIC: BUNQNL2A
+#+end_quote
+
+*** Legal / Imprint (in german)
+
+Anbieter und Verantwortlicher im Sinne des § 5 TMG und § 55 Absatz 2 RStV ist:
+
+#+begin_quote
+Sven Koschnicke (Einzelunternehmer)\\
+Tannenstraße 16\\
+24229 Schwedeneck\\
+Germany\\
+E-Mail: [[mailto:s.koschnicke@gfxpro.com][s.koschnicke@gfxpro.com]]\\
+USt-IdNr.: DE235896138
+#+end_quote
+
+Hinweis für Verbraucher:
+
+Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: [[https://ec.europa.eu/consumers/odr]]
+
+Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+
+** Imprint
+:PROPERTIES:
+:EXPORT_FILE_NAME: imprint
+:END:
+
+This website is operated by me, Sven Koschnicke, and I am responsible in terms of data protection rights (see my full address on the [[/about/][about page]]).
+
+When using this website, no personal information about you is stored by me.
+
+When your browser-software requests a part of this website, it sends some request information to the server providing the website. This request information includes:
+
+- your current IP-Address over which you are connected to the internet
+- name and version of your browser software and operating system
+- website, from which you reached the requested website if using a hyperlink (the so called [[https://en.wikipedia.org/wiki/HTTP_referer][referer-URL, it's misspelling originated in the original proposal for the HTTP specification]])
+- date and time of the request
+
+The request information is required by the server to process your request of the website (Article 6.1(f) GDPR) and is discarded as soon as this request is fulfilled.
+
+Your privacy is very important to me. For this reason, I do not use any third party services on my website, which would receive your request information. I also do not set any cookies which would allow to track you navigating my website. My website is only available over [[https://en.wikipedia.org/wiki/Transport_Layer_Security][TLS]], the standard for encrypted HTTP (called HTTPS), preventing other from seeing or changing the requested sites (only the hostname, sven.guru, for the request is not encrypted, which is a feature of the [[https://en.wikipedia.org/wiki/Server_Name_Indication][SNI extension]] to TLS and allows the server to serve more than one website over TLS).
+
+When you contact me, I store the personal information which is provided along with your message to me. I keep this data as long as necessary for our conversation (Article 6.1(b) GDPR) and as required by law (which is six years for business correspondence in germany, Article 257(4) german commercial code, HGB). Conversations over e-mail are not encrypted by default and you should use PGP to encrypt e-mails. You can find [[https://keybase.io/skoschnicke][my PGP-key at keybase.io]].
+
+When I work for you, I store your contact data in my invoice system, which is called [[https://www.getharvest.com/privacy-policy][Harvest]] and is operated by Iridesco, LLC d/b/a Harvest, a New York (USA) limited liability company. Harvest is fully GDPR compliant ([[https://www.getharvest.com/privacy-policy][see Harvest's privacy policy]]). Invoices are stored ten years as required by german law (Article 257(4) german commercial code, HGB).
+
+Additionally to normal bank transfer you can pay me using PayPal and Stripe. When using one of these third party services, the service receives your payment data. You can consult the [[https://www.paypal.com/de/webapps/mpp/ua/privacy-prev][PayPal privacy policy]] and the [[https://stripe.com/de/privacy][Stripe privacy policy]] for further details.
+
+In any case, I follow industry standards of technical, physical and administrative security to safeguard your personal information.
+
+If you want to access or change your personal data that I store, you may [[/about/][contact me]]. You have the right to disclosure, correction, deletion or constraint of your personal data, if permitted by law.
+
+If you are unhappy about how I handle your personal data, you may complain to any data privacy authority. For example to the [[https://www.datenschutzzentrum.de/][Independent Centre for Privacy Protection Schleswig-Holstein]].
+
+If you have any questions, feel free to [[/about/][contact me]].
 * Posts
 
 ** DONE Hello World                                                             :personal:
 :PROPERTIES:
 :EXPORT_FILE_NAME: hello-world
+:EXPORT_DATE: 2025-01-02
 :END:
 
 Shipping is a feature, and because I don't have much time these days, I'll start with a minimal viable product and get this homepage published as fast as possible. You'll find my thoughts and insights here soon. Mostly about technology and software development. But I can't say how often or when.
@@ -57,6 +131,7 @@ Shipping is a feature, and because I don't have much time these days, I'll start
 ** DONE Magic Wormhole                                                         :software:
 :PROPERTIES:
 :EXPORT_FILE_NAME: magic-wormhole
+:EXPORT_DATE: 2025-05-07
 :ID:       d25b0e33-8bd4-44cc-9249-dcfd4eff5b1a
 :END:
 
@@ -143,3 +218,10 @@ And on the server the program exits with:
 #+end_example
 
 That's it. Now I could access the server from my laptop. Easy, secure, straight forward.
+
+** TODO Overengineering a static website                                       :web:rust:cloud:unikernel:
+:PROPERTIES:
+:EXPORT_DATE: 2026-01-22
+:END:
+
+Back in the dark ages of the world wide web, when someone wanted to publish a website, they would write some HTML (by hand) and put it into a directory where an Apache webserver could deliver it to the users browser (likely Netscape Navigator). Then, people wanted dynamic content and Apache got an interface to ask a program (e.g. a Perl script) what it should deliver to the user. That was a bit complicated, but it worked. Then came PHP, a script language created only for the purpose of writing dynamic websites and it was directly integrated with Apache through =mod_php=. It was way easier to create dynamic websites now, and everyone did that. Even if they actually didn't need to be dynamic, just to not have to write the navigation on every page again. Today, we have static site generators, that create static HTML from some Markdown sources and it's a little bit like at the beginning again. You could put the static HTML onto GitHub and be done with it. GitHub would deliver the HTML to the user. Easy. I did that with the first versions of this homepage. Write it in emacs (because org-mode is better than Markdown), export it to Markdown for Hugo and let Hugo convert it to HTML.
