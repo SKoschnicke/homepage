@@ -242,11 +242,6 @@ a:visited::after {
 
 .post-title {
     margin: 0 0 1rem;
-    color: var(--primary-color);
-    font-size: 1.2rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-family: var(--heading-font);
 }
 
 .post-title a {
