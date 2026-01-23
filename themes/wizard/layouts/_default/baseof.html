@@ -75,9 +75,11 @@
             <footer class="site-footer">
                 {{ partial "sidebar/socials.html" . }}
                 <div id="metrics-dashboard"></div>
-                <div id="memory-game"></div>
+                <div class="memory-game-wrapper">
+                    <div id="memory-game"></div>
+                </div>
                 <button id="reset-game" class="reset-button">Reset Game</button>
-                <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }}</p>
+                <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }} · <a href="/imprint/">Imprint</a></p>
             </footer>
         </div>
     </body>

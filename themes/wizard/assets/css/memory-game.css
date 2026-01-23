@@ -1,68 +1,86 @@
-/* Memory Game Styles */
+/* Memory Game Styles - Retro 8-bit aesthetic */
+
+.memory-game-wrapper {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
+}
 
 .memory-game-title {
   margin: 20px 0 10px;
-  font-size: 1.2rem;
+  font-size: 0.7rem;
   color: var(--text-color);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   font-family: var(--heading-font);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 #memory-game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-gap: 10px;
+  grid-gap: 6px;
   width: 280px;
   margin: 20px auto;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: rgba(245, 245, 230, 0.7);
+  padding: 12px;
+  border-radius: 0;
+  background-color: #d8e8f0;
   cursor: pointer;
   position: relative;
-  transition: transform 0.3s ease;
+  /* Chunky pixel border effect */
+  border: 4px solid #3AAFB9;
+  box-shadow:
+    4px 4px 0 0 #2d7a82,
+    inset 0 0 0 2px #b8c8d0;
+  image-rendering: pixelated;
 }
 
 #memory-game:hover {
-  transform: scale(1.02);
+  transform: none;
 }
 
 #memory-game::before {
-  content: '';
+  content: 'CLICK TO START';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 8px;
-  border: 2px dashed transparent;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--heading-font);
+  font-size: 1.2rem;
+  color: #ffffff;
+  text-shadow:
+    2px 2px 0 #000,
+    0 0 10px rgba(255, 255, 255, 0.5);
   pointer-events: none;
-  transition: border-color 0.3s ease;
+  z-index: 10;
 }
 
-#memory-game:hover::before {
-  border-color: var(--primary-color);
+#memory-game.game-started::before {
+  display: none;
 }
 
-html.dark #memory-game {
-  background-color: rgba(26, 42, 51, 0.7);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+[data-theme="dark"] #memory-game {
+  background-color: #0a0a14;
+  box-shadow:
+    4px 4px 0 0 #2d7a82,
+    inset 0 0 0 2px #050508;
 }
+
 
 .memory-card {
   position: relative;
-  height: 60px;
+  height: 55px;
   cursor: pointer;
   transform-style: preserve-3d;
   transform: scale(1);
-  transition: transform 0.5s;
+  transition: transform 0.15s step-end;
   perspective: 1000px;
 }
 
 .memory-card:active {
-  transform: scale(0.95);
-  transition: transform 0.2s;
+  transform: scale(0.9);
+  transition: transform 0.05s step-end;
 }
 
 .memory-card.flipped {
@@ -74,29 +92,60 @@ html.dark #memory-game {
   position: absolute;
   width: 100%;
   height: 100%;
-  border-radius: 6px;
+  border-radius: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+  image-rendering: pixelated;
 }
 
 .front-face {
   transform: rotateY(180deg);
-  background-color: #f5f5f5;
-  font-size: 26px;
-  border: 2px solid #3AAFB9;
+  background: linear-gradient(135deg, #e8f0f8 0%, #d0e0e8 100%);
+  font-size: 22px;
+  border: 3px solid #3AAFB9;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.8),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.15);
 }
 
 .back-face {
-  background-color: #59C265;
-  border: 2px solid #3AAFB9;
+  background: repeating-linear-gradient(
+    45deg,
+    #4d9a50,
+    #4d9a50 4px,
+    #5dba60 4px,
+    #5dba60 8px
+  );
+  border: 3px solid #3AAFB9;
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.2);
   transform: rotateY(0deg);
 }
 
-/* Confetti Animation */
+/* Scanline effect on card backs */
+.back-face::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.1) 2px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  pointer-events: none;
+}
+
+/* Retro Pixel Confetti Animation */
 .confetti-container {
   position: fixed;
   top: 0;
@@ -105,14 +154,18 @@ html.dark #memory-game {
   height: 100vh;
   pointer-events: none;
   z-index: 1000;
+  image-rendering: pixelated;
 }
 
 .confetti {
   position: absolute;
   top: -25px;
-  width: 10px;
-  height: 20px;
-  animation: confetti-fall linear forwards;
+  width: 8px;
+  height: 8px;
+  /* Square pixels, no rounded corners */
+  border-radius: 0;
+  animation: confetti-fall steps(30) forwards;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 @keyframes confetti-fall {
@@ -121,45 +174,121 @@ html.dark #memory-game {
     opacity: 1;
   }
   100% {
-    transform: translateY(100vh) rotate(720deg);
+    transform: translateY(100vh) rotate(360deg);
     opacity: 0;
   }
 }
 
 /* Dark theme support */
-html.dark .front-face {
-  background-color: #2A3B47;
-  color: #ffffff;
+[data-theme="dark"] .front-face {
+  background: linear-gradient(135deg, #2a2a4a 0%, #1a1a2e 100%);
+  color: #3AAFB9;
+  border-color: #3AAFB9;
+  text-shadow: 0 0 8px #3AAFB9;
+}
+
+[data-theme="dark"] .back-face {
+  background: repeating-linear-gradient(
+    45deg,
+    #2d5a30,
+    #2d5a30 4px,
+    #3d7a40 4px,
+    #3d7a40 8px
+  );
   border-color: #3AAFB9;
 }
 
-html.dark .back-face {
-  background-color: #1A2A33;
-  border-color: #3AAFB9;
+/* Final score overlay */
+.score-counter.final-score {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--heading-font);
+  font-size: 1.2rem;
+  color: #ffffff;
+  letter-spacing: 2px;
+  text-shadow:
+    2px 2px 0 #000,
+    0 0 10px rgba(255, 255, 255, 0.5);
+  z-index: 20;
+  pointer-events: none;
+  white-space: nowrap;
 }
 
 .reset-button {
-  margin: 15px auto;
-  padding: 8px 16px;
-  background-color: #3AAFB9;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  margin: 10px auto;
+  padding: 10px 20px;
+  background-color: #e8f0f8;
+  color: #2d7a82;
+  border: 3px solid #3AAFB9;
+  border-radius: 0;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.5rem;
   font-family: var(--heading-font);
-  transition: background-color 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   display: block;
+  box-shadow:
+    3px 3px 0 0 #2d7a82,
+    inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+  transition: none;
 }
 
 .reset-button:hover {
-  background-color: #59C265;
-}
-
-html.dark .reset-button {
   background-color: #3AAFB9;
+  color: #ffffff;
+  box-shadow:
+    3px 3px 0 0 #59C265,
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-html.dark .reset-button:hover {
-  background-color: #59C265;
+.reset-button:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    1px 1px 0 0 #2d7a82;
+}
+
+[data-theme="dark"] .reset-button {
+  background-color: #0a0a14;
+  color: #3AAFB9;
+  border-color: #3AAFB9;
+  box-shadow:
+    3px 3px 0 0 #2d7a82,
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .reset-button:hover {
+  background-color: #3AAFB9;
+  color: #0a0a14;
+}
+
+/* CRT scanline overlay for the whole game */
+#memory-game::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Matched cards get a glow */
+.memory-card.flipped .front-face {
+  animation: matched-glow 0.5s ease-out;
+}
+
+@keyframes matched-glow {
+  0% { box-shadow: 0 0 0 rgba(58, 175, 185, 0); }
+  50% { box-shadow: 0 0 20px rgba(58, 175, 185, 0.8), 0 0 40px rgba(58, 175, 185, 0.4); }
+  100% { box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.1), inset -2px -2px 0 rgba(0, 0, 0, 0.3); }
 }

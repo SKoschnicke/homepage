@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('Memory game initialized');
   
   // Symbols to use for the cards (using emoji for simplicity)
-  const symbols = ['🚀', '🌟', '🎮', '🎯'];
+  const symbols = ['🚀', '🌟', '🎮', '🎯', '👾', '🕹️'];
   const allSymbols = [...symbols, ...symbols]; // Duplicate for pairs
   
   // Game state
@@ -18,7 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let lockBoard = false;
   let firstCard, secondCard;
   let matchedPairs = 0;
+  let score = 1000;
   let gameStarted = false;
+
+  // Create score counter element (inside the game container for overlay)
+  const scoreCounter = document.createElement('div');
+  scoreCounter.classList.add('score-counter');
   
   // First, show all cards briefly then flip them
   function initialCardReveal() {
@@ -45,11 +50,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function startGameOnFirstClick(e) {
     if (!gameStarted) {
       gameStarted = true;
+      // Add class to hide the "CLICK TO START" text
+      gameContainer.classList.add('game-started');
       // Remove this event listener as it's no longer needed
       gameContainer.removeEventListener('click', startGameOnFirstClick);
       // Start the initial card reveal
       initialCardReveal();
-      
+
       // Prevent the first click from selecting a card
       e.stopPropagation();
       e.preventDefault();
@@ -65,14 +72,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function initGame() {
     // Clear any existing cards
     gameContainer.innerHTML = '';
-    
+    // Remove game-started class to show "CLICK TO START" again
+    gameContainer.classList.remove('game-started');
+
     // Reset game state
     hasFlippedCard = false;
     lockBoard = true; // Lock the board until first click
     firstCard = null;
     secondCard = null;
     matchedPairs = 0;
+    score = 1000;
     gameStarted = false;
+
+    // Remove score counter if it exists in DOM
+    if (scoreCounter.parentNode) {
+      scoreCounter.parentNode.removeChild(scoreCounter);
+    }
+    updateScoreCounter();
     
     // Shuffle the symbols
     const shuffledSymbols = [...allSymbols].sort(() => 0.5 - Math.random());
@@ -106,12 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confettiContainer) {
       confettiContainer.remove();
     }
-    
+
     // Re-initialize the game
     initGame();
-    
+
     // Immediately start the game without requiring activation
     gameStarted = true;
+    gameContainer.classList.add('game-started');
     initialCardReveal();
   }
   
@@ -137,18 +154,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check if the cards match
   function checkForMatch() {
     const isMatch = firstCard.dataset.symbol === secondCard.dataset.symbol;
-    
+
     if (isMatch) {
       disableCards();
       matchedPairs++;
-      
+
       // Check if all pairs are matched
       if (matchedPairs === symbols.length) {
+        setTimeout(showFinalScore, 500);
         setTimeout(celebrateWin, 500);
       }
     } else {
+      score = Math.max(0, score - 50);
+      updateScoreCounter();
       unflipCards();
     }
+  }
+
+  // Update the score counter display
+  function updateScoreCounter() {
+    scoreCounter.textContent = `SCORE ${score}`;
+  }
+
+  // Show final score overlay on game board
+  function showFinalScore() {
+    updateScoreCounter();
+    scoreCounter.classList.add('final-score');
+    // Append to wrapper for absolute positioning over the game
+    const wrapper = gameContainer.parentNode;
+    wrapper.appendChild(scoreCounter);
   }
   
   // Disable matched cards
@@ -179,9 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Celebrate with confetti when winning
   function celebrateWin() {
-    // Simple confetti effect
-    const confettiCount = 200;
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+    // Retro 8-bit confetti effect
+    const confettiCount = 150;
+    // Classic NES-inspired palette
+    const colors = ['#fc0000', '#00fc00', '#0000fc', '#fcfc00', '#fc00fc', '#00fcfc', '#fcfcfc', '#3AAFB9', '#59C265'];
     
     const confettiContainer = document.createElement('div');
     confettiContainer.classList.add('confetti-container');

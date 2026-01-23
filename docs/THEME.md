@@ -168,7 +168,7 @@ document.head.appendChild(script);
 |------|---------|------|
 | `pixel-scale.js` | DPR-based pixel art scaling | ~20 lines |
 | `light_dark.js` | Theme toggle, localStorage persistence | ~30 lines |
-| `memory-game.js` | Footer card matching game | ~200 lines |
+| `memory-game.js` | Footer card matching game (retro 8-bit style) | ~200 lines |
 | `metrics-dashboard.js` | Real-time server metrics | ~150 lines |
 | `chart.min.js` | Chart.js library (lazy-loaded) | ~200KB |
 | `mermaid.esm.min.mjs` | Diagram rendering (lazy-loaded) | ~1MB |

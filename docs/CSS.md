@@ -376,6 +376,69 @@ Use the existing breakpoint or add new ones:
 }
 ```
 
+## Memory Game (Footer)
+
+The footer includes a retro 8-bit style memory card matching game (`memory-game.css`).
+
+### Visual Style
+
+- **Aesthetic**: Arcade cabinet / CRT monitor inspired
+- **No rounded corners**: All elements use `border-radius: 0`
+- **Chunky pixel borders**: 3-4px solid borders with offset drop shadows
+- **Scanline effects**: CRT-style horizontal lines overlay the game board
+- **Stepped animations**: Uses `step-end` timing for that choppy retro feel
+- **Blinking "CLICK TO START"**: Classic arcade prompt with `step-end` blink animation
+
+### Theme Support
+
+The game respects the site's light/dark mode via `[data-theme="dark"]` selectors:
+
+| Element | Light Mode | Dark Mode |
+|---------|------------|-----------|
+| Game board | `#d8e8f0` (pale blue) | `#0a0a14` (near black) |
+| Card fronts | Light gradient | Dark gradient with cyan glow |
+| Card backs | Bright green stripes | Muted green stripes |
+| Start text | Dark with white shadow | White with black shadow + glow |
+| Reset button | Light bg, teal text | Dark bg, cyan text |
+
+### Key CSS Features
+
+```css
+/* Chunky retro border with offset shadow */
+#memory-game {
+  border: 4px solid #3AAFB9;
+  box-shadow:
+    4px 4px 0 0 #2d7a82,
+    inset 0 0 0 2px #b8c8d0;
+}
+
+/* CRT scanline overlay */
+#memory-game::after {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* Diagonal stripe pattern on card backs */
+.back-face {
+  background: repeating-linear-gradient(
+    45deg,
+    #4d9a50,
+    #4d9a50 4px,
+    #5dba60 4px,
+    #5dba60 8px
+  );
+}
+```
+
+### Confetti Animation
+
+Win celebration uses square pixel confetti (no border-radius) with an NES-inspired color palette and stepped animation for that authentic 8-bit falling effect.
+
 ## Testing Checklist
 
 When modifying CSS:
