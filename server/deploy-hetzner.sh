@@ -131,33 +131,100 @@ inject_s3_credentials() {
     echo_info "Using temporary config: $CONFIG"
 }
 
-# Create new unikernel image
+# Create new unikernel image with retry logic
 create_image() {
     echo_info "Creating unikernel image..."
-    $OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME" 2>&1 | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed)" || true
-    echo_info "Image creation complete"
+    local max_retries=3
+    local retry=0
+    local output
+
+    while [ $retry -lt $max_retries ]; do
+        output=$($OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME" 2>&1)
+        local exit_code=$?
+
+        # Filter and display relevant output
+        echo "$output" | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed|resource_unavailable)" || true
+
+        # Check for success
+        if echo "$output" | grep -qi "created"; then
+            echo_info "Image creation complete"
+            return 0
+        fi
+
+        # Check for transient resource_unavailable error
+        if echo "$output" | grep -qi "resource_unavailable"; then
+            retry=$((retry + 1))
+            if [ $retry -lt $max_retries ]; then
+                echo_warn "Hetzner resource unavailable (attempt $retry/$max_retries). Retrying in 30s..."
+                sleep 30
+                continue
+            fi
+        fi
+
+        # Non-transient error or max retries reached
+        echo_error "Image creation failed after $((retry + 1)) attempt(s). Output:\n$output"
+    done
 }
 
-# Create new instance
+# Verify image was created successfully
+verify_image() {
+    echo_info "Verifying image exists..."
+    if ! $OPS image list -t hetzner -c $CONFIG 2>/dev/null | grep -q "$IMAGE_NAME"; then
+        echo_error "Image '$IMAGE_NAME' not found after creation. Deployment cannot continue."
+    fi
+    echo_info "Image verified: $IMAGE_NAME"
+}
+
+# Create new instance with retry logic
 create_instance() {
     echo_info "Creating instance..."
-    local output=$($OPS instance create "$IMAGE_NAME" -t hetzner -c $CONFIG 2>&1 | grep -v "^\[")
-    echo "$output" | grep -E "(created|error|Error|failed|Failed)"
+    local max_retries=3
+    local retry=0
+    local output
 
-    # Extract instance name from output
-    INSTANCE_NAME=$(echo "$output" | grep "created..." | sed "s/hetzner instance '\(.*\)' created.../\1/")
+    while [ $retry -lt $max_retries ]; do
+        output=$($OPS instance create "$IMAGE_NAME" -t hetzner -c $CONFIG 2>&1)
+        local exit_code=$?
 
-    if [ -z "$INSTANCE_NAME" ]; then
-        echo_error "Failed to extract instance name"
-    fi
+        # Filter and display relevant output
+        echo "$output" | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed|resource_unavailable)" || true
 
-    echo_info "Instance created: $INSTANCE_NAME"
+        # Extract instance name from output
+        INSTANCE_NAME=$(echo "$output" | grep "created..." | sed "s/hetzner instance '\(.*\)' created.../\1/")
+
+        if [ -n "$INSTANCE_NAME" ]; then
+            echo_info "Instance created: $INSTANCE_NAME"
+            return 0
+        fi
+
+        # Check for transient resource_unavailable error
+        if echo "$output" | grep -qi "resource_unavailable"; then
+            retry=$((retry + 1))
+            if [ $retry -lt $max_retries ]; then
+                echo_warn "Hetzner resource unavailable (attempt $retry/$max_retries). Retrying in 30s..."
+                sleep 30
+                continue
+            fi
+        fi
+
+        # Non-transient error or max retries reached
+        echo_error "Instance creation failed after $((retry + 1)) attempt(s). Output:\n$output"
+    done
 }
 
 # Start the instance
 start_instance() {
     echo_info "Starting instance..."
-    $OPS instance start "$INSTANCE_NAME" -t hetzner -c $CONFIG 2>&1 | grep -v "^\[" | grep -E "(started|error|Error|failed|Failed)" || true
+    local output=$($OPS instance start "$INSTANCE_NAME" -t hetzner -c $CONFIG 2>&1)
+
+    # Filter and display relevant output
+    echo "$output" | grep -v "^\[" | grep -E "(started|error|Error|failed|Failed)" || true
+
+    # Check for errors
+    if echo "$output" | grep -qi "error\|failed"; then
+        echo_error "Instance start failed. Output:\n$output"
+    fi
+
     echo_info "Instance start command sent"
     sleep 5  # Give it a moment to actually start
 }
@@ -347,6 +414,7 @@ main() {
     cleanup_instances
     cleanup_image
     create_image
+    verify_image
     create_instance
     start_instance
     get_instance_ip
