@@ -1,0 +1,11 @@
+# {{ .Title }}
+
+{{ .Content | plainify }}
+
+{{ range .Pages }}
+=> {{ .RelPermalink }} {{ .Title }}{{ if .Date }} ({{ .Date.Format "2006-01-02" }}){{ end }}
+{{ end }}
+
+---
+
+=> / Home

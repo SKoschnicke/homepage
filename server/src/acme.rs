@@ -401,7 +401,7 @@ async fn handle_challenge_request(
         .unwrap())
 }
 
-fn build_tls_config(
+pub fn build_tls_config(
     cert_pem: &str,
     privkey_pem: &str,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {

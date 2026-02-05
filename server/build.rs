@@ -27,7 +27,7 @@ fn main() {
     writeln!(output, "#![allow(dead_code)]").unwrap();
     writeln!(output, "use std::collections::HashMap;\n").unwrap();
 
-    // Write Asset struct
+    // Write Asset struct (for HTTP/HTTPS)
     writeln!(output, "#[derive(Clone)]").unwrap();
     writeln!(output, "pub struct Asset {{").unwrap();
     writeln!(output, "    pub content_raw: &'static [u8],").unwrap();
@@ -38,9 +38,17 @@ fn main() {
     writeln!(output, "    pub is_compressible: bool,").unwrap();
     writeln!(output, "}}\n").unwrap();
 
-    let mut routes = Vec::new();
+    // Write GeminiAsset struct (simpler - no compression needed)
+    writeln!(output, "#[derive(Clone)]").unwrap();
+    writeln!(output, "pub struct GeminiAsset {{").unwrap();
+    writeln!(output, "    pub content: &'static [u8],").unwrap();
+    writeln!(output, "    pub etag: &'static str,").unwrap();
+    writeln!(output, "}}\n").unwrap();
 
-    // Walk public/ directory
+    let mut http_routes = Vec::new();
+    let mut gemini_routes = Vec::new();
+
+    // Walk public/ directory - process both HTML and Gemini files
     for entry in WalkDir::new(PUBLIC_DIR).follow_links(true) {
         let entry = match entry {
             Ok(e) => e,
@@ -58,8 +66,8 @@ fn main() {
         let relative_path = path.strip_prefix(PUBLIC_DIR)
             .expect("Failed to strip prefix");
 
-        let route = format!("/{}", relative_path.to_string_lossy())
-            .replace('\\', "/");
+        // Check if this is a Gemini file
+        let is_gemini = path.extension().map(|e| e == "gmi").unwrap_or(false);
 
         // Read file content
         let content = match fs::read(path) {
@@ -70,68 +78,109 @@ fn main() {
             }
         };
 
-        // Detect content type
-        let content_type = mime_guess::from_path(path)
-            .first_or_octet_stream()
-            .as_ref()
-            .to_string();
-
         // Generate ETag (SHA256 hash of content)
         let mut hasher = Sha256::new();
         hasher.update(&content);
         let etag = format!("{:x}", hasher.finalize());
 
-        // Determine if content should be compressed
-        let is_compressible = is_compressible_type(&content_type);
+        if is_gemini {
+            // Process as Gemini asset
+            let path_str = relative_path.to_string_lossy().replace('\\', "/");
 
-        // Compress if beneficial
-        let (gzip_content, brotli_content) = if is_compressible {
-            (compress_gzip(&content), compress_brotli(&content))
+            // Convert path to Gemini route:
+            // - /index.gmi -> /
+            // - /about/index.gmi -> /about/
+            // - /posts/hello-world/index.gmi -> /posts/hello-world/
+            let route = if path_str == "index.gmi" {
+                "/".to_string()
+            } else if path_str.ends_with("/index.gmi") {
+                format!("/{}", path_str.trim_end_matches("index.gmi"))
+            } else {
+                // Non-index .gmi file (shouldn't happen with Hugo, but handle it)
+                format!("/{}", path_str.trim_end_matches(".gmi"))
+            };
+
+            let ident = format!("GEMINI{}", sanitize_ident(&route));
+
+            // Write content const
+            writeln!(output, "const CONTENT_{}: &[u8] = &{:?};", ident, content).unwrap();
+
+            // Write GeminiAsset const
+            writeln!(output, "const ASSET_{}: GeminiAsset = GeminiAsset {{", ident).unwrap();
+            writeln!(output, "    content: CONTENT_{},", ident).unwrap();
+            writeln!(output, "    etag: \"{}\",", etag).unwrap();
+            writeln!(output, "}};\n").unwrap();
+
+            gemini_routes.push((route, ident));
         } else {
-            // For non-compressible content, just reference the same data
-            (content.clone(), content.clone())
-        };
+            // Process as HTTP asset
+            let route = format!("/{}", relative_path.to_string_lossy())
+                .replace('\\', "/");
 
-        // Generate const identifier
-        let ident = sanitize_ident(&route);
+            // Detect content type
+            let content_type = mime_guess::from_path(path)
+                .first_or_octet_stream()
+                .as_ref()
+                .to_string();
 
-        // Write raw content
-        writeln!(output, "const CONTENT_RAW_{}: &[u8] = &{:?};", ident, content).unwrap();
+            // Determine if content should be compressed
+            let is_compressible = is_compressible_type(&content_type);
 
-        // Only write different compressed versions if actually compressible
-        if is_compressible {
-            writeln!(output, "const CONTENT_GZIP_{}: &[u8] = &{:?};", ident, gzip_content).unwrap();
-            writeln!(output, "const CONTENT_BROTLI_{}: &[u8] = &{:?};", ident, brotli_content).unwrap();
-        } else {
-            writeln!(output, "const CONTENT_GZIP_{}: &[u8] = CONTENT_RAW_{};", ident, ident).unwrap();
-            writeln!(output, "const CONTENT_BROTLI_{}: &[u8] = CONTENT_RAW_{};", ident, ident).unwrap();
+            // Compress if beneficial
+            let (gzip_content, brotli_content) = if is_compressible {
+                (compress_gzip(&content), compress_brotli(&content))
+            } else {
+                (content.clone(), content.clone())
+            };
+
+            let ident = sanitize_ident(&route);
+
+            // Write raw content
+            writeln!(output, "const CONTENT_RAW_{}: &[u8] = &{:?};", ident, content).unwrap();
+
+            // Only write different compressed versions if actually compressible
+            if is_compressible {
+                writeln!(output, "const CONTENT_GZIP_{}: &[u8] = &{:?};", ident, gzip_content).unwrap();
+                writeln!(output, "const CONTENT_BROTLI_{}: &[u8] = &{:?};", ident, brotli_content).unwrap();
+            } else {
+                writeln!(output, "const CONTENT_GZIP_{}: &[u8] = CONTENT_RAW_{};", ident, ident).unwrap();
+                writeln!(output, "const CONTENT_BROTLI_{}: &[u8] = CONTENT_RAW_{};", ident, ident).unwrap();
+            }
+
+            // Write Asset const
+            writeln!(output, "const ASSET_{}: Asset = Asset {{", ident).unwrap();
+            writeln!(output, "    content_raw: CONTENT_RAW_{},", ident).unwrap();
+            writeln!(output, "    content_gzip: CONTENT_GZIP_{},", ident).unwrap();
+            writeln!(output, "    content_brotli: CONTENT_BROTLI_{},", ident).unwrap();
+            writeln!(output, "    content_type: \"{}\",", content_type).unwrap();
+            writeln!(output, "    etag: \"{}\",", etag).unwrap();
+            writeln!(output, "    is_compressible: {},", is_compressible).unwrap();
+            writeln!(output, "}};\n").unwrap();
+
+            http_routes.push((route, ident));
         }
-
-        // Write Asset const
-        writeln!(output, "const ASSET_{}: Asset = Asset {{", ident).unwrap();
-        writeln!(output, "    content_raw: CONTENT_RAW_{},", ident).unwrap();
-        writeln!(output, "    content_gzip: CONTENT_GZIP_{},", ident).unwrap();
-        writeln!(output, "    content_brotli: CONTENT_BROTLI_{},", ident).unwrap();
-        writeln!(output, "    content_type: \"{}\",", content_type).unwrap();
-        writeln!(output, "    etag: \"{}\",", etag).unwrap();
-        writeln!(output, "    is_compressible: {},", is_compressible).unwrap();
-        writeln!(output, "}};\n").unwrap();
-
-        routes.push((route, ident));
     }
 
-    // Generate get_routes function
+    // Generate get_routes function (HTTP)
     writeln!(output, "pub fn get_routes() -> HashMap<&'static str, &'static Asset> {{").unwrap();
     writeln!(output, "    let mut m = HashMap::new();").unwrap();
-
-    for (route, ident) in &routes {
+    for (route, ident) in &http_routes {
         writeln!(output, "    m.insert(\"{}\", &ASSET_{});", route, ident).unwrap();
     }
+    writeln!(output, "    m").unwrap();
+    writeln!(output, "}}\n").unwrap();
 
+    // Generate get_gemini_routes function
+    writeln!(output, "pub fn get_gemini_routes() -> HashMap<&'static str, &'static GeminiAsset> {{").unwrap();
+    writeln!(output, "    let mut m = HashMap::new();").unwrap();
+    for (route, ident) in &gemini_routes {
+        writeln!(output, "    m.insert(\"{}\", &ASSET_{});", route, ident).unwrap();
+    }
     writeln!(output, "    m").unwrap();
     writeln!(output, "}}").unwrap();
 
-    println!("cargo:warning=Generated {} routes", routes.len());
+    println!("cargo:warning=Generated {} HTTP routes", http_routes.len());
+    println!("cargo:warning=Generated {} Gemini routes", gemini_routes.len());
 }
 
 fn is_compressible_type(mime: &str) -> bool {
@@ -151,7 +200,7 @@ fn compress_gzip(data: &[u8]) -> Vec<u8> {
 fn compress_brotli(data: &[u8]) -> Vec<u8> {
     let mut output = Vec::new();
     let params = brotli::enc::BrotliEncoderParams {
-        quality: 11, // Max quality for static assets
+        quality: 11,
         ..Default::default()
     };
     let mut input = &data[..];
@@ -179,7 +228,15 @@ fn create_empty_assets() {
     writeln!(output, "    pub etag: &'static str,").unwrap();
     writeln!(output, "    pub is_compressible: bool,").unwrap();
     writeln!(output, "}}\n").unwrap();
+    writeln!(output, "#[derive(Clone)]").unwrap();
+    writeln!(output, "pub struct GeminiAsset {{").unwrap();
+    writeln!(output, "    pub content: &'static [u8],").unwrap();
+    writeln!(output, "    pub etag: &'static str,").unwrap();
+    writeln!(output, "}}\n").unwrap();
     writeln!(output, "pub fn get_routes() -> HashMap<&'static str, &'static Asset> {{").unwrap();
+    writeln!(output, "    HashMap::new()").unwrap();
+    writeln!(output, "}}").unwrap();
+    writeln!(output, "pub fn get_gemini_routes() -> HashMap<&'static str, &'static GeminiAsset> {{").unwrap();
     writeln!(output, "    HashMap::new()").unwrap();
     writeln!(output, "}}").unwrap();
 }

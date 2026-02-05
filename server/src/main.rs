@@ -13,6 +13,7 @@ extern crate rustls23;
 mod acme;
 mod assets;
 mod config;
+mod gemini;
 mod metrics;
 mod router;
 mod s3_storage;
@@ -116,7 +117,33 @@ async fn run_simple_server() -> Result<(), Box<dyn std::error::Error + Send + Sy
         .serve(make_svc);
 
     println!("✓ HTTP server listening on http://{}", addr);
-    println!("✓ Serving {} routes", router::route_count());
+    println!("✓ Serving {} HTTP routes", router::route_count());
+
+    // Start Gemini server with self-signed cert (if enabled)
+    let gemini_enabled = std::env::var("ENABLE_GEMINI").unwrap_or_else(|_| "true".to_string()) == "true";
+
+    if gemini_enabled && gemini::route_count() > 0 {
+        println!("\nStarting Gemini server with self-signed certificate...");
+
+        // Generate self-signed cert for Gemini
+        let domain = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
+        let cert_data = acme::generate_self_signed_certificate(&domain).await?;
+        let tls_config = acme::build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem)?;
+
+        let gemini_port = 1965u16;
+        tokio::spawn(async move {
+            if let Err(e) = start_gemini_server(tls_config, gemini_port).await {
+                eprintln!("Gemini server error: {}", e);
+            }
+        });
+
+        println!("✓ Gemini server listening on gemini://{}:{}", domain, gemini_port);
+        println!("✓ Serving {} Gemini routes", gemini::route_count());
+        println!("  (Using self-signed certificate - clients will show trust warning)");
+    } else if gemini_enabled {
+        println!("\n(Gemini disabled - no .gmi content in gemini-content/)");
+    }
+
     println!();
 
     server.await.map_err(|e| e.into())
@@ -253,7 +280,7 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     };
 
     // Step 5: Start HTTP redirect server
-    println!("\n[5/5] Starting HTTP redirect server (port {})...", http_port);
+    println!("\n[5/7] Starting HTTP redirect server (port {})...", http_port);
     let http_metrics = Arc::clone(&metrics);
     let http_domain = config.domain.clone();
     let http_server = tokio::spawn(async move {
@@ -262,26 +289,60 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  ✓ HTTP redirect server started");
 
     // Step 6: Start HTTPS server
-    println!("\n[6/6] Starting HTTPS server (port {})...", https_port);
+    println!("\n[6/7] Starting HTTPS server (port {})...", https_port);
+    let https_tls_config = Arc::clone(&tls_config);
     let https_metrics = Arc::clone(&metrics);
     let https_server = tokio::spawn(async move {
-        start_https_server(tls_config, https_metrics, https_port).await
+        start_https_server(https_tls_config, https_metrics, https_port).await
     });
     println!("  ✓ HTTPS server started");
 
+    // Step 7: Start Gemini server (reuses TLS config)
+    let gemini_enabled = std::env::var("ENABLE_GEMINI").unwrap_or_else(|_| "true".to_string()) == "true";
+    let gemini_port = 1965u16;
+
+    let gemini_server = if gemini_enabled {
+        println!("\n[7/7] Starting Gemini server (port {})...", gemini_port);
+        let gemini_tls_config = Arc::clone(&tls_config);
+        let handle = tokio::spawn(async move {
+            start_gemini_server(gemini_tls_config, gemini_port).await
+        });
+        println!("  ✓ Gemini server started");
+        Some(handle)
+    } else {
+        println!("\n[7/7] Gemini server disabled (set ENABLE_GEMINI=true to enable)");
+        None
+    };
+
     println!("\n========================================");
-    println!("✓ HTTPS Server Ready!");
-    println!("  HTTP:  http://0.0.0.0:{} (→ HTTPS)", http_port);
-    println!("  HTTPS: https://{}:{}", config.domain, https_port);
-    println!("  Routes: {}", router::route_count());
+    println!("✓ Server Ready!");
+    println!("  HTTP:   http://0.0.0.0:{} (→ HTTPS)", http_port);
+    println!("  HTTPS:  https://{}:{}", config.domain, https_port);
+    if gemini_enabled {
+        println!("  Gemini: gemini://{}:{}", config.domain, gemini_port);
+    }
+    println!("  HTTP Routes:   {}", router::route_count());
+    println!("  Gemini Routes: {}", gemini::route_count());
     println!("========================================\n");
 
-    // Wait for both servers
-    let (http_result, https_result) = tokio::try_join!(http_server, https_server)
-        .map_err(|e| format!("Server task failed: {}", e))?;
+    // Wait for servers
+    if let Some(gemini_handle) = gemini_server {
+        let (http_result, https_result, gemini_result) = tokio::try_join!(
+            http_server,
+            https_server,
+            gemini_handle
+        ).map_err(|e| format!("Server task failed: {}", e))?;
 
-    http_result?;
-    https_result?;
+        http_result?;
+        https_result?;
+        gemini_result?;
+    } else {
+        let (http_result, https_result) = tokio::try_join!(http_server, https_server)
+            .map_err(|e| format!("Server task failed: {}", e))?;
+
+        http_result?;
+        https_result?;
+    }
 
     Ok(())
 }
@@ -366,6 +427,37 @@ async fn start_https_server(
                 .await
             {
                 eprintln!("HTTPS connection error: {}", e);
+            }
+        });
+    }
+}
+
+async fn start_gemini_server(
+    tls_config: Arc<tokio_rustls::rustls::ServerConfig>,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    let listener = TcpListener::bind(&addr).await?;
+    let tls_acceptor = TlsAcceptor::from(tls_config);
+
+    loop {
+        let (stream, peer_addr) = listener.accept().await?;
+        let tls_acceptor = tls_acceptor.clone();
+
+        tokio::spawn(async move {
+            let tls_stream = match tls_acceptor.accept(stream).await {
+                Ok(s) => s,
+                Err(e) => {
+                    // TLS errors are common with probes/scanners - log at debug level
+                    if std::env::var("DEBUG_GEMINI").is_ok() {
+                        eprintln!("Gemini TLS error from {}: {}", peer_addr, e);
+                    }
+                    return;
+                }
+            };
+
+            if let Err(e) = gemini::handle_connection(tls_stream).await {
+                eprintln!("Gemini connection error from {}: {}", peer_addr, e);
             }
         });
     }

@@ -3,6 +3,21 @@ languageCode = 'en-us'
 title = 'Sven Koschnicke'
 theme = 'wizard'
 
+# Gemini output format
+[mediaTypes."text/gemini"]
+  suffixes = ["gmi"]
+
+[outputFormats.gemini]
+  baseName = "index"
+  mediaType = "text/gemini"
+  isPlainText = true
+  notAlternative = true
+
+[outputs]
+  home = ["HTML", "gemini"]
+  page = ["HTML", "gemini"]
+  section = ["HTML", "gemini"]
+
 defaultContentLanguage = 'en'
 [languages]
   [languages.de]

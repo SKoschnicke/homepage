@@ -1,0 +1,20 @@
+# {{ .Site.Title }}
+
+{{ .Content | plainify | htmlUnescape | replaceRE "\\n{3,}" "\n\n" }}
+
+## Recent Posts
+{{ range first 5 (where .Site.RegularPages "Section" "posts") }}
+=> {{ .RelPermalink }} {{ .Title }} ({{ .Date.Format "2006-01-02" }})
+{{ end }}
+
+## Navigation
+
+=> /about/ About
+=> /posts/ All Posts
+=> /imprint/ Imprint
+
+## Contact
+
+=> mailto:{{ .Site.Params.email_url | replaceRE "mailto:" "" }} Email
+=> {{ .Site.Params.github_url }} GitHub
+=> {{ .Site.Params.mastodon_url }} Mastodon
