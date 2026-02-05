@@ -136,43 +136,27 @@ create_image() {
     echo_info "Creating unikernel image..."
     local max_retries=3
     local retry=0
-    local output
 
     while [ $retry -lt $max_retries ]; do
-        output=$($OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME" 2>&1)
-        local exit_code=$?
+        # Run ops and show all output (filtered for noise)
+        $OPS image create target/release/static-server -c $CONFIG -t hetzner -i "$IMAGE_NAME" 2>&1 | grep -v "^\[" || true
 
-        # Filter and display relevant output
-        echo "$output" | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed|resource_unavailable)" || true
-
-        # Check for success
-        if echo "$output" | grep -qi "created"; then
+        # Check if image actually exists now (the only reliable test)
+        sleep 2
+        if $OPS image list -t hetzner -c $CONFIG 2>/dev/null | grep -q "$IMAGE_NAME"; then
             echo_info "Image creation complete"
             return 0
         fi
 
-        # Check for transient resource_unavailable error
-        if echo "$output" | grep -qi "resource_unavailable"; then
-            retry=$((retry + 1))
-            if [ $retry -lt $max_retries ]; then
-                echo_warn "Hetzner resource unavailable (attempt $retry/$max_retries). Retrying in 30s..."
-                sleep 30
-                continue
-            fi
+        # Image doesn't exist - check if it was a transient error worth retrying
+        retry=$((retry + 1))
+        if [ $retry -lt $max_retries ]; then
+            echo_warn "Image not found after creation attempt $retry/$max_retries. Retrying in 30s..."
+            sleep 30
         fi
-
-        # Non-transient error or max retries reached
-        echo_error "Image creation failed after $((retry + 1)) attempt(s). Output:\n$output"
     done
-}
 
-# Verify image was created successfully
-verify_image() {
-    echo_info "Verifying image exists..."
-    if ! $OPS image list -t hetzner -c $CONFIG 2>/dev/null | grep -q "$IMAGE_NAME"; then
-        echo_error "Image '$IMAGE_NAME' not found after creation. Deployment cannot continue."
-    fi
-    echo_info "Image verified: $IMAGE_NAME"
+    echo_error "Image creation failed after $max_retries attempts. Image '$IMAGE_NAME' not found."
 }
 
 # Create new instance with retry logic
@@ -183,33 +167,42 @@ create_instance() {
     local output
 
     while [ $retry -lt $max_retries ]; do
+        # Capture output so we can extract instance name
         output=$($OPS instance create "$IMAGE_NAME" -t hetzner -c $CONFIG 2>&1)
-        local exit_code=$?
 
-        # Filter and display relevant output
-        echo "$output" | grep -v "^\[" | grep -E "(created|error|Error|failed|Failed|resource_unavailable)" || true
+        # Show filtered output
+        echo "$output" | grep -v "^\[" || true
 
-        # Extract instance name from output
+        # Try to extract instance name from output
         INSTANCE_NAME=$(echo "$output" | grep "created..." | sed "s/hetzner instance '\(.*\)' created.../\1/")
 
+        # If we got a name, verify it exists
         if [ -n "$INSTANCE_NAME" ]; then
+            sleep 2
+            if $OPS instance list -t hetzner -c $CONFIG 2>/dev/null | grep -q "$INSTANCE_NAME"; then
+                echo_info "Instance created: $INSTANCE_NAME"
+                return 0
+            fi
+        fi
+
+        # Also check if ANY new instance was created (fallback)
+        sleep 2
+        local new_instance=$($OPS instance list -t hetzner -c $CONFIG 2>/dev/null | grep "homepage-unikernel-" | head -1 | awk '{print $2}')
+        if [ -n "$new_instance" ]; then
+            INSTANCE_NAME="$new_instance"
             echo_info "Instance created: $INSTANCE_NAME"
             return 0
         fi
 
-        # Check for transient resource_unavailable error
-        if echo "$output" | grep -qi "resource_unavailable"; then
-            retry=$((retry + 1))
-            if [ $retry -lt $max_retries ]; then
-                echo_warn "Hetzner resource unavailable (attempt $retry/$max_retries). Retrying in 30s..."
-                sleep 30
-                continue
-            fi
+        # Instance doesn't exist - retry
+        retry=$((retry + 1))
+        if [ $retry -lt $max_retries ]; then
+            echo_warn "Instance not found after creation attempt $retry/$max_retries. Retrying in 30s..."
+            sleep 30
         fi
-
-        # Non-transient error or max retries reached
-        echo_error "Instance creation failed after $((retry + 1)) attempt(s). Output:\n$output"
     done
+
+    echo_error "Instance creation failed after $max_retries attempts."
 }
 
 # Start the instance
@@ -414,7 +407,6 @@ main() {
     cleanup_instances
     cleanup_image
     create_image
-    verify_image
     create_instance
     start_instance
     get_instance_ip
