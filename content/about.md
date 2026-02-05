@@ -23,6 +23,8 @@ If you're looking for someone who can not only understand your technical
 challenges from every angle but also architect and implement solutions that
 exceed expectations in both performance and quality, let's connect.
 
+You can download my full [resume in English](/cv-en.pdf) or [in German](/cv-de.pdf).
+
 
 ## Contact {#contact}
 
