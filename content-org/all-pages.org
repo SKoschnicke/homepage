@@ -232,4 +232,43 @@ That works very well. The hugo conversion can even be done in a GitHub workflow 
 
 But it's also a little bit boring. I thought about how a generic webserver like Nginx could never be optimized to such extend for serving my static website because it needs to be usable for other use-cases, too. I wanted to try if it would be faster to keep all the pages in memory the way they need to be sent to the client. So I wrote a custom webserver in Rust which gets all the content compiled into the binary on build time. Then I did some benchmarks. The Rust server was over 16 times faster than a standard Nginx server. That was promising, so I added TLS support to the server. When comparing the deployed custom server with GitHub pages, Github pages still wins in overall response speed. That is because the most time of a web request is not spend waiting for the webserver but transferring the data from the server to the client, because the user is rarely sitting right next to the datacenter where the server is located. To make the distance between server and client as short as possible, one uses a content delivery network (CDN). The static content is copied to multiple datacenters all over the world and served from the location nearest to the user. GitHub pages distributes the content through a CDN by default and that makes it faster than any single webserver in one location (except when the user happens to be near this single server). But what a CDN can't do is serve dynamic content. So I added a dynamic component to my homepage in the form of live statistics about requests to the server. It is nothing really useful, but it is something a CDN cannot do.
 
-I could have stopped here. Deploy the Rust server to a virtual private server and be happy. But I didn't want to stop. The server was already a single binary also containing the content it should serve. So why not skip the whole operating system and deploy the server as an unikernel directly to the hypervisor?
+I could have stopped here. Deploy the Rust server to a virtual private server and be happy. But I didn't want to stop. The server was already a single binary also containing the content it should serve. So why not skip the whole operating system and deploy the server as an unikernel directly to the hypervisor? The most difficult thing was actually finding a cloud provider that supported that and understanding the API for deployment. I choose Hetzner, because they are based in Europe, but it shows that unikernels are a not so often used technology. Using the API successfully needed some experimentation, and the ~ops~ tool to build an unikernel image needs some polishing, but eventually it worked. TLS certificates from Let's Encrypt couldn't be stored on disk anymore, so I had to use a storage bucket for that (Hetzner provides these with a S3 compatible API). Storing the certificates only in memory would have meant that every deploy needs a new certificate, and that way I might have run into rate limits from Let's Encrypt.
+
+But now everything works. This website is served from a custom server running directly on the hypervisor. No system updates I have to worry about (the provider cares about the hypervisor), I only have to update the server itself. And it is fast. I also spend some time reducing the amount of data transferred by optimizing the binary files (images, PDFs). The server supports brotli compression (in addition to the standard gzip compression). So it's still slower than using a CDN if you are not near the datacenter, but everything is properly optimized now and it was a fun learning experience.
+
+Is this kind of deployment actually better? Speed and reduced attack surface are the advantages. I can also add fun little gimmicks like the statistics, because I control the whole webserver, but there are also not so nice things:
+
+- deployment is slow. The binary needs to be build, then the image needs to be build from the binary. Takes about 5 to 10 minutes until the new version is online. That's much for small content changes.
+- no easy debugging in production. I can't SSH into the server or look at logs (there are no logs, currently). I'd need to create observability infrastructure like OpenTelemetry and some log consumer where the server could send data. Or I'd need to integrate that into the server, extending it's attack surface again.
+- the allocated server resources are way too many for a simple static website. I'm paying about 3.50 euros for the server (2 vCPUs, 4 GB RAM) plus about 6 euros for object storage (that's basically Hetzner's base fee, I'm only using a few kilobytes for the certificates).
+- I can't share the server resources to run other services like a Mastodon server or a Matrix server
+
+*** TODO Improvements
+[2026-02-07 Sat 13:01]
+
+Interesting project, mediocre presentation. The technical journey deserves better storytelling. Add structure, add specifics, and for the
+love of Kernighan, break up those paragraphs.
+
+**** TODO Structure Problems
+
+The whole thing is essentially three giant paragraphs. Wall of text syndrome. My eyes glazed over around the middle of paragraph 2. Break it
+up with:
+- Subheadings: "The Boring Way", "The Custom Server", "Going Full Unikernel"
+- Bullet points for the benchmark results
+- Maybe some actual code snippets or architecture diagrams
+
+**** TODO Missing the Good Stuff
+
+You mention "16 times faster than Nginx" but don't show your work. What was the benchmark methodology? What requests per second? What
+latency? Numbers without context are just bragging.
+
+The "live statistics" feature sounds interesting but you don't even link to it or show a screenshot. That's your dynamic differentiator —
+show it off!
+
+**** TODO The Intro Drags
+
+You spend a whole paragraph on web history before getting to your story. Could be condensed to 2-3 sentences. We know PHP exists.
+
+**** STARTED No Conclusion/Lessons
+
+What did you actually learn? Was it worth it? Would you recommend unikernels? The ending just... stops.
