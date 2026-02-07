@@ -141,7 +141,7 @@ async fn run_simple_server() -> Result<(), Box<dyn std::error::Error + Send + Sy
         println!("✓ Serving {} Gemini routes", gemini::route_count());
         println!("  (Using self-signed certificate - clients will show trust warning)");
     } else if gemini_enabled {
-        println!("\n(Gemini disabled - no .gmi content in gemini-content/)");
+        println!("\n(Gemini disabled - no .gmi content found in public/)");
     }
 
     println!();

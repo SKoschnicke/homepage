@@ -1,12 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
-
-# Note: Gemini content is exported separately via ox-gemini in Emacs
-# Run your org-mode export before this script if you've updated content
-# The gemini-content/ directory should contain .gmi files
 
 echo "Building static site with Hugo..."
 hugo --minify
+
+echo "Converting Gemini content with Pandoc..."
+./scripts/convert-gemini-content.sh
 
 echo "Building Rust server..."
 cd server

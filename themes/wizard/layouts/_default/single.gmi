@@ -3,7 +3,7 @@
 {{ if .Date }}{{ .Date.Format "2006-01-02" }}{{ end }}
 {{ if .Params.tags }}Tags: {{ delimit .Params.tags ", " }}{{ end }}
 
-{{ .RawContent | replaceRE "!\\[([^\\]]*)\\]\\(([^\\)]+)\\)" "=> $2 $1" | replaceRE "\\[([^\\]]+)\\]\\(([^\\)]+)\\)" "=> $2 $1" | replaceRE "\\n{3,}" "\n\n" }}
+<!-- GEMINI_BODY -->
 
 ---
 
