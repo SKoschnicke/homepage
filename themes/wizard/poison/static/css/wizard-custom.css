@@ -51,25 +51,6 @@ code {
     box-shadow: 5px 0 15px rgba(0,0,0,0.3);
 }
 
-/* Add floating magical particles effect */
-.sidebar::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: url('/images/magic-particles.png');
-    opacity: 0.1;
-    animation: float 20s infinite linear;
-}
-
-@keyframes float {
-    from { background-position: 0 0; }
-    to { background-position: 100% 100%; }
-}
-
 /* Style blockquotes as magical scrolls */
 blockquote {
     border-left: 4px solid #9268f2;
