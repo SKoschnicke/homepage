@@ -1,4 +1,4 @@
-use aws_sdk_s3::Client as S3Client;
+use s3::Bucket;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response, Server, StatusCode};
 use instant_acme::{
@@ -49,15 +49,14 @@ pub async fn generate_self_signed_certificate(
 
 pub async fn get_or_create_self_signed_certificate(
     domain: &str,
-    s3_client: &aws_sdk_s3::Client,
-    bucket: &str,
+    bucket: &Bucket,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Checking S3 for existing certificate...");
-    println!("  Bucket: {}", bucket);
+    println!("  Bucket: {}", bucket.name());
     println!("  Domain: {}", domain);
 
     // Try to load existing certificate from S3
-    match s3_storage::load_certificate(s3_client, bucket, domain).await {
+    match s3_storage::load_certificate(bucket, domain).await {
         Ok(Some(cert_data)) => {
             println!("Found certificate in S3, checking expiry...");
 
@@ -94,7 +93,6 @@ pub async fn get_or_create_self_signed_certificate(
     // Save to S3
     println!("Saving certificate to S3...");
     match s3_storage::save_certificate(
-        s3_client,
         bucket,
         domain,
         &cert_data.cert_pem,
@@ -115,15 +113,14 @@ pub async fn get_or_create_certificate(
     domain: &str,
     email: &str,
     staging: bool,
-    s3_client: &S3Client,
-    bucket: &str,
+    bucket: &Bucket,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Checking S3 for existing certificate...");
-    println!("  Bucket: {}", bucket);
+    println!("  Bucket: {}", bucket.name());
     println!("  Domain: {}", domain);
 
     // Try to load existing certificate from S3
-    match s3_storage::load_certificate(s3_client, bucket, domain).await {
+    match s3_storage::load_certificate(bucket, domain).await {
         Ok(Some(cert_data)) => {
             println!("Found certificate in S3, checking expiry...");
 
@@ -162,7 +159,6 @@ pub async fn get_or_create_certificate(
     // Save to S3
     println!("Saving certificate to S3...");
     match s3_storage::save_certificate(
-        s3_client,
         bucket,
         domain,
         &cert_data.cert_pem,

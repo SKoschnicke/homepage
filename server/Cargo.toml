@@ -25,11 +25,8 @@ rustls-pemfile = "0.2"
 tokio-rustls = "0.22"
 rcgen = "0.11"
 aws-lc-rs = "1"
-# rustls 0.23 for AWS SDK crypto provider (separate from our 0.19 usage)
-rustls23 = { package = "rustls", version = "0.23" }
-# S3 storage for certificate persistence
-aws-sdk-s3 = { version = "1", features = ["behavior-version-latest"] }
-aws-config = { version = "1", features = ["behavior-version-latest"] }
+# S3 storage for certificate persistence (lightweight alternative to aws-sdk)
+rust-s3 = { version = "0.35", default-features = false, features = ["tokio-rustls-tls"] }
 x509-parser = "0.15"
 # Pin base64ct to avoid edition2024 requirement
 base64ct = "=1.6.0"

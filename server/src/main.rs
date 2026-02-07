@@ -7,8 +7,6 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 
-// Import rustls 0.23 as rustls23 for AWS SDK crypto provider
-extern crate rustls23;
 
 mod acme;
 mod assets;
@@ -44,16 +42,6 @@ async fn main() {
         eprintln!("!!! END PANIC !!!\n");
         let _ = std::io::stderr().flush();
     }));
-
-    // Install default crypto provider for rustls 0.23 (required for AWS SDK)
-    // This must be done before any rustls 0.23 operations (AWS SDK uses rustls 0.23)
-    // Note: We use rustls23 (0.23) for AWS SDK, rustls (0.19) for our own TLS
-    let _ = rustls23::crypto::aws_lc_rs::default_provider()
-        .install_default()
-        .map_err(|e| {
-            eprintln!("Warning: Failed to install default crypto provider: {:?}", e);
-            eprintln!("This is usually OK if already installed by another part of the application");
-        });
 
     debug_checkpoint!("Application starting");
     println!("=== Static Server Starting ===");
@@ -178,20 +166,20 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  ✓ S3 Bucket: {}", config.s3_bucket);
     debug_checkpoint!("Config loaded and printed successfully");
 
-    // Step 2: Initialize S3 client (always - needed for both dev and production)
-    debug_checkpoint!("Initializing S3 client");
+    // Step 2: Initialize S3 bucket (always - needed for both dev and production)
+    debug_checkpoint!("Initializing S3 bucket");
     println!("\n[2/5] Initializing S3 storage...");
-    eprintln!("[DEBUG] About to initialize S3 client");
+    eprintln!("[DEBUG] About to initialize S3 bucket");
 
-    let s3_client = match s3_storage::init_s3_client(&config).await {
-        Ok(client) => {
-            debug_checkpoint!("S3 client initialized successfully");
-            eprintln!("[DEBUG] S3 client initialized successfully");
-            println!("  ✓ S3 client initialized");
-            client
+    let s3_bucket = match s3_storage::init_s3_bucket(&config).await {
+        Ok(bucket) => {
+            debug_checkpoint!("S3 bucket initialized successfully");
+            eprintln!("[DEBUG] S3 bucket initialized successfully");
+            println!("  ✓ S3 bucket initialized");
+            bucket
         }
         Err(e) => {
-            eprintln!("Failed to initialize S3 client: {}", e);
+            eprintln!("Failed to initialize S3 bucket: {}", e);
             eprintln!("Cannot use HTTPS without S3 storage.");
             eprintln!("Falling back to simple HTTP mode...");
             let _ = std::io::stderr().flush();
@@ -204,7 +192,7 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  Testing S3 storage...");
     eprintln!("[DEBUG] About to test S3 storage");
 
-    if let Err(e) = s3_storage::test_s3_storage(&s3_client, &config.s3_bucket).await {
+    if let Err(e) = s3_storage::test_s3_storage(&s3_bucket).await {
         eprintln!("S3 storage test failed: {}", e);
         eprintln!("Cannot persist certificates without working S3 storage.");
         eprintln!("Falling back to simple HTTP mode...");
@@ -226,8 +214,7 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
 
         match acme::get_or_create_self_signed_certificate(
             &config.domain,
-            &s3_client,
-            &config.s3_bucket,
+            &s3_bucket,
         ).await {
             Ok(cfg) => {
                 eprintln!("[DEBUG] Self-signed certificate ready");
@@ -248,8 +235,7 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
             &config.domain,
             &config.acme_contact,
             config.acme_staging,
-            &s3_client,
-            &config.s3_bucket,
+            &s3_bucket,
         ).await {
             Ok(cert) => {
                 debug_checkpoint!("Certificate obtained successfully");
