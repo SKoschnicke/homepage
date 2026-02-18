@@ -1,6 +1,4 @@
-use s3::creds::Credentials;
-use s3::region::Region;
-use s3::Bucket;
+use rusty_s3::{Bucket, Credentials, S3Action, UrlStyle};
 use rustls::Certificate;
 use rustls_pemfile;
 use std::io::{Cursor, Write};
@@ -21,48 +19,69 @@ pub struct CertificateData {
     pub privkey_pem: String,
 }
 
-pub async fn init_s3_bucket(config: &Config) -> Result<Bucket, Box<dyn std::error::Error + Send + Sync>> {
+/// Lightweight S3 client using rusty-s3 for signing and reqwest for HTTP
+pub struct S3Client {
+    bucket: Bucket,
+    credentials: Credentials,
+    http: reqwest::Client,
+    bucket_name: String,
+}
+
+impl S3Client {
+    pub fn name(&self) -> &str {
+        &self.bucket_name
+    }
+}
+
+pub async fn init_s3_bucket(config: &Config) -> Result<S3Client, Box<dyn std::error::Error + Send + Sync>> {
     debug_checkpoint!("Entering init_s3_bucket");
     println!("Creating S3 credentials...");
     eprintln!("[DEBUG] S3 init: Creating credentials");
 
     debug_checkpoint!("About to create Credentials object");
     let credentials = Credentials::new(
-        Some(&config.s3_access_key),
-        Some(&config.s3_secret_key),
-        None,
-        None,
-        None,
-    )?;
+        config.s3_access_key.clone(),
+        config.s3_secret_key.clone(),
+    );
     debug_checkpoint!("Credentials object created");
     eprintln!("[DEBUG] S3 init: Credentials created");
 
     println!("Setting S3 region: {}", config.s3_region);
-    debug_checkpoint!("About to create Region object");
-    let region = Region::Custom {
-        region: config.s3_region.clone(),
-        endpoint: config.s3_endpoint.clone(),
-    };
-    debug_checkpoint!("Region object created");
-    eprintln!("[DEBUG] S3 init: Region set");
+    debug_checkpoint!("About to create Bucket object");
 
-    println!("Building S3 bucket with endpoint: {}", config.s3_endpoint);
-    debug_checkpoint!("About to build S3 bucket");
+    let endpoint: url::Url = config.s3_endpoint.parse()
+        .map_err(|e| format!("Invalid S3 endpoint URL: {}", e))?;
+
+    // Use path-style URLs (required for Hetzner Object Storage and MinIO)
+    // Pass owned strings to avoid lifetime issues
     let bucket = Bucket::new(
-        &config.s3_bucket,
-        region,
-        credentials,
-    )?.with_path_style();  // Required for Hetzner Object Storage
-    debug_checkpoint!("S3 bucket created successfully");
+        endpoint,
+        UrlStyle::Path,
+        config.s3_bucket.clone(),
+        config.s3_region.clone(),
+    ).map_err(|e| format!("Failed to create S3 bucket: {}", e))?;
+
+    debug_checkpoint!("Bucket object created");
     eprintln!("[DEBUG] S3 init: Bucket ready");
+
+    // Create HTTP client
+    let http = reqwest::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     println!("✓ S3 bucket initialized");
 
-    Ok(*bucket)
+    Ok(S3Client {
+        bucket,
+        credentials,
+        http,
+        bucket_name: config.s3_bucket.clone(),
+    })
 }
 
 pub async fn load_certificate(
-    bucket: &Bucket,
+    client: &S3Client,
     domain: &str,
 ) -> Result<Option<CertificateData>, Box<dyn std::error::Error + Send + Sync>> {
     debug_checkpoint!("Loading certificate from S3");
@@ -70,26 +89,33 @@ pub async fn load_certificate(
     let privkey_key = format!("certs/{}/privkey.pem", domain);
 
     // Try to load certificate with timeout
-    debug_checkpoint!(&format!("Fetching certificate from s3://{}/{}", bucket.name(), cert_key));
+    debug_checkpoint!(&format!("Fetching certificate from s3://{}/{}", client.name(), cert_key));
+
+    let cert_url = client.bucket.get_object(Some(&client.credentials), &cert_key)
+        .sign(Duration::from_secs(60));
+
     let cert_result = tokio::time::timeout(
         tokio::time::Duration::from_secs(10),
-        bucket.get_object(&cert_key)
+        client.http.get(cert_url).send()
     ).await;
 
     let cert_pem = match cert_result {
         Ok(Ok(response)) => {
-            if response.status_code() == 200 {
+            if response.status().is_success() {
                 debug_checkpoint!("Certificate found in S3");
-                String::from_utf8(response.to_vec())
-                    .map_err(|e| format!("Certificate is not valid UTF-8: {}", e))?
+                response.text().await
+                    .map_err(|e| format!("Failed to read certificate body: {}", e))?
+            } else if response.status().as_u16() == 404 {
+                eprintln!("Certificate not found in S3 (status 404)");
+                debug_checkpoint!("Certificate not found - will request new one");
+                return Ok(None);
             } else {
-                eprintln!("Certificate not found in S3 (status {})", response.status_code());
+                eprintln!("Certificate not found in S3 (status {})", response.status());
                 debug_checkpoint!("Certificate not found - will request new one");
                 return Ok(None);
             }
         }
         Ok(Err(err)) => {
-            // If cert doesn't exist, return None
             eprintln!("Certificate not found in S3: {}", err);
             debug_checkpoint!("Certificate not found - will request new one");
             return Ok(None);
@@ -102,20 +128,28 @@ pub async fn load_certificate(
     };
 
     // Try to load private key with timeout
-    debug_checkpoint!(&format!("Fetching private key from s3://{}/{}", bucket.name(), privkey_key));
+    debug_checkpoint!(&format!("Fetching private key from s3://{}/{}", client.name(), privkey_key));
+
+    let privkey_url = client.bucket.get_object(Some(&client.credentials), &privkey_key)
+        .sign(Duration::from_secs(60));
+
     let privkey_result = tokio::time::timeout(
         tokio::time::Duration::from_secs(10),
-        bucket.get_object(&privkey_key)
+        client.http.get(privkey_url).send()
     ).await;
 
     let privkey_pem = match privkey_result {
         Ok(Ok(response)) => {
-            if response.status_code() == 200 {
+            if response.status().is_success() {
                 debug_checkpoint!("Private key found in S3");
-                String::from_utf8(response.to_vec())
-                    .map_err(|e| format!("Private key is not valid UTF-8: {}", e))?
+                response.text().await
+                    .map_err(|e| format!("Failed to read private key body: {}", e))?
+            } else if response.status().as_u16() == 404 {
+                eprintln!("Private key not found in S3 (status 404)");
+                debug_checkpoint!("Private key not found - will request new certificate");
+                return Ok(None);
             } else {
-                eprintln!("Private key not found in S3 (status {})", response.status_code());
+                eprintln!("Private key not found in S3 (status {})", response.status());
                 debug_checkpoint!("Private key not found - will request new certificate");
                 return Ok(None);
             }
@@ -140,7 +174,7 @@ pub async fn load_certificate(
 }
 
 pub async fn save_certificate(
-    bucket: &Bucket,
+    client: &S3Client,
     domain: &str,
     cert_pem: &str,
     privkey_pem: &str,
@@ -150,20 +184,26 @@ pub async fn save_certificate(
     let privkey_key = format!("certs/{}/privkey.pem", domain);
 
     // Save certificate with timeout
-    debug_checkpoint!(&format!("Uploading certificate to s3://{}/{}", bucket.name(), cert_key));
+    debug_checkpoint!(&format!("Uploading certificate to s3://{}/{}", client.name(), cert_key));
+
+    let cert_url = client.bucket.put_object(Some(&client.credentials), &cert_key)
+        .sign(Duration::from_secs(60));
+
     let cert_result = tokio::time::timeout(
-        tokio::time::Duration::from_secs(10),
-        bucket.put_object(&cert_key, cert_pem.as_bytes())
+        Duration::from_secs(10),
+        client.http.put(cert_url)
+            .body(cert_pem.to_string())
+            .send()
     ).await;
 
     match cert_result {
         Ok(Ok(response)) => {
-            if response.status_code() >= 200 && response.status_code() < 300 {
+            if response.status().is_success() {
                 println!("Saved certificate to S3: {}", cert_key);
                 debug_checkpoint!("Certificate saved successfully");
             } else {
                 let _ = std::io::stderr().flush();
-                return Err(format!("S3 error saving certificate: status {}", response.status_code()).into());
+                return Err(format!("S3 error saving certificate: status {}", response.status()).into());
             }
         }
         Ok(Err(e)) => {
@@ -179,20 +219,26 @@ pub async fn save_certificate(
     }
 
     // Save private key with timeout
-    debug_checkpoint!(&format!("Uploading private key to s3://{}/{}", bucket.name(), privkey_key));
+    debug_checkpoint!(&format!("Uploading private key to s3://{}/{}", client.name(), privkey_key));
+
+    let key_url = client.bucket.put_object(Some(&client.credentials), &privkey_key)
+        .sign(Duration::from_secs(60));
+
     let key_result = tokio::time::timeout(
-        tokio::time::Duration::from_secs(10),
-        bucket.put_object(&privkey_key, privkey_pem.as_bytes())
+        Duration::from_secs(10),
+        client.http.put(key_url)
+            .body(privkey_pem.to_string())
+            .send()
     ).await;
 
     match key_result {
         Ok(Ok(response)) => {
-            if response.status_code() >= 200 && response.status_code() < 300 {
+            if response.status().is_success() {
                 println!("Saved private key to S3: {}", privkey_key);
                 debug_checkpoint!("Private key saved successfully");
             } else {
                 let _ = std::io::stderr().flush();
-                return Err(format!("S3 error saving private key: status {}", response.status_code()).into());
+                return Err(format!("S3 error saving private key: status {}", response.status()).into());
             }
         }
         Ok(Err(e)) => {
@@ -253,26 +299,32 @@ pub fn cert_is_valid(cert_pem: &str, min_days_remaining: u64) -> bool {
 }
 
 pub async fn test_s3_storage(
-    bucket: &Bucket,
+    client: &S3Client,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     debug_checkpoint!("Testing S3 storage connectivity");
     let test_key = ".test/connectivity-check";
-    let test_content = b"S3 storage connectivity test";
+    let test_content = "S3 storage connectivity test";
 
     // Test 1: Write
     debug_checkpoint!("S3 test: Writing test object");
+
+    let write_url = client.bucket.put_object(Some(&client.credentials), test_key)
+        .sign(Duration::from_secs(60));
+
     let write_result = tokio::time::timeout(
         Duration::from_secs(10),
-        bucket.put_object(test_key, test_content)
+        client.http.put(write_url)
+            .body(test_content)
+            .send()
     ).await;
 
     match write_result {
         Ok(Ok(response)) => {
-            if response.status_code() >= 200 && response.status_code() < 300 {
+            if response.status().is_success() {
                 debug_checkpoint!("S3 test: Write successful");
             } else {
                 let _ = std::io::stderr().flush();
-                return Err(format!("S3 write test failed: status {}", response.status_code()).into());
+                return Err(format!("S3 write test failed: status {}", response.status()).into());
             }
         }
         Ok(Err(e)) => {
@@ -287,19 +339,24 @@ pub async fn test_s3_storage(
 
     // Test 2: Read
     debug_checkpoint!("S3 test: Reading test object");
+
+    let read_url = client.bucket.get_object(Some(&client.credentials), test_key)
+        .sign(Duration::from_secs(60));
+
     let read_result = tokio::time::timeout(
         Duration::from_secs(10),
-        bucket.get_object(test_key)
+        client.http.get(read_url).send()
     ).await;
 
     let body = match read_result {
         Ok(Ok(response)) => {
-            if response.status_code() == 200 {
+            if response.status().is_success() {
                 debug_checkpoint!("S3 test: Read successful");
-                response.to_vec()
+                response.text().await
+                    .map_err(|e| format!("Failed to read test object: {}", e))?
             } else {
                 let _ = std::io::stderr().flush();
-                return Err(format!("S3 read test failed: status {}", response.status_code()).into());
+                return Err(format!("S3 read test failed: status {}", response.status()).into());
             }
         }
         Ok(Err(e)) => {
@@ -312,7 +369,7 @@ pub async fn test_s3_storage(
         }
     };
 
-    if &body[..] != test_content {
+    if body != test_content {
         let _ = std::io::stderr().flush();
         return Err("S3 read-back verification failed: content mismatch".into());
     }
@@ -320,19 +377,23 @@ pub async fn test_s3_storage(
 
     // Test 3: Delete
     debug_checkpoint!("S3 test: Deleting test object");
+
+    let delete_url = client.bucket.delete_object(Some(&client.credentials), test_key)
+        .sign(Duration::from_secs(60));
+
     let delete_result = tokio::time::timeout(
         Duration::from_secs(10),
-        bucket.delete_object(test_key)
+        client.http.delete(delete_url).send()
     ).await;
 
     match delete_result {
         Ok(Ok(response)) => {
             // S3 returns 204 for successful deletes
-            if response.status_code() >= 200 && response.status_code() < 300 {
+            if response.status().is_success() {
                 debug_checkpoint!("S3 test: Delete successful");
             } else {
                 let _ = std::io::stderr().flush();
-                return Err(format!("S3 delete test failed: status {}", response.status_code()).into());
+                return Err(format!("S3 delete test failed: status {}", response.status()).into());
             }
         }
         Ok(Err(e)) => {

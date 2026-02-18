@@ -4,6 +4,32 @@ run = """
 #!/usr/bin/env bash
 set -e
 
+# Check if hugo server is running
+if pgrep -f "hugo server" > /dev/null; then
+  echo "Hugo development server is running. Stop it before deploying:
+    pkill -f 'hugo server'
+
+Running hugo server interferes with server builds."
+  exit 1
+fi
+
+# Go to project root (one level up from server/)
+cd "$MISE_PROJECT_ROOT/.."
+
+# Clean public directory to ensure no dev artifacts
+if [ -d "public" ]; then
+  echo "Removing existing public/ directory"
+  rm -rf public
+fi
+
+# Build fresh production site
+echo "Building Hugo site with --minify"
+if ! hugo --minify; then
+  echo "Hugo build failed"
+fi
+
+cd "$MISE_PROJECT_ROOT"
+
 echo "Building release binary..."
 cargo build --release
 

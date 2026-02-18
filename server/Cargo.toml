@@ -24,10 +24,10 @@ rustls = { version = "0.19", features = ["dangerous_configuration"] }
 rustls-pemfile = "0.2"
 tokio-rustls = "0.22"
 rcgen = "0.11"
-aws-lc-rs = "1"
-# S3 storage for certificate persistence (lightweight alternative to aws-sdk)
-rust-s3 = { version = "0.35", default-features = false, features = ["tokio-rustls-tls"] }
 x509-parser = "0.15"
+# Lightweight S3 client (Sans-IO - we provide HTTP via reqwest)
+rusty-s3 = "0.8"
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
 # Pin base64ct to avoid edition2024 requirement
 base64ct = "=1.6.0"
 

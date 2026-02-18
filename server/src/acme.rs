@@ -1,4 +1,3 @@
-use s3::Bucket;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response, Server, StatusCode};
 use instant_acme::{
@@ -12,7 +11,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::s3_storage::{self, CertificateData};
+use crate::s3_storage::{self, CertificateData, S3Client};
 
 const MIN_DAYS_REMAINING: u64 = 30;
 
@@ -49,14 +48,14 @@ pub async fn generate_self_signed_certificate(
 
 pub async fn get_or_create_self_signed_certificate(
     domain: &str,
-    bucket: &Bucket,
+    client: &S3Client,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Checking S3 for existing certificate...");
-    println!("  Bucket: {}", bucket.name());
+    println!("  Bucket: {}", client.name());
     println!("  Domain: {}", domain);
 
     // Try to load existing certificate from S3
-    match s3_storage::load_certificate(bucket, domain).await {
+    match s3_storage::load_certificate(client, domain).await {
         Ok(Some(cert_data)) => {
             println!("Found certificate in S3, checking expiry...");
 
@@ -93,7 +92,7 @@ pub async fn get_or_create_self_signed_certificate(
     // Save to S3
     println!("Saving certificate to S3...");
     match s3_storage::save_certificate(
-        bucket,
+        client,
         domain,
         &cert_data.cert_pem,
         &cert_data.privkey_pem,
@@ -113,14 +112,14 @@ pub async fn get_or_create_certificate(
     domain: &str,
     email: &str,
     staging: bool,
-    bucket: &Bucket,
+    client: &S3Client,
 ) -> Result<Arc<ServerConfig>, Box<dyn std::error::Error + Send + Sync>> {
     println!("Checking S3 for existing certificate...");
-    println!("  Bucket: {}", bucket.name());
+    println!("  Bucket: {}", client.name());
     println!("  Domain: {}", domain);
 
     // Try to load existing certificate from S3
-    match s3_storage::load_certificate(bucket, domain).await {
+    match s3_storage::load_certificate(client, domain).await {
         Ok(Some(cert_data)) => {
             println!("Found certificate in S3, checking expiry...");
 
@@ -159,7 +158,7 @@ pub async fn get_or_create_certificate(
     // Save to S3
     println!("Saving certificate to S3...");
     match s3_storage::save_certificate(
-        bucket,
+        client,
         domain,
         &cert_data.cert_pem,
         &cert_data.privkey_pem,
