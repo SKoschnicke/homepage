@@ -1,0 +1,73 @@
+[tasks.hugo]
+description = "Run hugo to get a preview of the site"
+run = """
+hugo server --buildDrafts --navigateToChanged
+"""
+
+
+[tasks.build]
+description = "Build everything: Hugo site, Gemini conversion, Rust server"
+run = """
+#!/usr/bin/env bash
+set -e
+
+# Check if hugo server is running (interferes with builds)
+if pgrep -f "hugo server" > /dev/null; then
+  echo "ERROR: Hugo development server is running. Stop it first:"
+  echo "  pkill -f 'hugo server'"
+  exit 1
+fi
+
+# Clean public directory
+if [ -d "public" ]; then
+  echo "Cleaning public/"
+  rm -rf public
+fi
+
+echo "Building Hugo site..."
+hugo --minify
+
+echo "Converting Gemini content..."
+./scripts/convert-gemini-content.sh
+
+echo "Building Rust server..."
+cd server
+cargo build --release
+
+echo "Stripping debug symbols..."
+strip target/release/static-server
+
+SIZE=$(du -h target/release/static-server | cut -f1)
+echo ""
+echo "Build complete! Binary: server/target/release/static-server ($SIZE)"
+"""
+
+[tasks.dev]
+description = "Build and run server locally with self-signed cert"
+depends = ["build"]
+run = """
+#!/usr/bin/env bash
+set -e
+
+cd server
+
+echo "Setting capabilities for binding to ports 80/443..."
+sudo setcap 'cap_net_bind_service=+ep' target/release/static-server
+
+echo "Starting server..."
+DOMAIN=localhost \
+LOCAL_DEV=true \
+ACME_CONTACT_EMAIL=s.koschnicke@gfxpro.com \
+./target/release/static-server
+"""
+
+[tasks.deploy]
+description = "Build and deploy to Hetzner Cloud"
+depends = ["build"]
+run = """
+#!/usr/bin/env bash
+set -e
+
+cd server
+CALLED_FROM_MISE=1 ./deploy-hetzner.sh
+"""

@@ -3,12 +3,19 @@ set -e
 
 # Deployment script for Hetzner Cloud with automatic DNS update
 #
-# Secrets are loaded from 1Password CLI.
-# Required 1Password items:
-#   - "Hetzner Cloud API Token" (in Private vault) - for instance and DNS management
-#   - "Hetzner Object Storage S3 credentials" (in Private vault) - for cert storage
+# DO NOT CALL DIRECTLY - use: mise run deploy
 #
-# Make sure you're signed in: eval $(op signin)
+# This script expects the binary to be pre-built by mise.
+# Secrets are loaded from 1Password CLI.
+
+if [ "$CALLED_FROM_MISE" != "1" ]; then
+    echo "ERROR: Don't call this script directly."
+    echo ""
+    echo "Use:  mise run deploy"
+    echo ""
+    echo "(This ensures the build runs first)"
+    exit 1
+fi
 
 OPS="${HOME}/.local/bin/ops"
 CONFIG="config-hetzner.json"
@@ -352,47 +359,13 @@ wait_for_server() {
     exit 1
 }
 
-# Build clean production binary
-build_production() {
-    echo_info "Building clean production binary..."
-
-    # Check if hugo server is running
-    if pgrep -f "hugo server" > /dev/null; then
-        echo_error "Hugo development server is running. Stop it before deploying:
-    pkill -f 'hugo server'
-
-Running hugo server interferes with production builds."
-    fi
-
-    # Go to project root (one level up from server/)
-    cd "$(dirname "$0")/.."
-
-    # Clean public directory to ensure no dev artifacts
-    if [ -d "public" ]; then
-        echo_info "Removing existing public/ directory"
-        rm -rf public
-    fi
-
-    # Build fresh production site
-    echo_info "Building Hugo site with --minify"
-    if ! hugo --minify; then
-        echo_error "Hugo build failed"
-    fi
-
-    # Rebuild Rust server with fresh production assets
-    echo_info "Building Rust server (this embeds the Hugo site)"
-    cd server
-    cargo build --release 2>&1 | grep -E "(Compiling|Finished|error|Error)" || true
-
+# Verify binary exists (build should be done by mise before calling this)
+verify_binary() {
     if [ ! -f "target/release/static-server" ]; then
-        echo_error "Rust build failed - binary not found"
+        echo_error "Binary not found. Run 'mise run build' first."
     fi
-
-    echo_info "Stripping debug symbols"
-    strip target/release/static-server
-
     local size=$(du -h target/release/static-server | cut -f1)
-    echo_info "Production binary ready: ${size}"
+    echo_info "Using binary: target/release/static-server ($size)"
 }
 
 # Main deployment flow
@@ -400,7 +373,7 @@ main() {
     echo_info "Starting Hetzner deployment for $DOMAIN"
     echo ""
 
-    build_production
+    verify_binary
     load_secrets
     get_dns_zone_id
     inject_s3_credentials
