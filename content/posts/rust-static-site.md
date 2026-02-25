@@ -1,6 +1,6 @@
 +++
 title = "Overengineering a static website"
-date = 2026-02-19
+date = 2026-02-23
 tags = ["web", "rust", "cloud", "unikernel"]
 draft = false
 +++

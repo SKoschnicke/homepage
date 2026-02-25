@@ -224,7 +224,7 @@ That's it. Now I could access the server from my laptop. Easy, secure, straight 
 ** DONE Overengineering a static website                                         :web:rust:cloud:unikernel:
 :PROPERTIES:
 :EXPORT_FILE_NAME: rust-static-site
-:EXPORT_DATE: 2026-02-19
+:EXPORT_DATE: 2026-02-23
 :END:
 
 

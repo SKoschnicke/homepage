@@ -14,9 +14,9 @@ theme = 'wizard'
   notAlternative = true
 
 [outputs]
-  home = ["HTML", "gemini"]
+  home = ["HTML", "RSS", "gemini"]
   page = ["HTML", "gemini"]
-  section = ["HTML", "gemini"]
+  section = ["HTML", "RSS", "gemini"]
 
 defaultContentLanguage = 'en'
 [languages]
