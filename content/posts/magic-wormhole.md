@@ -7,6 +7,8 @@ draft = false
 
 In a world where software gets more and more complex, and because of that also bloated, there are sometimes little gems which make your day a little bit better. They adhere to the initial goal of software and computers, helping people to get their tasks done. And when they just do their job and then get out of the way, it sometimes makes me smile.
 
+<!--more-->
+
 One if these programs I just had the pleasure to use again is Magic Wormhole. A small command line utility which lets you transfer files between two computers.
 
 ![](/ox-hugo/2025-05-07_16-41-33_screenshot.png)

@@ -15,11 +15,13 @@
                 {{ partial "post/meta.html" . }}
             </header>
 
-            {{ with .Description }}
-            <div class="post-description">
-                <p>{{ . }}</p>
+            <div class="post-summary-text">
+                {{ with .Description }}
+                    <p>{{ . }}</p>
+                {{ else }}
+                    {{ .Summary }}
+                {{ end }}
             </div>
-            {{ end }}
 
             <footer class="post-footer">
                 <a href="{{ .RelPermalink }}" class="read-more" aria-label="Read more about {{ .Title }}">Read more →</a>
