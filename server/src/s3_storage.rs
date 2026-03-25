@@ -4,6 +4,7 @@ use rustls_pemfile;
 use std::io::{Cursor, Write};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use crate::cert_storage::CertStorage;
 use crate::config::Config;
 
 macro_rules! debug_checkpoint {
@@ -28,7 +29,7 @@ pub struct S3Client {
 }
 
 impl S3Client {
-    pub fn name(&self) -> &str {
+    pub fn s3_name(&self) -> &str {
         &self.bucket_name
     }
 }
@@ -39,17 +40,23 @@ pub async fn init_s3_bucket(config: &Config) -> Result<S3Client, Box<dyn std::er
     eprintln!("[DEBUG] S3 init: Creating credentials");
 
     debug_checkpoint!("About to create Credentials object");
-    let credentials = Credentials::new(
-        config.s3_access_key.clone(),
-        config.s3_secret_key.clone(),
-    );
+    let access_key = config.s3_access_key.clone()
+        .ok_or("S3_ACCESS_KEY is required for S3 storage")?;
+    let secret_key = config.s3_secret_key.clone()
+        .ok_or("S3_SECRET_KEY is required for S3 storage")?;
+    let credentials = Credentials::new(access_key, secret_key);
     debug_checkpoint!("Credentials object created");
     eprintln!("[DEBUG] S3 init: Credentials created");
 
     println!("Setting S3 region: {}", config.s3_region);
     debug_checkpoint!("About to create Bucket object");
 
-    let endpoint: url::Url = config.s3_endpoint.parse()
+    let endpoint_str = config.s3_endpoint.clone()
+        .ok_or("S3_ENDPOINT is required for S3 storage")?;
+    let bucket_name = config.s3_bucket.clone()
+        .ok_or("S3_BUCKET is required for S3 storage")?;
+
+    let endpoint: url::Url = endpoint_str.parse()
         .map_err(|e| format!("Invalid S3 endpoint URL: {}", e))?;
 
     // Use path-style URLs (required for Hetzner Object Storage and MinIO)
@@ -57,7 +64,7 @@ pub async fn init_s3_bucket(config: &Config) -> Result<S3Client, Box<dyn std::er
     let bucket = Bucket::new(
         endpoint,
         UrlStyle::Path,
-        config.s3_bucket.clone(),
+        bucket_name.clone(),
         config.s3_region.clone(),
     ).map_err(|e| format!("Failed to create S3 bucket: {}", e))?;
 
@@ -76,7 +83,7 @@ pub async fn init_s3_bucket(config: &Config) -> Result<S3Client, Box<dyn std::er
         bucket,
         credentials,
         http,
-        bucket_name: config.s3_bucket.clone(),
+        bucket_name,
     })
 }
 
@@ -89,7 +96,7 @@ pub async fn load_certificate(
     let privkey_key = format!("certs/{}/privkey.pem", domain);
 
     // Try to load certificate with timeout
-    debug_checkpoint!(&format!("Fetching certificate from s3://{}/{}", client.name(), cert_key));
+    debug_checkpoint!(&format!("Fetching certificate from s3://{}/{}", client.s3_name(), cert_key));
 
     let cert_url = client.bucket.get_object(Some(&client.credentials), &cert_key)
         .sign(Duration::from_secs(60));
@@ -128,7 +135,7 @@ pub async fn load_certificate(
     };
 
     // Try to load private key with timeout
-    debug_checkpoint!(&format!("Fetching private key from s3://{}/{}", client.name(), privkey_key));
+    debug_checkpoint!(&format!("Fetching private key from s3://{}/{}", client.s3_name(), privkey_key));
 
     let privkey_url = client.bucket.get_object(Some(&client.credentials), &privkey_key)
         .sign(Duration::from_secs(60));
@@ -184,7 +191,7 @@ pub async fn save_certificate(
     let privkey_key = format!("certs/{}/privkey.pem", domain);
 
     // Save certificate with timeout
-    debug_checkpoint!(&format!("Uploading certificate to s3://{}/{}", client.name(), cert_key));
+    debug_checkpoint!(&format!("Uploading certificate to s3://{}/{}", client.s3_name(), cert_key));
 
     let cert_url = client.bucket.put_object(Some(&client.credentials), &cert_key)
         .sign(Duration::from_secs(60));
@@ -219,7 +226,7 @@ pub async fn save_certificate(
     }
 
     // Save private key with timeout
-    debug_checkpoint!(&format!("Uploading private key to s3://{}/{}", client.name(), privkey_key));
+    debug_checkpoint!(&format!("Uploading private key to s3://{}/{}", client.s3_name(), privkey_key));
 
     let key_url = client.bucket.put_object(Some(&client.credentials), &privkey_key)
         .sign(Duration::from_secs(60));
@@ -295,6 +302,33 @@ pub fn cert_is_valid(cert_pem: &str, min_days_remaining: u64) -> bool {
             eprintln!("Failed to check cert expiry: {}", e);
             false
         }
+    }
+}
+
+#[async_trait::async_trait]
+impl CertStorage for S3Client {
+    fn name(&self) -> &str {
+        &self.bucket_name
+    }
+
+    async fn load_certificate(
+        &self,
+        domain: &str,
+    ) -> Result<Option<CertificateData>, Box<dyn std::error::Error + Send + Sync>> {
+        load_certificate(self, domain).await
+    }
+
+    async fn save_certificate(
+        &self,
+        domain: &str,
+        cert_pem: &str,
+        privkey_pem: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        save_certificate(self, domain, cert_pem, privkey_pem).await
+    }
+
+    async fn test_storage(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        test_s3_storage(self).await
     }
 }
 

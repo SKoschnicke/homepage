@@ -62,12 +62,12 @@ ACME_CONTACT_EMAIL=s.koschnicke@gfxpro.com \
 """
 
 [tasks.deploy]
-description = "Build and deploy to Hetzner Cloud"
+description = "Build and deploy to VPS via SSH"
 depends = ["build"]
 run = """
 #!/usr/bin/env bash
 set -e
 
 cd server
-CALLED_FROM_MISE=1 ./deploy-hetzner.sh
+CALLED_FROM_MISE=1 ./deploy-vps.sh
 """

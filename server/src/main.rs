@@ -10,12 +10,15 @@ use tokio_rustls::TlsAcceptor;
 
 mod acme;
 mod assets;
+mod cert_storage;
 mod config;
 mod gemini;
 mod metrics;
 mod router;
 mod s3_storage;
 mod websocket;
+
+use cert_storage::CertStorage;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -163,63 +166,68 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
     println!("  ✓ Domain: {}", config.domain);
     println!("  ✓ Local Dev Mode: {}", config.local_dev);
     println!("  ✓ ACME Staging: {}", config.acme_staging);
-    println!("  ✓ S3 Bucket: {}", config.s3_bucket);
+    if let Some(ref dir) = config.cert_dir {
+        println!("  ✓ Cert Storage: filesystem ({})", dir);
+    } else if config.has_s3() {
+        println!("  ✓ Cert Storage: S3 ({})", config.s3_bucket.as_deref().unwrap_or("?"));
+    }
     debug_checkpoint!("Config loaded and printed successfully");
 
-    // Step 2: Initialize S3 bucket (always - needed for both dev and production)
-    debug_checkpoint!("Initializing S3 bucket");
-    println!("\n[2/5] Initializing S3 storage...");
-    eprintln!("[DEBUG] About to initialize S3 bucket");
+    // Step 2: Initialize certificate storage (filesystem or S3)
+    debug_checkpoint!("Initializing certificate storage");
+    println!("\n[2/5] Initializing certificate storage...");
 
-    let s3_bucket = match s3_storage::init_s3_bucket(&config).await {
-        Ok(bucket) => {
-            debug_checkpoint!("S3 bucket initialized successfully");
-            eprintln!("[DEBUG] S3 bucket initialized successfully");
-            println!("  ✓ S3 bucket initialized");
-            bucket
-        }
-        Err(e) => {
-            eprintln!("Failed to initialize S3 bucket: {}", e);
-            eprintln!("Cannot use HTTPS without S3 storage.");
+    let storage: Box<dyn cert_storage::CertStorage> = if let Some(ref cert_dir) = config.cert_dir {
+        // Filesystem storage
+        let fs_storage = cert_storage::FilesystemStorage::new(cert_dir);
+        if let Err(e) = fs_storage.test_storage().await {
+            eprintln!("Filesystem storage test failed: {}", e);
             eprintln!("Falling back to simple HTTP mode...");
             let _ = std::io::stderr().flush();
             return run_simple_server().await;
         }
+        println!("  ✓ Filesystem storage ready ({})", cert_dir);
+        Box::new(fs_storage)
+    } else {
+        // S3 storage
+        eprintln!("[DEBUG] About to initialize S3 bucket");
+        match s3_storage::init_s3_bucket(&config).await {
+            Ok(bucket) => {
+                debug_checkpoint!("S3 bucket initialized successfully");
+                println!("  ✓ S3 bucket initialized");
+
+                println!("  Testing S3 storage...");
+                if let Err(e) = bucket.test_storage().await {
+                    eprintln!("S3 storage test failed: {}", e);
+                    eprintln!("Falling back to simple HTTP mode...");
+                    let _ = std::io::stderr().flush();
+                    return run_simple_server().await;
+                }
+                println!("  ✓ S3 storage is working");
+                Box::new(bucket)
+            }
+            Err(e) => {
+                eprintln!("Failed to initialize S3 bucket: {}", e);
+                eprintln!("Falling back to simple HTTP mode...");
+                let _ = std::io::stderr().flush();
+                return run_simple_server().await;
+            }
+        }
     };
 
-    // Step 2b: Test S3 storage connectivity
-    debug_checkpoint!("Testing S3 storage");
-    println!("  Testing S3 storage...");
-    eprintln!("[DEBUG] About to test S3 storage");
-
-    if let Err(e) = s3_storage::test_s3_storage(&s3_bucket).await {
-        eprintln!("S3 storage test failed: {}", e);
-        eprintln!("Cannot persist certificates without working S3 storage.");
-        eprintln!("Falling back to simple HTTP mode...");
-        let _ = std::io::stderr().flush();
-        return run_simple_server().await;
-    }
-    println!("  ✓ S3 storage is working");
-    debug_checkpoint!("S3 storage test passed");
-
-    // Step 3: Get TLS certificate (safe now - S3 verified)
+    // Step 3: Get TLS certificate
     debug_checkpoint!("Starting TLS certificate acquisition");
     println!("\n[3/5] Obtaining TLS certificate...");
-    eprintln!("[DEBUG] About to obtain TLS certificate");
 
     let tls_config = if config.local_dev {
-        debug_checkpoint!("Using local dev mode - self-signed cert with S3 caching");
-        println!("  Local dev mode: self-signed certificate with S3 caching...");
-        eprintln!("[DEBUG] Calling get_or_create_self_signed_certificate");
+        debug_checkpoint!("Using local dev mode - self-signed cert");
+        println!("  Local dev mode: self-signed certificate...");
 
         match acme::get_or_create_self_signed_certificate(
             &config.domain,
-            &s3_bucket,
+            storage.as_ref(),
         ).await {
-            Ok(cfg) => {
-                eprintln!("[DEBUG] Self-signed certificate ready");
-                cfg
-            }
+            Ok(cfg) => cfg,
             Err(e) => {
                 eprintln!("[FATAL] Failed to get/create self-signed certificate: {}", e);
                 let _ = std::io::stderr().flush();
@@ -227,19 +235,17 @@ async fn run_https_server() -> Result<(), Box<dyn std::error::Error + Send + Syn
             }
         }
     } else {
-        debug_checkpoint!("Using production mode - Let's Encrypt with S3 caching");
-        println!("  Production mode: Let's Encrypt with S3 caching...");
-        eprintln!("[DEBUG] Calling get_or_create_certificate");
+        debug_checkpoint!("Using production mode - Let's Encrypt");
+        println!("  Production mode: Let's Encrypt...");
 
         match acme::get_or_create_certificate(
             &config.domain,
             &config.acme_contact,
             config.acme_staging,
-            &s3_bucket,
+            storage.as_ref(),
         ).await {
             Ok(cert) => {
                 debug_checkpoint!("Certificate obtained successfully");
-                eprintln!("[DEBUG] Certificate obtained successfully");
                 cert
             }
             Err(e) => {

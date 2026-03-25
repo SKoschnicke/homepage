@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 hyper = { version = "0.14", features = ["server", "http2", "tcp", "http1"] }
-tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "time", "fs"] }
 lazy_static = "1.4"
 mimalloc = { version = "0.1", default-features = false }
 tokio-tungstenite = "0.20"
@@ -28,6 +28,7 @@ x509-parser = "0.15"
 # Lightweight S3 client (Sans-IO - we provide HTTP via reqwest)
 rusty-s3 = "0.8"
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
+async-trait = "0.1"
 # Pin base64ct to avoid edition2024 requirement
 base64ct = "=1.6.0"
 
