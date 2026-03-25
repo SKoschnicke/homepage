@@ -18,7 +18,7 @@ if [ "$CALLED_FROM_MISE" != "1" ]; then
 fi
 
 DOMAIN="sven.guru"
-BINARY="target/release/static-server"
+BINARY="target/aarch64-unknown-linux-musl/release/static-server"
 VPS_HOST="${VPS_HOST:-palanthas}"
 
 # Colors
@@ -59,7 +59,7 @@ systemctl start homepage
 # Wait for it to come up
 echo "Waiting for server to start..."
 for i in $(seq 1 30); do
-    if curl -sf --connect-timeout 2 http://localhost:80/ > /dev/null 2>&1; then
+    if curl -sf --connect-timeout 2 http://localhost:8080/ > /dev/null 2>&1; then
         echo "Server is up!"
         exit 0
     fi

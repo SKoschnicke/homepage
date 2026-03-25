@@ -11,7 +11,9 @@ Instructions for AI assistants working with this Hugo-based personal homepage.
 | Build site | `hugo --minify` |
 | Modify styles | Edit `themes/wizard/assets/css/*.css` |
 | Modify templates | Edit `themes/wizard/layouts/**/*.html` |
-| Full build (Hugo + Rust) | `./build.sh` |
+| Full build (Hugo + Rust) | `mise run build` |
+| Build for deploy (aarch64) | `mise run build aarch64` |
+| Deploy to VPS | `mise run deploy` |
 
 ## Critical Rules
 
@@ -37,8 +39,9 @@ themes/wizard/             # Custom theme (modify directly)
   poison/                  # Base theme (rarely touched)
 static/images/             # Static assets
 hugo.toml                  # Site configuration
+flake.nix                  # Nix dev shell (Rust + Hugo + cross-compile toolchain)
+.mise.toml                 # Task runner (build, dev, deploy)
 server/                    # Rust web server (see server/README.md)
-build.sh                   # Hugo + Rust build script
 docs/                      # Detailed documentation
 ```
 
@@ -49,7 +52,7 @@ Detailed documentation for specific aspects of the project:
 - **[docs/CONTENT.md](docs/CONTENT.md)** - Content workflow, Org-mode structure, front matter
 - **[docs/THEME.md](docs/THEME.md)** - Theme architecture, templates, Hugo pipes
 - **[docs/CSS.md](docs/CSS.md)** - Design system, colors, typography, responsive design
-- **[server/README.md](server/README.md)** - Rust server, unikernel deployment, HTTPS setup
+- **[server/README.md](server/README.md)** - Rust server, VPS deployment, cross-compilation
 
 ## Common Tasks
 
@@ -106,15 +109,17 @@ Detailed documentation for specific aspects of the project:
 
 ## Deployment
 
-The site runs as a **Rust unikernel on Hetzner Cloud** with automatic HTTPS via Let's Encrypt.
+The site runs on a **Hetzner VPS (aarch64, NixOS)** behind **Caddy** as reverse proxy. The Rust server listens on localhost:8080, Caddy handles TLS.
 
 ```bash
-./build.sh              # Build Hugo + Rust server
-cd server
-./deploy-hetzner.sh     # Deploy to Hetzner (requires 1Password for secrets)
+mise run deploy         # Build, cross-compile, scp, restart
 ```
 
-See `server/README.md` for full deployment instructions including manual deployment and HTTPS setup.
+Infrastructure (NixOS config) is managed separately in `~/nixos-config/`:
+- `modules/homepage.nix` - systemd service, user, Caddy virtualhost
+- `hosts/palanthas/default.nix` - enables Caddy + homepage
+
+See `server/README.md` for details.
 
 ## Key Files Reference
 
@@ -127,4 +132,6 @@ See `server/README.md` for full deployment instructions including manual deploym
 | `themes/wizard/assets/js/memory-game.js` | Footer card game |
 | `content-org/all-pages.org` | All page/post content |
 | `server/build.rs` | Asset embedding for Rust server |
-| `server/deploy-hetzner.sh` | Unikernel deployment script |
+| `server/deploy-vps.sh` | VPS deployment script (scp + restart) |
+| `flake.nix` | Nix dev shell with cross-compile toolchain |
+| `.mise.toml` | Build, dev, and deploy tasks |

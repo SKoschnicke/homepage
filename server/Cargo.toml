@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 hyper = { version = "0.14", features = ["server", "http2", "tcp", "http1"] }
-tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "time", "fs"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "time"] }
 lazy_static = "1.4"
 mimalloc = { version = "0.1", default-features = false }
 tokio-tungstenite = "0.20"
@@ -17,20 +17,11 @@ sha1 = "0.10"
 base64 = "0.21"
 # Pin url to avoid icu deps requiring Rust 1.83
 url = "=2.5.2"
-# HTTPS and Let's Encrypt support
-instant-acme = "0.7"
-hyper-rustls = "0.22"
+# TLS for Gemini protocol (self-signed certs only)
 rustls = { version = "0.19", features = ["dangerous_configuration"] }
 rustls-pemfile = "0.2"
 tokio-rustls = "0.22"
 rcgen = "0.11"
-x509-parser = "0.15"
-# Lightweight S3 client (Sans-IO - we provide HTTP via reqwest)
-rusty-s3 = "0.8"
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
-async-trait = "0.1"
-# Pin base64ct to avoid edition2024 requirement
-base64ct = "=1.6.0"
 
 [build-dependencies]
 mime_guess = "2.0"
@@ -43,7 +34,5 @@ walkdir = "2"
 opt-level = 3
 lto = "fat"
 codegen-units = 1
-# TEMPORARILY disabled for debugging - re-enable once stable
-strip = false
-# TEMPORARILY set to "unwind" for debugging - change back to "abort" once stable
-panic = "unwind"
+strip = true
+panic = "abort"

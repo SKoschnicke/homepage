@@ -6,10 +6,12 @@ hugo server --buildDrafts --navigateToChanged
 
 
 [tasks.build]
-description = "Build everything: Hugo site, Gemini conversion, Rust server"
+description = "Build everything: Hugo site, Gemini conversion, Rust server (native)"
 run = """
 #!/usr/bin/env bash
 set -e
+
+TARGET="${1:-}"
 
 # Check if hugo server is running (interferes with builds)
 if pgrep -f "hugo server" > /dev/null; then
@@ -32,41 +34,43 @@ echo "Converting Gemini content..."
 
 echo "Building Rust server..."
 cd server
-cargo build --release
 
-echo "Stripping debug symbols..."
-strip target/release/static-server
+if [ "$TARGET" = "aarch64" ]; then
+  echo "  Target: aarch64-unknown-linux-musl (cross-compile)"
+  cargo build --release --target aarch64-unknown-linux-musl
+  BINARY="target/aarch64-unknown-linux-musl/release/static-server"
+else
+  echo "  Target: native"
+  cargo build --release
+  BINARY="target/release/static-server"
+fi
 
-SIZE=$(du -h target/release/static-server | cut -f1)
+SIZE=$(du -h "$BINARY" | cut -f1)
 echo ""
-echo "Build complete! Binary: server/target/release/static-server ($SIZE)"
+echo "Build complete! Binary: server/$BINARY ($SIZE)"
 """
 
 [tasks.dev]
-description = "Build and run server locally with self-signed cert"
-depends = ["build"]
+description = "Build and run server locally"
 run = """
 #!/usr/bin/env bash
 set -e
 
+# Build native for local dev
+mise run build
+
 cd server
-
-echo "Setting capabilities for binding to ports 80/443..."
-sudo setcap 'cap_net_bind_service=+ep' target/release/static-server
-
-echo "Starting server..."
-DOMAIN=localhost \
-LOCAL_DEV=true \
-ACME_CONTACT_EMAIL=s.koschnicke@gfxpro.com \
-./target/release/static-server
+echo "Starting server on http://localhost:8080 ..."
+PORT=8080 DOMAIN=localhost ./target/release/static-server
 """
 
 [tasks.deploy]
-description = "Build and deploy to VPS via SSH"
-depends = ["build"]
+description = "Cross-compile for aarch64 and deploy to VPS via SSH"
 run = """
 #!/usr/bin/env bash
 set -e
+
+mise run build aarch64
 
 cd server
 CALLED_FROM_MISE=1 ./deploy-vps.sh
