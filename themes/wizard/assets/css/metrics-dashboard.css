@@ -1,5 +1,5 @@
 #metrics-dashboard {
-    margin: 1rem 0;
+    margin: 0;
 }
 
 .metrics-compact {
@@ -7,11 +7,10 @@
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
-    padding: 0.75rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary, #666);
-    border-top: 1px solid var(--border-color, #eee);
-    border-bottom: 1px solid var(--border-color, #eee);
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted, #666);
+    border: none;
 }
 
 .metric-compact-item {
@@ -26,13 +25,13 @@
 
 .metric-compact-value {
     font-weight: 700;
-    color: var(--primary-color, #4CAF50);
+    color: var(--color-text-accent, #4CAF50);
 }
 
 .metrics-toggle {
     margin-left: auto;
-    font-size: 0.85rem;
-    color: var(--link-color, #0066cc);
+    font-size: 0.75rem;
+    color: var(--color-link, #0066cc);
     text-decoration: none;
     font-weight: 600;
 }
@@ -42,61 +41,64 @@
 }
 
 #metrics-expanded {
-    margin-top: 2rem;
-    padding: 2rem;
-    background: var(--background, #f8f9fa);
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background: var(--color-bg-card, #f8f9fa);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    box-sizing: border-box;
 }
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
 }
 
 .metric-card {
-    background: var(--card-background, white);
-    padding: 1.5rem;
+    background: var(--color-bg-elevated, white);
+    padding: 1rem;
     border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--color-border-subtle, #eee);
 }
 
 .metric-card h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.1rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-color, #333);
+    color: var(--color-text-heading, #333);
 }
 
 .metric-card canvas {
     max-height: 200px;
+    width: 100%;
 }
 
 .metric-value {
-    margin-top: 1rem;
-    font-size: 2rem;
+    margin-top: 0.75rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color, #4CAF50);
+    color: var(--color-text-accent, #fbbf24);
     text-align: center;
 }
 
 .metric-labels {
     display: flex;
     justify-content: space-around;
-    margin-top: 1rem;
-    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
 }
 
 .metric-labels span {
-    color: var(--text-color, #666);
+    color: var(--color-text-muted, #818cf8);
 }
 
 .metric-stat {
     display: flex;
     justify-content: space-between;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color, #eee);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border-subtle, #3730a3);
 }
 
 .metric-stat:last-of-type {
@@ -104,75 +106,40 @@
 }
 
 .stat-label {
-    color: var(--text-secondary, #666);
-    font-size: 0.95rem;
+    color: var(--color-text-muted, #818cf8);
+    font-size: 0.85rem;
 }
 
 .stat-value {
     font-weight: 600;
-    color: var(--text-color, #333);
+    color: var(--color-text-primary, #bae6fd);
 }
 
 .connection-status {
-    margin-top: 1rem;
-    padding: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.4rem;
     border-radius: 4px;
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
 .connection-status.connected {
-    background: #d4edda;
-    color: #155724;
+    background: var(--color-tag-emerald-bg);
+    color: var(--color-tag-emerald-text);
 }
 
 .connection-status.error {
-    background: #f8d7da;
-    color: #721c24;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
 }
 
 .connection-status.reconnecting {
-    background: #fff3cd;
-    color: #856404;
+    background: var(--color-tag-amber-bg);
+    color: var(--color-tag-amber-text);
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    #metrics-dashboard {
-        --background: #1a1a1a;
-        --card-background: #2d2d2d;
-        --text-color: #e0e0e0;
-        --text-secondary: #a0a0a0;
-        --border-color: #444;
-        --primary-color: #66BB6A;
-        --link-color: #5599ff;
-    }
-
-    .metrics-compact {
-        border-top-color: var(--border-color);
-        border-bottom-color: var(--border-color);
-    }
-
-    .metric-card {
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .connection-status.connected {
-        background: #1b5e20;
-        color: #c8e6c9;
-    }
-
-    .connection-status.error {
-        background: #b71c1c;
-        color: #ffcdd2;
-    }
-
-    .connection-status.reconnecting {
-        background: #f57f17;
-        color: #fff9c4;
-    }
-}
+/* Dark mode — inherits from CSS custom properties set on :root / [data-theme] */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

@@ -1,0 +1,39 @@
+/* Phosphor Icons - self-hosted subset (regular weight) */
+@font-face {
+  font-family: "Phosphor";
+  src:
+    url("/fonts/Phosphor.woff2") format("woff2"),
+    url("/fonts/Phosphor.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.ph {
+  font-family: "Phosphor" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  letter-spacing: 0;
+  font-feature-settings: "liga";
+  font-variant-ligatures: discretionary-ligatures;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Only the icons we actually use */
+.ph.ph-terminal-window:before { content: "\eae8"; }
+.ph.ph-github-logo:before { content: "\e576"; }
+.ph.ph-linkedin-logo:before { content: "\e2ee"; }
+.ph.ph-mastodon-logo:before { content: "\ed68"; }
+.ph.ph-envelope:before { content: "\e214"; }
+.ph.ph-rss:before { content: "\e400"; }
+.ph.ph-cpu:before { content: "\e610"; }
+.ph.ph-code:before { content: "\e1bc"; }
+.ph.ph-cloud:before { content: "\e1aa"; }
+.ph.ph-browser:before { content: "\e0f4"; }
+.ph.ph-sun:before { content: "\e472"; }
+.ph.ph-moon:before { content: "\e330"; }

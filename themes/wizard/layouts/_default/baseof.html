@@ -7,6 +7,10 @@
 
         <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
 
+        {{ $phosphor := resources.Get "css/phosphor.css" }}
+        {{ $phosphor = $phosphor | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $phosphor.RelPermalink }}" integrity="{{ $phosphor.Data.Integrity }}">
+
         {{ $style := resources.Get "css/style.css" }}
         {{ $style = $style | resources.Minify | resources.Fingerprint }}
         <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
@@ -56,31 +60,14 @@
         <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}"></script>
     </head>
     <body>
-        <div class="container">
-            <header class="site-header">
-                <div class="header-image"></div>
-                <div class="header-content">
-                    {{ partial "sidebar/title.html" . }}
-                    {{ partial "light_dark.html" . }}
-                </div>
-                <nav class="main-nav">
-                    {{ partial "navigation.html" . }}
-                </nav>
-            </header>
+        {{ partial "navigation.html" . }}
 
-            <main id="content">
-                {{ block "main" . }}{{ end }}
-            </main>
+        <main>
+            {{ block "main" . }}{{ end }}
+        </main>
 
-            <footer class="site-footer">
-                {{ partial "sidebar/socials.html" . }}
-                <div id="metrics-dashboard"></div>
-                <div class="memory-game-wrapper">
-                    <div id="memory-game"></div>
-                </div>
-                <button id="reset-game" class="reset-button">Reset Game</button>
-                <p class="copyright">&copy; {{ now.Year }} {{ .Site.Title }} · <a href="/imprint/">Imprint</a></p>
-            </footer>
-        </div>
+        <footer class="site-footer">
+            {{ partial "footer.html" . }}
+        </footer>
     </body>
 </html>

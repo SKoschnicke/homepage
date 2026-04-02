@@ -1,7 +1,72 @@
 {{ define "main" }}
-<article class="homepage">
-    <div class="homepage-content">
-        {{ .Content }}
+<section class="hero">
+    <img class="hero-bg-light" src="/images/header-tower-light.webp" alt="" aria-hidden="true">
+    <img class="hero-bg-dark" src="/images/header-tower-dark.webp" alt="" aria-hidden="true">
+    <div class="hero-overlay" aria-hidden="true"></div>
+    <div class="hero-content">
+        <span class="hero-label">Welcome to</span>
+        <h1 class="hero-title">{{ .Site.Params.brand }}</h1>
+        <div class="hero-divider" aria-hidden="true"></div>
+        <p class="hero-subtitle">{{ .Site.Params.description }} — from hardware to the cloud and everything in between.</p>
+        <div class="hero-actions">
+            <a href="/posts/" class="btn-primary">Read Posts</a>
+            <a href="/about/" class="btn-secondary">About Me</a>
+        </div>
     </div>
-</article>
+</section>
+
+<section class="about-preview">
+    <div class="about-text">
+        <span class="section-label">// About</span>
+        <h2>Full-Stack Since The 90s</h2>
+        <div class="homepage-content">
+            {{ .Content }}
+        </div>
+        <div class="about-skills">
+            <span class="about-skill"><i class="ph ph-cpu" aria-hidden="true"></i> Hardware</span>
+            <span class="about-skill"><i class="ph ph-code" aria-hidden="true"></i> Backend</span>
+            <span class="about-skill"><i class="ph ph-cloud" aria-hidden="true"></i> DevOps</span>
+            <span class="about-skill"><i class="ph ph-browser" aria-hidden="true"></i> Frontend</span>
+        </div>
+        <a href="/about/" class="about-cta">Learn More →</a>
+    </div>
+    <figure class="about-avatar">
+        <img src="/ox-hugo/2026-01-20_19-52-46_screenshot.png" alt="Pixel art avatar of Sven">
+        <figcaption class="about-avatar-caption">// that's me, in pixels</figcaption>
+    </figure>
+</section>
+
+{{ $posts := (where .Site.RegularPages "Section" "posts") }}
+{{ if $posts }}
+<section class="latest-posts">
+    <header class="latest-posts-header">
+        <div>
+            <span class="section-label">// Latest Posts</span>
+            <h2>Blog</h2>
+        </div>
+        <a href="/posts/" class="view-all">View All →</a>
+    </header>
+    <div class="posts-grid">
+        {{ range first 3 $posts }}
+        <article class="post-card">
+            {{ with .Params.tags }}
+            <div class="post-card-tags">
+                {{ range . }}
+                <span class="tag tag--amber">{{ . }}</span>
+                {{ end }}
+            </div>
+            {{ end }}
+            <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+            <p class="post-card-summary">
+                {{ with .Description }}{{ . }}{{ else }}{{ .Summary | plainify | truncate 120 }}{{ end }}
+            </p>
+            <div class="post-card-meta">
+                <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+                {{ with .ReadingTime }}<span>{{ . }} min read</span>{{ end }}
+            </div>
+        </article>
+        {{ end }}
+    </div>
+</section>
+{{ end }}
 {{ end }}

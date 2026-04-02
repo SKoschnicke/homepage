@@ -1,18 +1,34 @@
-{{ $menu := .Site.Params.menu }}
-<ul class="nav-list">
-    {{ range $menu }}
-    <li class="nav-item{{ if .HasChildren }} has-children{{ end }}">
-        <a href="{{ .URL }}" class="nav-link">{{ .Name }}</a>
-        {{ if and .HasChildren .Limit }}
-        <ul class="subnav-list">
-            {{ $url := .URL }}
-            {{ range first .Limit ($.Site.GetPage .URL).Pages }}
-            <li class="subnav-item">
-                <a href="{{ .RelPermalink }}" class="subnav-link">{{ .Title }}</a>
-            </li>
+<nav class="site-nav" aria-label="Main navigation">
+    <a href="{{ .Site.BaseURL }}" class="nav-brand">
+        <i class="ph ph-terminal-window" aria-hidden="true"></i>
+        <span class="nav-brand-text">{{ .Site.Params.brand }}</span>
+    </a>
+
+    <div class="nav-links">
+        <ul class="nav-menu">
+            {{ range .Site.Params.menu }}
+            <li><a href="{{ .URL }}">{{ .Name }}</a></li>
             {{ end }}
         </ul>
-        {{ end }}
-    </li>
-    {{ end }}
-</ul> 
+
+        <div class="nav-social">
+            {{ with .Site.Params.github_url }}
+            <a href="{{ . }}" aria-label="GitHub"><i class="ph ph-github-logo" aria-hidden="true"></i></a>
+            {{ end }}
+            {{ with .Site.Params.linkedin_url }}
+            <a href="{{ . }}" aria-label="LinkedIn"><i class="ph ph-linkedin-logo" aria-hidden="true"></i></a>
+            {{ end }}
+            {{ with .Site.Params.mastodon_url }}
+            <a href="{{ . }}" rel="me" aria-label="Mastodon"><i class="ph ph-mastodon-logo" aria-hidden="true"></i></a>
+            {{ end }}
+            {{ with .Site.Params.email_url }}
+            <a href="{{ . }}" aria-label="Email"><i class="ph ph-envelope" aria-hidden="true"></i></a>
+            {{ end }}
+        </div>
+
+        <button onclick="toggleTheme()" class="nav-toggle-theme" title="Toggle light/dark mode" aria-label="Toggle theme">
+            <i class="ph ph-moon moon" aria-hidden="true"></i>
+            <i class="ph ph-sun sun" aria-hidden="true"></i>
+        </button>
+    </div>
+</nav>

@@ -1,28 +1,34 @@
+// Set theme immediately (before paint) to avoid flash
+(function() {
+    var savedTheme = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+})();
+
 function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeIcons(newTheme);
 }
 
 function updateThemeIcons(theme) {
-    const moon = document.querySelector('.moon');
-    const sun = document.querySelector('.sun');
+    var moon = document.querySelector('.moon');
+    var sun = document.querySelector('.sun');
+    if (!moon || !sun) return;
     if (theme === 'dark') {
         moon.style.display = 'none';
-        sun.style.display = 'block';
+        sun.style.display = 'inline';
     } else {
-        moon.style.display = 'block';
+        moon.style.display = 'inline';
         sun.style.display = 'none';
     }
 }
 
-// Set theme on load
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
+// Update icons once DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    var theme = document.documentElement.getAttribute('data-theme') || 'dark';
     updateThemeIcons(theme);
-}); 
+});

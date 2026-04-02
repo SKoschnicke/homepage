@@ -1,0 +1,36 @@
+<div id="metrics-dashboard"></div>
+
+<ul class="footer-social">
+    {{ with .Site.Params.email_url }}
+    <li><a href="{{ . }}"><i class="ph ph-envelope" aria-hidden="true"></i> <span>Email</span></a></li>
+    {{ end }}
+    {{ with .Site.Params.github_url }}
+    <li><a href="{{ . }}"><i class="ph ph-github-logo" aria-hidden="true"></i> <span>GitHub</span></a></li>
+    {{ end }}
+    {{ with .Site.Params.linkedin_url }}
+    <li><a href="{{ . }}"><i class="ph ph-linkedin-logo" aria-hidden="true"></i> <span>LinkedIn</span></a></li>
+    {{ end }}
+    {{ with .Site.Params.mastodon_url }}
+    <li><a href="{{ . }}" rel="me"><i class="ph ph-mastodon-logo" aria-hidden="true"></i> <span>Mastodon</span></a></li>
+    {{ end }}
+    {{ if .Site.Params.rss_icon }}
+    <li><a href="{{ "posts/index.xml" | absURL }}"><i class="ph ph-rss" aria-hidden="true"></i> <span>RSS</span></a></li>
+    {{ end }}
+</ul>
+
+<div class="footer-divider"></div>
+
+<div class="memory-game-wrapper">
+    <div id="memory-game"></div>
+</div>
+<button id="reset-game" class="reset-button">Reset Game</button>
+
+<p class="footer-tagline">// No cookies. No tracking. Just vibes.</p>
+
+<p class="footer-info">
+    <span>&copy; {{ now.Year }} {{ .Site.Title }}</span>
+    <span>&middot;</span>
+    <a href="/imprint/">Imprint</a>
+    <span>&middot;</span>
+    <span>Powered by Rust + Hugo</span>
+</p>

@@ -50,19 +50,58 @@
         });
     }
 
+    function getThemeColors() {
+        var style = getComputedStyle(document.documentElement);
+        return {
+            text: style.getPropertyValue('--color-text-primary').trim() || '#bae6fd',
+            muted: style.getPropertyValue('--color-text-muted').trim() || '#818cf8',
+            accent: style.getPropertyValue('--color-text-accent').trim() || '#fbbf24',
+            link: style.getPropertyValue('--color-link').trim() || '#6ee7b7',
+            gridLine: style.getPropertyValue('--color-border-subtle').trim() || '#3730a3'
+        };
+    }
+
+    function updateChartColors() {
+        if (!rpsChart || !latencyChart) return;
+        var c = getThemeColors();
+
+        rpsChart.data.datasets[0].borderColor = c.link;
+        rpsChart.data.datasets[0].backgroundColor = c.link + '33';
+        rpsChart.options.scales.y.ticks.color = c.muted;
+        rpsChart.options.scales.y.grid.color = c.gridLine + '44';
+        rpsChart.update('none');
+
+        latencyChart.data.datasets[0].backgroundColor = [c.link + 'aa', c.accent + 'aa', '#f87171aa'];
+        latencyChart.data.datasets[0].borderColor = [c.link, c.accent, '#f87171'];
+        latencyChart.options.scales.y.ticks.color = c.muted;
+        latencyChart.options.scales.y.grid.color = c.gridLine + '44';
+        latencyChart.options.scales.x.ticks.color = c.muted;
+        latencyChart.update('none');
+    }
+
+    // Re-apply chart colors when theme changes
+    new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName === 'data-theme') {
+                updateChartColors();
+            }
+        });
+    }).observe(document.documentElement, { attributes: true });
+
     function initCharts() {
         if (rpsChart && latencyChart) return; // Already initialized
 
-        const rpsCtx = document.getElementById('rps-chart').getContext('2d');
-        const latencyCtx = document.getElementById('latency-chart').getContext('2d');
+        var colors = getThemeColors();
+        var rpsCtx = document.getElementById('rps-chart').getContext('2d');
+        var latencyCtx = document.getElementById('latency-chart').getContext('2d');
 
         rpsData = {
             labels: [],
             datasets: [{
                 label: 'req/s',
                 data: [],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: colors.link,
+                backgroundColor: colors.link + '33',
                 tension: 0.4,
                 fill: true
             }]
@@ -80,7 +119,8 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { color: 'inherit' }
+                        ticks: { color: colors.muted },
+                        grid: { color: colors.gridLine + '44' }
                     },
                     x: {
                         display: false
@@ -97,10 +137,16 @@
                     label: 'μs',
                     data: [0, 0, 0],
                     backgroundColor: [
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(255, 99, 132, 0.6)'
-                    ]
+                        colors.link + 'aa',
+                        colors.accent + 'aa',
+                        '#f87171aa'
+                    ],
+                    borderColor: [
+                        colors.link,
+                        colors.accent,
+                        '#f87171'
+                    ],
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -112,10 +158,12 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { color: 'inherit' }
+                        ticks: { color: colors.muted },
+                        grid: { color: colors.gridLine + '44' }
                     },
                     x: {
-                        ticks: { color: 'inherit' }
+                        ticks: { color: colors.muted },
+                        grid: { display: false }
                     }
                 }
             }
