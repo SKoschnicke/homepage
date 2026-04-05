@@ -6,15 +6,6 @@
   margin: 0 auto;
 }
 
-.memory-game-title {
-  margin: 20px 0 10px;
-  font-size: 0.7rem;
-  color: var(--text-color);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-family: var(--heading-font);
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
-}
 
 #memory-game {
   display: grid;

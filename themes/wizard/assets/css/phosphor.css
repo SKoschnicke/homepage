@@ -1,9 +1,7 @@
 /* Phosphor Icons - self-hosted subset (regular weight) */
 @font-face {
   font-family: "Phosphor";
-  src:
-    url("/fonts/Phosphor.woff2") format("woff2"),
-    url("/fonts/Phosphor.woff") format("woff");
+  src: url("/fonts/Phosphor.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
