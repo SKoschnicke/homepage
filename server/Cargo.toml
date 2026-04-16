@@ -18,10 +18,10 @@ base64 = "0.21"
 # Pin url to avoid icu deps requiring Rust 1.83
 url = "=2.5.2"
 # TLS for Gemini protocol (self-signed certs only)
-rustls = { version = "0.19", features = ["dangerous_configuration"] }
-rustls-pemfile = "0.2"
-tokio-rustls = "0.22"
-rcgen = "0.11"
+rustls = "0.23"
+rustls-pemfile = "2"
+tokio-rustls = "0.26"
+rcgen = "0.13"
 
 [build-dependencies]
 mime_guess = "2.0"
