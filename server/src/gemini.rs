@@ -104,69 +104,42 @@ pub async fn handle_connection(
 
     let path = url.path();
 
-    // Route to content
-    let response = route(path);
-    stream.write_all(&response).await?;
+    // Route to content. Write header then body in two calls so we don't
+    // allocate a Vec just to concatenate a static header with static content.
+    match lookup(path) {
+        Some(content) => {
+            stream.write_all(b"20 text/gemini\r\n").await?;
+            stream.write_all(content).await?;
+        }
+        None => {
+            stream.write_all(b"51 Not found\r\n").await?;
+        }
+    }
 
     Ok(())
 }
 
-/// Route a Gemini request to the appropriate content
-fn route(path: &str) -> Vec<u8> {
-    // Normalize path
+/// Look up the static content for a Gemini path, if any.
+fn lookup(path: &str) -> Option<&'static [u8]> {
     let path = if path.is_empty() { "/" } else { path };
 
-    // Try exact match
     if let Some(asset) = GEMINI_ROUTES.get(path) {
-        return success_response(asset.content);
+        return Some(asset.content);
     }
 
-    // Try without trailing slash
     if path.len() > 1 && path.ends_with('/') {
         let without_slash = &path[..path.len() - 1];
         if let Some(asset) = GEMINI_ROUTES.get(without_slash) {
-            return success_response(asset.content);
+            return Some(asset.content);
         }
     }
 
-    // Try with trailing slash (directory)
     if !path.ends_with('/') {
         let with_slash = format!("{}/", path);
         if let Some(asset) = GEMINI_ROUTES.get(with_slash.as_str()) {
-            return success_response(asset.content);
+            return Some(asset.content);
         }
     }
 
-    // Not found
-    not_found_response()
-}
-
-/// Build a success response (status 20)
-fn success_response(content: &[u8]) -> Vec<u8> {
-    let mut response = b"20 text/gemini\r\n".to_vec();
-    response.extend_from_slice(content);
-    response
-}
-
-/// Build a not found response (status 51)
-fn not_found_response() -> Vec<u8> {
-    b"51 Not found\r\n".to_vec()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_success_response() {
-        let response = success_response(b"# Hello\nWorld");
-        assert!(response.starts_with(b"20 text/gemini\r\n"));
-        assert!(response.ends_with(b"# Hello\nWorld"));
-    }
-
-    #[test]
-    fn test_not_found_response() {
-        let response = not_found_response();
-        assert_eq!(response, b"51 Not found\r\n");
-    }
+    None
 }
