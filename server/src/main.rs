@@ -3,8 +3,14 @@ use hyper::Server;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::net::TcpListener;
+use tokio::sync::Semaphore;
+use tokio::time::timeout;
 use tokio_rustls::TlsAcceptor;
+
+const GEMINI_TLS_HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+const GEMINI_MAX_CONCURRENT: usize = 256;
 
 mod acme;
 mod assets;
@@ -77,17 +83,42 @@ async fn start_gemini_server(
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = TcpListener::bind(&addr).await?;
     let tls_acceptor = TlsAcceptor::from(tls_config);
+    let semaphore = Arc::new(Semaphore::new(GEMINI_MAX_CONCURRENT));
 
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         let tls_acceptor = tls_acceptor.clone();
 
+        // Drop connections over the cap rather than queuing unbounded work.
+        let permit = match Arc::clone(&semaphore).try_acquire_owned() {
+            Ok(p) => p,
+            Err(_) => {
+                if std::env::var("DEBUG_GEMINI").is_ok() {
+                    eprintln!("Gemini connection dropped (at cap) from {}", peer_addr);
+                }
+                drop(stream);
+                continue;
+            }
+        };
+
         tokio::spawn(async move {
-            let tls_stream = match tls_acceptor.accept(stream).await {
-                Ok(s) => s,
-                Err(e) => {
+            let _permit = permit;
+            let tls_stream = match timeout(
+                GEMINI_TLS_HANDSHAKE_TIMEOUT,
+                tls_acceptor.accept(stream),
+            )
+            .await
+            {
+                Ok(Ok(s)) => s,
+                Ok(Err(e)) => {
                     if std::env::var("DEBUG_GEMINI").is_ok() {
                         eprintln!("Gemini TLS error from {}: {}", peer_addr, e);
+                    }
+                    return;
+                }
+                Err(_) => {
+                    if std::env::var("DEBUG_GEMINI").is_ok() {
+                        eprintln!("Gemini TLS handshake timeout from {}", peer_addr);
                     }
                     return;
                 }

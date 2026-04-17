@@ -13,8 +13,10 @@
 //! - 59: Bad request
 
 use std::collections::HashMap;
+use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tokio::time::timeout;
 use tokio_rustls::server::TlsStream;
 
 use crate::assets::{get_gemini_routes, GeminiAsset};
@@ -24,6 +26,7 @@ lazy_static::lazy_static! {
 }
 
 const MAX_REQUEST_SIZE: usize = 1024;
+const REQUEST_READ_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Return the number of Gemini routes
 pub fn route_count() -> usize {
@@ -38,24 +41,41 @@ pub async fn handle_connection(
     let mut buf = [0u8; MAX_REQUEST_SIZE + 2]; // +2 for CRLF
     let mut pos = 0;
 
-    loop {
-        let n = stream.read(&mut buf[pos..]).await?;
-        if n == 0 {
-            // Connection closed before complete request
+    let read_result = timeout(REQUEST_READ_TIMEOUT, async {
+        loop {
+            let n = stream.read(&mut buf[pos..]).await?;
+            if n == 0 {
+                // Connection closed before complete request
+                return Ok::<Option<usize>, std::io::Error>(None);
+            }
+            pos += n;
+
+            // Check for CRLF
+            if pos >= 2 && &buf[pos - 2..pos] == b"\r\n" {
+                return Ok(Some(pos));
+            }
+
+            if pos >= MAX_REQUEST_SIZE + 2 {
+                // Request too long
+                return Ok(Some(0));
+            }
+        }
+    })
+    .await;
+
+    match read_result {
+        Err(_) => {
+            // Timed out — best-effort status then drop
+            let _ = stream.write_all(b"59 Request timeout\r\n").await;
             return Ok(());
         }
-        pos += n;
-
-        // Check for CRLF
-        if pos >= 2 && &buf[pos - 2..pos] == b"\r\n" {
-            break;
-        }
-
-        if pos >= MAX_REQUEST_SIZE + 2 {
-            // Request too long
+        Ok(Ok(None)) => return Ok(()),
+        Ok(Ok(Some(0))) => {
             stream.write_all(b"59 Request exceeds maximum size\r\n").await?;
             return Ok(());
         }
+        Ok(Ok(Some(_))) => {}
+        Ok(Err(e)) => return Err(e.into()),
     }
 
     // Parse URL (strip CRLF)
