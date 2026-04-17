@@ -54,8 +54,15 @@ async fn main() {
 
     if gemini_enabled && gemini::route_count() > 0 {
         let domain = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
-        let cert_data = acme::generate_self_signed_certificate(&domain)
-            .expect("Failed to generate self-signed certificate for Gemini");
+        let cert_data = match std::env::var("STATE_DIRECTORY").ok() {
+            Some(dir) if !dir.is_empty() => {
+                let path = std::path::PathBuf::from(dir);
+                acme::load_or_generate_persistent_certificate(&path, &domain)
+                    .expect("Failed to load/generate persistent Gemini certificate")
+            }
+            _ => acme::generate_self_signed_certificate(&domain)
+                .expect("Failed to generate self-signed certificate for Gemini"),
+        };
         let tls_config = acme::build_tls_config(&cert_data.cert_pem, &cert_data.privkey_pem)
             .expect("Failed to build TLS config for Gemini");
 

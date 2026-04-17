@@ -14,13 +14,36 @@ RestartSec=5
 Environment=PORT=8080
 Environment=DOMAIN=sven.guru
 
+# Persistent state for the Gemini self-signed cert (exposed as $STATE_DIRECTORY,
+# resolves to /var/lib/homepage under the default StateDirectoryMode).
+StateDirectory=homepage
+StateDirectoryMode=0750
+
 # Hardening
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
+PrivateDevices=true
 ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
 ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @debug @mount
+# Binary binds 8080 and 1965, both >=1024 — no capabilities needed.
+CapabilityBoundingSet=
+AmbientCapabilities=
 
 [Install]
 WantedBy=multi-user.target
