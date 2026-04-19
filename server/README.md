@@ -21,7 +21,7 @@ Hugo builds site → build.rs embeds assets → Rust binary → deploy via scp
 - `main.rs` - HTTP server on localhost, Gemini server with self-signed TLS
 - `router.rs` - Content negotiation, ETag handling, cache headers
 - `assets.rs` - Generated file with embedded routes (HTML, CSS, JS, images, XML)
-- `acme.rs` - Self-signed certificate generation (for Gemini only)
+- `acme.rs` - Self-signed certificate generation and persistence (Gemini only). Loads `gemini.{crt,key}` from `$STATE_DIRECTORY` if set, generates and writes a fresh pair otherwise.
 - `gemini.rs` - Gemini protocol handler
 - `metrics.rs` - Real-time metrics collection and WebSocket streaming
 - `websocket.rs` - WebSocket protocol handling for live metrics
@@ -64,32 +64,32 @@ Output: `server/target/release/static-server`.
 
 ## Deployment
 
-The site runs on a **Hetzner VPS (aarch64)** behind **Caddy** as reverse proxy. Caddy handles TLS via Let's Encrypt. The Rust server only listens on localhost.
+The site runs on a **Hetzner VPS (aarch64, NixOS)** — `palanthas`.
 
-### Deploy
+- HTTP on `127.0.0.1:8080` behind **Caddy**, which terminates TLS on `:443`
+  via Let's Encrypt.
+- Gemini on `0.0.0.0:1965` directly, with a self-signed TLS cert persisted
+  in `/var/lib/homepage/`. This is the only process-owned socket on the
+  public internet.
+
+Deploy the binary:
 
 ```bash
 mise run deploy
 ```
 
-This will:
-1. Build Hugo site + Gemini content
-2. Cross-compile the Rust binary for aarch64-musl (static)
-3. `scp` to the VPS (`palanthas`)
-4. Restart the systemd service
-5. Verify the site is responding
+Deploy unit / infra changes (systemd service, Caddy vhost, `homepage` user)
+from the separate NixOS config repo:
 
-### Infrastructure
-
-The VPS is managed via NixOS (`~/nixos-config/`):
-- `modules/homepage.nix` - Systemd service, user, Caddy virtualhost
-- `hosts/palanthas/default.nix` - Enables Caddy + homepage service
-
-Deploy NixOS config changes separately:
 ```bash
 cd ~/nixos-config
 mise run deploy:palanthas
 ```
+
+Full topology, bootstrap steps, env vars, and troubleshooting:
+[DEPLOYMENT.md](DEPLOYMENT.md).
+
+Security audit and sandbox details: [SECURITY_HARDENING.md](SECURITY_HARDENING.md).
 
 ### Environment Variables
 
@@ -149,7 +149,7 @@ server/
 ├── src/
 │   ├── main.rs         # Server initialization
 │   ├── router.rs       # HTTP routing and serving
-│   ├── acme.rs         # Self-signed cert generation (Gemini)
+│   ├── acme.rs         # Self-signed cert generation + persistence (Gemini)
 │   ├── gemini.rs       # Gemini protocol handler
 │   ├── metrics.rs      # Request metrics
 │   ├── websocket.rs    # WebSocket for metrics

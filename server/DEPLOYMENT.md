@@ -1,337 +1,147 @@
-# Deployment Guide - Hetzner Cloud
+# Deployment
 
-Guide for deploying the Rust static server to Hetzner Cloud.
+How the site actually runs in production. Superseded the old Docker /
+ops-unikernel / certbot scaffolding that used to live in this file — none of
+it reflected reality.
 
-## Prerequisites
+## Topology
 
-- Hetzner Cloud account with API token
-- `hcloud` CLI installed: `brew install hcloud` or download from [Hetzner](https://github.com/hetznercloud/cli)
-- Docker/Podman for container builds
-
-## Option 1: Docker Deployment (Recommended)
-
-### 1. Build the Docker image locally
-
-```bash
-cd /home/sven/development/homepage
-podman build -f server/Dockerfile -t static-server:latest .
+```
+                    Internet
+                       │
+        ┌──────────────┼──────────────┐
+        │ 443 TCP      │ 80 TCP       │ 1965 TCP
+        ▼              ▼              ▼
+   ┌────────────────────────┐   ┌──────────────┐
+   │     Caddy              │   │  homepage    │
+   │  (TLS via ACME)        │   │  (Gemini)    │
+   │  reverse_proxy ────────┼──▶│  0.0.0.0:1965│
+   └────────────────────────┘   │              │
+        ▲                       │              │
+        │ HTTP 127.0.0.1:8080   │ HTTP 8080    │
+        └───────────────────────│ 127.0.0.1    │
+                                └──────────────┘
+                              Hetzner VPS (palanthas)
+                              aarch64, NixOS
 ```
 
-### 2. Create a Hetzner Cloud server
+- **HTTP/HTTPS**: Caddy terminates TLS on :443 (auto Let's Encrypt), reverse
+  proxies to the Rust server on `127.0.0.1:8080`. Plain :80 redirects to :443.
+- **Gemini**: the Rust server listens on `0.0.0.0:1965` directly with its own
+  self-signed TLS certificate — no reverse proxy. This is the only
+  process-owned socket reachable from the public internet.
+- **Metrics**: WebSocket at `/__metrics__/ws` is public (no auth), routed
+  through Caddy like any other HTTP path.
+
+## Host
+
+- **Provider**: Hetzner Cloud, aarch64
+- **OS**: NixOS
+- **SSH alias**: `palanthas` (configured in `~/.ssh/config`)
+- **DNS**: `sven.guru` A/AAAA → VPS IP
+
+## Split config — two repos
+
+Unit file + user + Caddy vhost live in `~/nixos-config/`. The server binary
+and the reference systemd unit live in this repo. Changes to the unit or
+infra go via NixOS; changes to the binary go via scp.
+
+| What | Where | Deploy with |
+|------|-------|-------------|
+| Rust binary (`/opt/homepage/static-server`) | this repo | `mise run deploy` |
+| systemd unit, `homepage` user, Caddy vhost | `~/nixos-config/modules/homepage.nix` | `cd ~/nixos-config && mise run deploy:palanthas` |
+| Persistent state dir `/var/lib/homepage/` | created by systemd from `StateDirectory=homepage` | — |
+
+The reference `server/homepage.service` in this repo is **not** what systemd
+loads on the VPS — it mirrors the NixOS unit so local dev / non-NixOS hosts
+can reuse it. When in doubt, `~/nixos-config/modules/homepage.nix` wins.
+
+## Binary deploy
+
+From this repo:
 
 ```bash
-# Login to Hetzner
-hcloud context create homepage
-
-# Create a small server (CX22 = 2 vCPU, 4GB RAM, €5.83/month)
-hcloud server create \
-  --name homepage-server \
-  --type cx22 \
-  --image ubuntu-22.04 \
-  --ssh-key <your-ssh-key-name> \
-  --location fsn1
+mise run deploy
 ```
 
-### 3. Install Docker on the server
+That runs `mise run build aarch64` then `server/deploy-vps.sh`:
+
+1. Build Hugo site, convert Gemini content, cross-compile the static
+   aarch64-musl binary (~5 MB).
+2. `scp` to `/tmp/static-server.new` on the VPS.
+3. `systemctl stop homepage`, move binary into `/opt/homepage/static-server`,
+   chown `homepage:homepage`, `systemctl start homepage`.
+4. Poll `curl http://localhost:8080/` for 30s; fail the deploy if it
+   doesn't come up.
+5. Verify `https://sven.guru/` returns 200.
+
+No downtime-hiding tricks — restart is ~1 second. Good enough for a personal
+site.
+
+## NixOS / infra deploy
+
+From `~/nixos-config/`:
 
 ```bash
-# SSH into the server
-ssh root@<server-ip>
-
-# Install Docker
-apt-get update
-apt-get install -y docker.io
-
-# Enable and start Docker
-systemctl enable docker
-systemctl start docker
+mise run deploy:palanthas    # wraps: nix run github:serokell/deploy-rs -- -s .#palanthas
 ```
 
-### 4. Push and run the container
+`deploy-rs` ships the closure, activates it, and rolls back if the
+post-activation health check fails. The unit has
+`ConditionPathExists=/opt/homepage/static-server` so a fresh server boots
+fine before any binary has been deployed.
 
-**Option A: Save/Load (no registry needed)**
+Deploy NixOS first when a change needs a new unit directive (new env var,
+new capability, new sandbox setting); deploy the binary after.
 
-```bash
-# On your local machine - save the image
-podman save static-server:latest | gzip > static-server.tar.gz
+## Bootstrapping a fresh host
 
-# Copy to server
-scp static-server.tar.gz root@<server-ip>:/tmp/
+1. Install NixOS on the VPS (one-time; Hetzner rescue + nixos-install).
+2. Point DNS at the box.
+3. `mise run deploy:palanthas` from `~/nixos-config/` — creates the
+   `homepage` user, lays down the unit, brings up Caddy. Unit stays inactive
+   because the binary isn't there yet (`ConditionPathExists`).
+4. `mise run deploy` from this repo — ships the binary, starts the unit.
+5. Caddy acquires the LE cert on first HTTPS request.
 
-# On the server - load and run
-ssh root@<server-ip>
-docker load < /tmp/static-server.tar.gz
-docker run -d \
-  --name homepage \
-  -p 80:3000 \
-  --restart unless-stopped \
-  static-server:latest
-
-# Check it's running
-docker ps
-curl http://localhost
-```
-
-**Option B: Use Docker Hub**
+## Monitoring & troubleshooting
 
 ```bash
-# Tag and push
-podman tag static-server:latest your-dockerhub-username/static-server:latest
-podman push your-dockerhub-username/static-server:latest
+ssh palanthas
 
-# On server
-ssh root@<server-ip>
-docker pull your-dockerhub-username/static-server:latest
-docker run -d \
-  --name homepage \
-  -p 80:3000 \
-  --restart unless-stopped \
-  your-dockerhub-username/static-server:latest
-```
-
-### 5. Configure firewall
-
-```bash
-# On Hetzner Cloud Console or via CLI
-hcloud firewall create --name web-firewall
-hcloud firewall add-rule web-firewall \
-  --direction in \
-  --protocol tcp \
-  --port 80 \
-  --source-ips 0.0.0.0/0 \
-  --source-ips ::/0
-
-hcloud firewall add-rule web-firewall \
-  --direction in \
-  --protocol tcp \
-  --port 443 \
-  --source-ips 0.0.0.0/0 \
-  --source-ips ::/0
-
-hcloud firewall apply-to-resource web-firewall \
-  --type server \
-  --server homepage-server
-```
-
-### 6. Test the deployment
-
-```bash
-curl http://<server-ip>/
-```
-
-## Option 2: Simple Binary Deployment
-
-For maximum performance without Docker overhead.
-
-### 1. Create server (same as above)
-
-### 2. Build a static binary
-
-```bash
-# On your local machine
-cd /home/sven/development/homepage
-
-# Build Hugo site
-hugo --minify
-
-# Build Rust binary (musl for static linking)
-cd server
-cargo build --release --target x86_64-unknown-linux-musl
-
-# The binary is now at: target/x86_64-unknown-linux-musl/release/static-server
-```
-
-### 3. Copy to server
-
-```bash
-scp target/x86_64-unknown-linux-musl/release/static-server root@<server-ip>:/usr/local/bin/
-
-# Make executable
-ssh root@<server-ip> chmod +x /usr/local/bin/static-server
-```
-
-### 4. Create systemd service
-
-```bash
-# On the server
-cat > /etc/systemd/system/homepage.service <<'EOF'
-[Unit]
-Description=Static Homepage Server
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/var/www
-ExecStart=/usr/local/bin/static-server
-Restart=always
-RestartSec=3
-Environment="PORT=3000"
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start
-systemctl daemon-reload
-systemctl enable homepage
-systemctl start homepage
+# Service state
 systemctl status homepage
+journalctl -u homepage -n 50 --no-pager
+
+# Caddy
+systemctl status caddy
+journalctl -u caddy -n 50 --no-pager
+
+# Sandbox score (expect 1.4 OK)
+systemd-analyze security homepage
+
+# Persistent state
+ls -la /var/lib/homepage/
 ```
 
-### 5. Setup nginx reverse proxy (optional, for HTTPS)
+## Environment variables
 
-```bash
-# Install nginx
-apt-get install -y nginx certbot python3-certbot-nginx
+Set by the NixOS unit:
 
-# Configure nginx
-cat > /etc/nginx/sites-available/homepage <<'EOF'
-server {
-    listen 80;
-    server_name sven.guru www.sven.guru;
+- `PORT=8080` — HTTP listen port (localhost only)
+- `DOMAIN=sven.guru` — used as the Gemini cert CN
+- `STATE_DIRECTORY=/var/lib/homepage` — exported by systemd from
+  `StateDirectory=homepage`; the binary looks here for
+  `gemini.crt` / `gemini.key` and generates+persists them on first boot
 
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-EOF
+Optional (not set in prod):
 
-ln -s /etc/nginx/sites-available/homepage /etc/nginx/sites-enabled/
-nginx -t
-systemctl reload nginx
+- `ENABLE_GEMINI` — `false` disables the Gemini listener (default: on if
+  any Gemini content was compiled in)
+- `DEBUG_GEMINI` — extra logging on dropped/timed-out Gemini connections
 
-# Get SSL certificate
-certbot --nginx -d sven.guru -d www.sven.guru
-```
+## Security
 
-## Option 3: True Unikernel Deployment (Hetzner Cloud)
-
-For true unikernel deployment, use **Hetzner Cloud** which is natively supported by ops.
-
-See the main **README.md** for complete Hetzner Cloud unikernel deployment instructions, including:
-- Setting up Hetzner credentials (API token, Object Storage keys)
-- Creating and deploying unikernel images
-- Managing instances
-- Cost estimates (~€8.48/month)
-
-Quick reference:
-```bash
-# Set credentials
-export HCLOUD_TOKEN=<your-token>
-export OBJECT_STORAGE_DOMAIN=fsn1.your-objectstorage.com
-export OBJECT_STORAGE_KEY=<your-key>
-export OBJECT_STORAGE_SECRET=<your-secret>
-
-# Deploy
-ops image create target/release/static-server -c config-hetzner.json -t hetzner -i homepage-unikernel
-ops instance create -t hetzner -c config-hetzner.json -i homepage-unikernel
-```
-
-**Alternative:** Oracle Cloud offers a free tier with 4 ARM cores + 24GB RAM (always free). See ops documentation for OCI deployment.
-
-## DNS Configuration
-
-Point your domain to the server IP:
-
-```bash
-# Get server IP
-hcloud server describe homepage-server
-
-# Add A record to your DNS
-# sven.guru → <server-ip>
-```
-
-## Updating the Deployment
-
-### Docker:
-
-```bash
-# Rebuild image
-podman build -f server/Dockerfile -t static-server:latest .
-
-# Save and copy to server
-podman save static-server:latest | gzip > static-server.tar.gz
-scp static-server.tar.gz root@<server-ip>:/tmp/
-
-# On server
-ssh root@<server-ip>
-docker load < /tmp/static-server.tar.gz
-docker stop homepage
-docker rm homepage
-docker run -d --name homepage -p 80:3000 --restart unless-stopped static-server:latest
-```
-
-### Binary:
-
-```bash
-# Rebuild
-cd /home/sven/development/homepage
-hugo --minify
-cd server
-cargo build --release --target x86_64-unknown-linux-musl
-
-# Deploy
-scp target/x86_64-unknown-linux-musl/release/static-server root@<server-ip>:/usr/local/bin/
-ssh root@<server-ip> systemctl restart homepage
-```
-
-## Monitoring
-
-### Check server status
-
-```bash
-# Docker
-ssh root@<server-ip> docker logs homepage
-
-# Binary
-ssh root@<server-ip> journalctl -u homepage -f
-```
-
-### Monitor performance
-
-```bash
-# Install monitoring tools on server
-apt-get install -y htop iotop
-
-# Watch resource usage
-ssh root@<server-ip> htop
-
-# Check connections
-ss -tuln | grep 3000
-```
-
-## Cost Estimation
-
-**Hetzner Cloud Pricing (as of 2024):**
-
-- **CX11** (1 vCPU, 2GB RAM): €4.15/month - sufficient for low traffic
-- **CX22** (2 vCPU, 4GB RAM): €5.83/month - recommended for testing
-- **CX32** (4 vCPU, 8GB RAM): €11.49/month - high traffic
-
-**Traffic:** 20TB included with all servers (more than enough for a personal site)
-
-**Total estimated cost:** ~€6/month for testing
-
-## Cleanup
-
-```bash
-# Delete the server when done testing
-hcloud server delete homepage-server
-
-# Or power off to save money
-hcloud server poweroff homepage-server
-```
-
-## Recommended Approach for Testing
-
-1. **Start simple:** Use Docker deployment (Option 1)
-2. **Test it works:** Verify the site loads and performs well
-3. **Add HTTPS:** Use nginx + certbot if you want SSL
-4. **Optimize later:** Once satisfied, switch to binary deployment for max performance
-
-The Docker approach is easiest to iterate on and gives you ~90% of the performance since the Rust server itself is still doing the heavy lifting.
+See [SECURITY_HARDENING.md](SECURITY_HARDENING.md) for the full audit: TLS
+stack, Gemini listener timeouts/caps, WebSocket handshake validation,
+systemd sandbox (exposure level 1.4), and the persistent-cert mechanism.
