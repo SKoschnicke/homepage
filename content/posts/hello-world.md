@@ -1,5 +1,6 @@
 +++
 title = "Hello World"
+author = ["Sven Koschnicke"]
 date = 2025-01-02
 tags = ["personal"]
 draft = false
