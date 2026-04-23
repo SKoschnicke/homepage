@@ -5,7 +5,7 @@ tags = ["ATTACH"]
 draft = false
 +++
 
-{{< figure src="/ox-hugo/2026-01-20_19-52-46_screenshot.png" alt=""That's me in pixels"" class="homepage-image" >}}
+{{< figure src="/ox-hugo/2026-01-20_19-52-46_screenshot.png" alt="That's me in pixels" class="homepage-image" >}}
 
 Welcome to my little home on the interwebs. I'm Sven Koschnicke, a computer nerd with over 25 years of software-engineering experience across the full technology stack - from hardware design and kernel modules to DevOps, backend services, and frontend applications.
 

@@ -12,7 +12,7 @@
 :END:
 
 #+DOWNLOADED: screenshot @ 2026-01-20 19:52:46
-#+ATTR_HTML: :class homepage-image :alt "That's me in pixels"
+#+ATTR_HTML: :class homepage-image :alt That's me in pixels
 [[attachment:2026-01-20_19-52-46_screenshot.png]]
 
 Welcome to my little home on the interwebs. I'm Sven Koschnicke, a computer nerd with over 25 years of software-engineering experience across the full technology stack - from hardware design and kernel modules to DevOps, backend services, and frontend applications.
