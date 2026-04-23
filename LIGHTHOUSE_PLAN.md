@@ -2,7 +2,7 @@
 
 Source: Lighthouse 12.6.0, mobile, run 2026-04-22 against `https://sven.guru/`.
 
-Current category scores:
+Original category scores (production, mobile):
 
 | Category       | Score |
 |----------------|-------|
@@ -11,8 +11,17 @@ Current category scores:
 | Best Practices | 100   |
 | SEO            | 92    |
 
-Key failing Core Web Vital: **CLS = 0.225** (target ≤ 0.1).
-LCP is 2.9s (needs improvement, target ≤ 2.5s).
+Local run 2026-04-23 (after tasks 1, 2, 3-partial, 4, 5, 6):
+
+| Category       | Mobile | Desktop |
+|----------------|--------|---------|
+| Performance    | 88     | 100     |
+| Accessibility  | 100    | 100     |
+| Best Practices | 96     | 96      |
+| SEO            | 100    | 100     |
+
+Original failing Core Web Vital: **CLS = 0.225** — now 0 (fixed).
+LCP on throttled localhost: 3.9s mobile / 0.8s desktop. Re-audit production to get a real number.
 
 ---
 
@@ -20,7 +29,7 @@ LCP is 2.9s (needs improvement, target ≤ 2.5s).
 
 Ordered by impact. Each task is independent unless noted.
 
-### 1. Add alt text to homepage image
+### 1. Add alt text to homepage image ✅ DONE (43e5758, 9afd9a4)
 - **Audit:** `image-alt` (a11y, SEO), score 0, severity critical.
 - **Problem:** `/ox-hugo/2026-01-20_19-52-46_screenshot.png` is rendered in the homepage without an `alt` attribute.
   - Selector: `div.about-text > div.homepage-content > figure.homepage-image > img`
@@ -28,7 +37,7 @@ Ordered by impact. Each task is independent unless noted.
 - **Fix:** Edit the source in `content-org/all-pages.org` (NOT the generated `/content/` markdown). Find the Org link to `2026-01-20_19-52-46_screenshot.png` on the homepage section and add a descriptive alt text. Re-export with `C-c C-e`.
 - **Acceptance:** `<img>` has non-empty `alt` attribute. Lighthouse `image-alt` passes.
 
-### 2. Reduce CLS from web font loading
+### 2. Reduce CLS from web font loading ✅ DONE (931a26f) — CLS now 0
 - **Audit:** `cumulative-layout-shift` = 0.225, `layout-shifts`, `cls-culprits-insight`. Needs improvement.
 - **Problem:** The three self-hosted fonts (`Phosphor.woff2`, `thaleah-fat.woff2`, `monaspace-argon-variable.woff2`) swap in after first paint and reflow the entire `<main>` element (score 0.225). Lighthouse attributes all three as causes.
 - **Files:**
@@ -41,7 +50,10 @@ Ordered by impact. Each task is independent unless noted.
   3. Mark Monaspace Argon with `font-display: optional` (body text still readable in fallback, avoids swap CLS). Keep ThaleahFat as `swap` since headings are critical to the pixel aesthetic.
 - **Acceptance:** CLS ≤ 0.1 in mobile Lighthouse. No visible jump when fonts finish loading.
 
-### 3. Optimize LCP hero image (~196 KiB savings)
+### 3. Optimize LCP hero image (~196 KiB savings) ⚠️ PARTIAL (8e18f1d)
+
+**Done:** smaller mobile source served via `srcset`.
+**Still open:** `fetchpriority="high"` on the visible hero, re-encode at lower quality, and the follow-up about shipping only one theme's hero.
 - **Audits:** `largest-contentful-paint` 2.9s, `image-delivery-insight` (196 KiB savings), `lcp-discovery-insight` (fetchpriority not applied), `prioritize-lcp-image`.
 - **Problem:** Hero backgrounds `/images/header-tower-light.webp` (145 KiB) and `/images/header-tower-dark.webp` (109 KiB) are the LCP element. Lighthouse says:
   - 116 KiB savings on light, 80 KiB on dark via stronger compression
@@ -61,7 +73,7 @@ Ordered by impact. Each task is independent unless noted.
   3. Keep the crossfade, but mark the non-initial `<img>` as `loading="lazy"` + `fetchpriority="low"` so it only loads when the theme actually flips.
   Pick based on how much the crossfade matters vs. doubling hero bytes on every load.
 
-### 4. Fix muted text contrast (light theme)
+### 4. Fix muted text contrast (light theme) ✅ DONE (1b79eff)
 - **Audit:** `color-contrast` fails, severity serious. WCAG AA requires 4.5:1 for body text.
 - **Problem:** `--color-text-muted: #9a8672` on `--color-bg-base: #f3ece0` = 2.96:1. Affects:
   - Post card meta (date, read time)
@@ -72,14 +84,14 @@ Ordered by impact. Each task is independent unless noted.
 - **Fix:** Darken `--color-text-muted`. `#6b5a44` hits ~5.1:1 on `#f3ece0` and still reads as muted brown. Verify the same token isn't relied on in dark theme (it isn't — dark theme defines its own).
 - **Acceptance:** All `color-contrast` items pass. Muted text still visually distinct from primary.
 
-### 5. Fix inline link contrast in body text
+### 5. Fix inline link contrast in body text ✅ DONE (6231199)
 - **Audit:** `link-in-text-block` fails, severity serious.
 - **Problem:** Inline links in the homepage intro paragraph (`posts`, `about me`) use `--color-link: #1a7a4c` against body text `#3b2f20` — 2.43:1 and no underline. WCAG requires 3:1 against surrounding text OR a non-color distinction.
 - **File:** `themes/wizard/assets/css/style.css`.
 - **Fix:** Add `text-decoration: underline` to inline links inside prose. Easiest selector: underline links inside `.homepage-content p`, `.post-content p`, `.post-summary-text` (but not `.post-card` or nav/tag/button styled links). Keep the teal color for visual identity.
 - **Acceptance:** Inline prose links have a visible underline. Lighthouse `link-in-text-block` passes.
 
-### 6. Fix reset-button contrast and font size
+### 6. Fix reset-button contrast and font size ✅ DONE (1b79eff)
 - **Audits:** `color-contrast` (4.32:1 fails AA for <14pt), `font-size` (8px < 12px).
 - **Problem:** `.reset-button` in `memory-game.css`:
   - `color: #2d7a82` on `background: #e8f0f8` = 4.32:1 (fails for 8px text, needs 4.5:1)
@@ -99,7 +111,12 @@ Ordered by impact. Each task is independent unless noted.
   ```
 - **Acceptance:** `bf-cache` audit passes. Metrics still update on first load and resume after back-navigation.
 
-### 8. Bump small font sizes
+### 8. Bump small font sizes ⚠️ NOT CURRENTLY FAILING
+
+Local Lighthouse 12.6 run no longer surfaces the `font-size` audit at all
+(mobile SEO is 100). Re-confirm against production before doing this — the
+`.footer-tagline` and `.tag` are still at 0.7rem, but Lighthouse may have
+dropped or relaxed the audit.
 - **Audit:** `font-size` — 1.7% of text is <12px.
 - **Problem:** Three selectors render below 12px:
   - `.footer-tagline` — 11.2px (0.7rem)
@@ -174,9 +191,8 @@ These live in the NixOS config repo (`modules/homepage.nix` or a dedicated Caddy
 
 ## Suggested order of execution
 
-1. **Quick wins first** (tasks 1, 8, 6, 5) — trivial edits, immediate score impact.
-2. **CLS fix** (task 2) — biggest single score gain, unblocks Core Web Vitals.
-3. **LCP image** (task 3) — second biggest perf gain.
-4. **Link contrast** (task 5).
-5. **BFCache** (task 7).
-6. Hand over A and B to the nixos-config agent.
+1. ~~**Quick wins first** (tasks 1, 8, 6, 5)~~ — done (1, 5, 6). Task 8 no longer flagged.
+2. ~~**CLS fix** (task 2)~~ — done.
+3. **LCP image** (task 3) — still open: `fetchpriority`, re-encode, theme-matched hero.
+4. **BFCache** (task 7) — still open.
+5. Hand over A and B to the nixos-config agent.
