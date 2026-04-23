@@ -202,17 +202,17 @@
   margin: 10px auto;
   padding: 10px 20px;
   background-color: #e8f0f8;
-  color: #2d7a82;
+  color: #1e5a60;
   border: 3px solid #3AAFB9;
   border-radius: 0;
   cursor: pointer;
-  font-size: 0.5rem;
+  font-size: 0.75rem;
   font-family: var(--heading-font);
   text-transform: uppercase;
   letter-spacing: 1px;
   display: block;
   box-shadow:
-    3px 3px 0 0 #2d7a82,
+    3px 3px 0 0 #1e5a60,
     inset 1px 1px 0 rgba(255, 255, 255, 0.8);
   transition: none;
 }
