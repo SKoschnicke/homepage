@@ -64,6 +64,10 @@ echo "Starting server on http://localhost:8080 ..."
 PORT=8080 DOMAIN=localhost ./target/release/static-server
 """
 
+[tasks.lighthouse]
+description = "Run Lighthouse (mobile + desktop) against a local hugo server"
+run = "./scripts/lighthouse-audit.sh"
+
 [tasks.deploy]
 description = "Cross-compile for aarch64 and deploy to VPS via SSH"
 run = """

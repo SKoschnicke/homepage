@@ -1,4 +1,5 @@
 /public/
+/.lighthouse/
 /resources/_gen/
 /server/target/
 /server/src/assets.rs

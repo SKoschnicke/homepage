@@ -29,8 +29,14 @@
           pkgs.hugo
           pkgs.gcc
           pkgs.wrk
+          pkgs.nodejs  # for npx-launched lighthouse (web-perf tool, not the eth client)
+          pkgs.chromium
+          pkgs.jq
           crossPkgs.stdenv.cc
         ];
+
+        # Point Lighthouse at the Nix-provided Chromium so it doesn't try to download one.
+        CHROME_PATH = "${pkgs.chromium}/bin/chromium";
 
         CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER =
           "${crossPkgs.stdenv.cc}/bin/aarch64-unknown-linux-musl-gcc";
@@ -41,6 +47,7 @@
           echo "Homepage dev environment loaded"
           echo "  hugo $(hugo version | grep -oP 'v\d+\.\d+\.\d+')"
           echo "  cargo $(cargo --version | cut -d' ' -f2)"
+          echo "  node $(node --version)  (run lighthouse via 'mise run lighthouse')"
           echo "  cross-compile: cargo build --release --target aarch64-unknown-linux-musl"
         '';
       };

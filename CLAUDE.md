@@ -14,6 +14,7 @@ Instructions for AI assistants working with this Hugo-based personal homepage.
 | Full build (Hugo + Rust) | `mise run build` |
 | Build for deploy (aarch64) | `mise run build aarch64` |
 | Deploy to VPS | `mise run deploy` |
+| Lighthouse audit (mobile + desktop) | `mise run lighthouse` |
 
 ## Critical Rules
 
@@ -121,6 +122,30 @@ Infrastructure (NixOS config) is managed separately in `~/nixos-config/`:
 
 See `server/README.md` for details.
 
+## Performance Auditing
+
+Run Lighthouse (mobile + desktop) against a local Hugo server:
+
+```bash
+mise run lighthouse           # inside the nix dev shell
+nix develop --command mise run lighthouse   # from outside
+```
+
+The task starts `hugo server` on :1313 if nothing is already listening there,
+runs a mobile audit (Lighthouse default) and then a desktop audit, writes the
+four reports to `.lighthouse/` (gitignored), and prints category scores, Core
+Web Vitals, and every scored audit below 1.0 to stdout.
+
+- Runner: `scripts/lighthouse-audit.sh`
+- Requires the nix dev shell for `node`, `chromium`, `jq`, `hugo`. Lighthouse
+  itself is fetched on demand via `npx` (cached under `~/.npm`).
+- Pass a path to audit a non-homepage URL: `./scripts/lighthouse-audit.sh /posts/`.
+- Reports are throwaway — delete `.lighthouse/` any time.
+
+Note: localhost runs exercise Lighthouse's simulated slow-4G throttling, so
+absolute numbers (especially LCP) can differ from production. Use the local
+runs for *deltas* while iterating, then confirm against `https://sven.guru`.
+
 ## Key Files Reference
 
 | File | Purpose |
@@ -135,3 +160,4 @@ See `server/README.md` for details.
 | `server/deploy-vps.sh` | VPS deployment script (scp + restart) |
 | `flake.nix` | Nix dev shell with cross-compile toolchain |
 | `.mise.toml` | Build, dev, and deploy tasks |
+| `scripts/lighthouse-audit.sh` | Mobile + desktop Lighthouse runner (see Performance Auditing) |
