@@ -776,6 +776,14 @@ a:hover {
     margin-bottom: 1.5rem;
 }
 
+.homepage-content p a,
+.post-content p a,
+.post-content li a,
+.post-summary-text a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
 .homepage-image {
     float: right;
     max-width: 45%;
