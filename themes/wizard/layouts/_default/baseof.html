@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
         <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
 
         <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
@@ -54,6 +55,7 @@
         {{ $lightDark := resources.Get "js/light_dark.js" }}
         {{ $lightDark = $lightDark | resources.Minify | resources.Fingerprint }}
         <script src="{{ $lightDark.RelPermalink }}" integrity="{{ $lightDark.Data.Integrity }}"></script>
+        <noscript><style>.nav-toggle-theme{display:none}</style></noscript>
 
         <!-- Memory Game script -->
         {{ $memoryGame := resources.Get "js/memory-game.js" }}

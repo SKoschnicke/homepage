@@ -23,6 +23,8 @@
    Indigo / Amber / Emerald palette
    ============================================ */
 :root {
+    color-scheme: light dark;
+
     /* Core palette */
     --color-bg-deep: #0a0a2e;
     --color-bg-base: #1e1b4b;       /* indigo-950 */
@@ -79,7 +81,47 @@
 
 /* ============================================
    Light Theme — warm parchment / sunlit tower
+
+   Applied in two cases:
+   1. User explicitly picked light via the toggle ([data-theme="light"]).
+   2. OS prefers light AND user hasn't forced dark via the toggle
+      (works without JS; JS toggle stays authoritative).
    ============================================ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg-deep: #faf6f0;
+    --color-bg-base: #f3ece0;
+    --color-bg-card: #fffdf8;
+    --color-bg-card-hover: #f9f4eb;
+    --color-bg-elevated: rgba(250, 246, 240, 0.95);
+    --color-text-primary: #3b2f20;
+    --color-text-heading: #6b3a1f;
+    --color-text-muted: #6b5a44;
+    --color-text-accent: #a0540a;
+    --color-link: #1a7a4c;
+    --color-link-hover: #a0540a;
+    --color-border: #d4c4a8;
+    --color-border-strong: #a0540a;
+    --color-border-subtle: #e8dece;
+    --color-tag-amber-bg: #f5e6c8;
+    --color-tag-amber-text: #7c4008;
+    --color-tag-emerald-bg: #d6ece0;
+    --color-tag-emerald-text: #1a5c37;
+    --color-tag-sky-bg: #dae8f0;
+    --color-tag-sky-text: #2a5470;
+    --color-btn-primary-bg: #a0540a;
+    --color-btn-primary-text: #faf6f0;
+    --color-btn-primary-border: #7c4008;
+    --color-btn-primary-hover: #7c4008;
+    --color-btn-secondary-text: #1a7a4c;
+    --color-btn-secondary-border: #1a7a4c;
+    --color-btn-secondary-hover-bg: #d6ece0;
+    --color-social: #4a3f6b;
+    --color-code-bg: rgba(107, 58, 31, 0.06);
+    --color-gradient-fade: #f3ece0;
+  }
+}
+
 [data-theme="light"] {
     /* Warm cream/sand backgrounds — like aged paper in sunlight */
     --color-bg-deep: #faf6f0;        /* warm off-white */

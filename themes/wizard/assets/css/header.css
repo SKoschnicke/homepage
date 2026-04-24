@@ -31,11 +31,21 @@
     opacity: 0.6;
 }
 
-/* When no data-theme is set (initial load, defaults to dark) */
+/* No data-theme set (JS disabled or pre-hydration): follow OS preference. */
 :root:not([data-theme]) .hero-bg-light {
     opacity: 0;
 }
 
 :root:not([data-theme]) .hero-bg-dark {
     opacity: 0.6;
+}
+
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme]) .hero-bg-light {
+        opacity: 0.6;
+    }
+
+    :root:not([data-theme]) .hero-bg-dark {
+        opacity: 0;
+    }
 }
