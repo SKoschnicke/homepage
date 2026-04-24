@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
-# Run Lighthouse (mobile + desktop) against a local hugo server and print a summary.
+# Run Lighthouse (mobile + desktop) against the local Rust server and print a summary.
 #
 # Requires the nix dev shell (provides node, chromium, jq, hugo). Lighthouse
 # itself is pulled from npm via npx on first run and cached thereafter.
 #
+# The Rust server (`mise run dev`) is the production-equivalent target: same
+# brotli/gzip negotiation, same cache headers, same embedded assets as prod.
+# Hugo dev server is NOT used — it lacks compression and realistic cache
+# behavior.
+#
 # Usage:
 #   scripts/lighthouse-audit.sh [url-path]
 #
-# Default target: http://localhost:1313/
+# Default target: http://localhost:8080/
 # Output: .lighthouse/{mobile,desktop}.report.{html,json}
 
 set -euo pipefail
@@ -15,26 +20,15 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$REPO_ROOT/.lighthouse"
 PATH_SUFFIX="${1:-/}"
-PORT=1313
+PORT=8080
 URL="http://localhost:$PORT$PATH_SUFFIX"
 
 mkdir -p "$OUT_DIR"
 
-# Start hugo server if nothing is listening on the port.
 if ! curl -fsS "http://localhost:$PORT/" -o /dev/null 2>&1; then
-  echo "Starting hugo server on :$PORT ..."
-  (cd "$REPO_ROOT" && hugo server --port "$PORT" --bind 127.0.0.1 --disableFastRender --noHTTPCache) \
-    > "$OUT_DIR/hugo.log" 2>&1 &
-  HUGO_PID=$!
-  trap 'kill $HUGO_PID 2>/dev/null || true' EXIT
-  for _ in $(seq 1 40); do
-    if curl -fsS "http://localhost:$PORT/" -o /dev/null 2>&1; then break; fi
-    sleep 0.5
-  done
-  if ! curl -fsS "http://localhost:$PORT/" -o /dev/null 2>&1; then
-    echo "hugo server failed to start; see $OUT_DIR/hugo.log" >&2
-    exit 1
-  fi
+  echo "Nothing listening on :$PORT." >&2
+  echo "Start the Rust server in another shell with: mise run dev" >&2
+  exit 1
 fi
 
 CHROME_FLAGS="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage"

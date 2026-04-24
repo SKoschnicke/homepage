@@ -135,12 +135,15 @@ fn serve_asset(asset: &Asset, req: &Request<Body>, path: &str) -> Response<Body>
 
     // Determine cache-control header
     // Hugo fingerprints assets with hashes (e.g., style.min.39e30de...css)
-    // These can be cached forever since content changes = new hash = new URL
+    // These can be cached forever since content changes = new hash = new URL.
+    // Non-fingerprinted fonts/images rarely change → 30 days.
+    // HTML must stay short so content updates propagate.
     let cache_control = if is_fingerprinted(path) {
         "public, max-age=31536000, immutable"
+    } else if is_long_lived_asset(path) {
+        "public, max-age=2592000"
     } else {
-        // HTML and other non-fingerprinted content
-        "public, max-age=3600"
+        "public, max-age=300, must-revalidate"
     };
 
     let mut response = Response::builder()
@@ -171,4 +174,12 @@ fn is_fingerprinted(path: &str) -> bool {
         }
     }
     false
+}
+
+fn is_long_lived_asset(path: &str) -> bool {
+    matches!(
+        path.rsplit_once('.').map(|(_, ext)| ext),
+        Some("woff2" | "woff" | "webp" | "png" | "jpg" | "jpeg" | "gif"
+            | "svg" | "ico" | "pdf")
+    )
 }

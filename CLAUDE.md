@@ -124,23 +124,28 @@ See `server/README.md` for details.
 
 ## Performance Auditing
 
-Run Lighthouse (mobile + desktop) against a local Hugo server:
+Run Lighthouse (mobile + desktop) against the local Rust server:
 
 ```bash
-mise run lighthouse           # inside the nix dev shell
-nix develop --command mise run lighthouse   # from outside
+mise run dev                  # terminal 1: build + start Rust server on :8080
+mise run lighthouse           # terminal 2: run the audit
 ```
 
-The task starts `hugo server` on :1313 if nothing is already listening there,
-runs a mobile audit (Lighthouse default) and then a desktop audit, writes the
-four reports to `.lighthouse/` (gitignored), and prints category scores, Core
-Web Vitals, and every scored audit below 1.0 to stdout.
+The runner expects something on :8080 and fails fast if nothing's there. The
+Rust server is the production-equivalent target — same brotli/gzip, same
+cache headers, same embedded assets — so numbers track production far better
+than auditing `hugo server`. It writes four reports to `.lighthouse/`
+(gitignored), and prints category scores, Core Web Vitals, and every scored
+audit below 1.0 to stdout.
 
 - Runner: `scripts/lighthouse-audit.sh`
-- Requires the nix dev shell for `node`, `chromium`, `jq`, `hugo`. Lighthouse
-  itself is fetched on demand via `npx` (cached under `~/.npm`).
+- Requires the nix dev shell for `node`, `chromium`, `jq`. Lighthouse itself
+  is fetched on demand via `npx` (cached under `~/.npm`).
 - Pass a path to audit a non-homepage URL: `./scripts/lighthouse-audit.sh /posts/`.
 - Reports are throwaway — delete `.lighthouse/` any time.
+- Rebuild the Rust server after content/template changes — it embeds assets
+  at compile time, so a running `mise run dev` shows stale content until
+  restarted.
 
 Note: localhost runs exercise Lighthouse's simulated slow-4G throttling, so
 absolute numbers (especially LCP) can differ from production. Use the local
