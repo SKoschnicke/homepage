@@ -56,6 +56,10 @@
     gap: 1rem;
 }
 
+.metrics-grid.hidden {
+    display: none;
+}
+
 .metric-card {
     background: var(--color-bg-elevated, white);
     padding: 1rem;

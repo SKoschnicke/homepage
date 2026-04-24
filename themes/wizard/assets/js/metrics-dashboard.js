@@ -191,7 +191,7 @@
                 </span>
                 <a href="#" class="metrics-toggle" id="metrics-toggle">Show more ▼</a>
             </div>
-            <div class="metrics-grid" id="metrics-expanded" style="display: none;">
+            <div class="metrics-grid hidden" id="metrics-expanded">
                 <div class="metric-card">
                     <h3>Requests/Second</h3>
                     <canvas id="rps-chart"></canvas>
@@ -280,7 +280,7 @@
         if (isExpanded) {
             loadChartJs().then(() => {
                 initCharts();
-                expandedView.style.display = 'grid';
+                expandedView.classList.remove('hidden');
                 toggleBtn.textContent = 'Show less ▲';
             }).catch(err => {
                 console.error('Failed to load Chart.js:', err);
@@ -296,13 +296,13 @@
                 // Load Chart.js if not already loaded, then show the view
                 loadChartJs().then(() => {
                     initCharts();
-                    expandedView.style.display = 'grid';
+                    expandedView.classList.remove('hidden');
                     toggleBtn.textContent = 'Show less ▲';
                 }).catch(err => {
                     console.error('Failed to load Chart.js:', err);
                 });
             } else {
-                expandedView.style.display = 'none';
+                expandedView.classList.add('hidden');
                 toggleBtn.textContent = 'Show more ▼';
             }
         });
