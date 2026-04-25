@@ -42,6 +42,7 @@ fn main() {
     writeln!(output, "#[derive(Clone)]").unwrap();
     writeln!(output, "pub struct GeminiAsset {{").unwrap();
     writeln!(output, "    pub content: &'static [u8],").unwrap();
+    writeln!(output, "    pub content_type: &'static str,").unwrap();
     writeln!(output, "    pub etag: &'static str,").unwrap();
     writeln!(output, "}}\n").unwrap();
 
@@ -108,6 +109,7 @@ fn main() {
             // Write GeminiAsset const
             writeln!(output, "const ASSET_{}: GeminiAsset = GeminiAsset {{", ident).unwrap();
             writeln!(output, "    content: CONTENT_{},", ident).unwrap();
+            writeln!(output, "    content_type: \"text/gemini\",").unwrap();
             writeln!(output, "    etag: \"{}\",", etag).unwrap();
             writeln!(output, "}};\n").unwrap();
 
@@ -157,7 +159,20 @@ fn main() {
             writeln!(output, "    is_compressible: {},", is_compressible).unwrap();
             writeln!(output, "}};\n").unwrap();
 
-            http_routes.push((route, ident));
+            http_routes.push((route.clone(), ident.clone()));
+
+            // Also expose as a Gemini asset, sharing the raw byte slice.
+            // Skip HTML — Gemini clients can't render it and we have a .gmi
+            // sibling for every page anyway.
+            if !content_type.starts_with("text/html") {
+                let gemini_ident = format!("GEMINI_HTTP_{}", ident);
+                writeln!(output, "const ASSET_{}: GeminiAsset = GeminiAsset {{", gemini_ident).unwrap();
+                writeln!(output, "    content: CONTENT_RAW_{},", ident).unwrap();
+                writeln!(output, "    content_type: \"{}\",", content_type).unwrap();
+                writeln!(output, "    etag: \"{}\",", etag).unwrap();
+                writeln!(output, "}};\n").unwrap();
+                gemini_routes.push((route, gemini_ident));
+            }
         }
     }
 

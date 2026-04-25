@@ -107,9 +107,10 @@ pub async fn handle_connection(
     // Route to content. Write header then body in two calls so we don't
     // allocate a Vec just to concatenate a static header with static content.
     match lookup(path) {
-        Some(content) => {
-            stream.write_all(b"20 text/gemini\r\n").await?;
-            stream.write_all(content).await?;
+        Some(asset) => {
+            let header = format!("20 {}\r\n", asset.content_type);
+            stream.write_all(header.as_bytes()).await?;
+            stream.write_all(asset.content).await?;
         }
         None => {
             stream.write_all(b"51 Not found\r\n").await?;
@@ -119,25 +120,25 @@ pub async fn handle_connection(
     Ok(())
 }
 
-/// Look up the static content for a Gemini path, if any.
-fn lookup(path: &str) -> Option<&'static [u8]> {
+/// Look up the static asset for a Gemini path, if any.
+fn lookup(path: &str) -> Option<&'static GeminiAsset> {
     let path = if path.is_empty() { "/" } else { path };
 
     if let Some(asset) = GEMINI_ROUTES.get(path) {
-        return Some(asset.content);
+        return Some(asset);
     }
 
     if path.len() > 1 && path.ends_with('/') {
         let without_slash = &path[..path.len() - 1];
         if let Some(asset) = GEMINI_ROUTES.get(without_slash) {
-            return Some(asset.content);
+            return Some(asset);
         }
     }
 
     if !path.ends_with('/') {
         let with_slash = format!("{}/", path);
         if let Some(asset) = GEMINI_ROUTES.get(with_slash.as_str()) {
-            return Some(asset.content);
+            return Some(asset);
         }
     }
 
