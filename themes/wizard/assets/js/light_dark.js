@@ -1,17 +1,31 @@
-// Set theme immediately (before paint) to avoid flash
+// Theme handling.
+//
+// No explicit choice: leave data-theme off so CSS media queries drive the scheme,
+// which means OS changes take effect live.
+// Explicit choice (via toggle): data-theme is set and persisted to sessionStorage,
+// overriding the OS preference for the current tab only.
+
+var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function effectiveTheme() {
+    var attr = document.documentElement.getAttribute('data-theme');
+    if (attr) return attr;
+    return darkQuery.matches ? 'dark' : 'light';
+}
+
 (function() {
-    var savedTheme = localStorage.getItem('theme');
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var theme = savedTheme || (prefersDark ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
+    var savedTheme = sessionStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
 })();
 
 function toggleTheme() {
-    var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    var newTheme = effectiveTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    sessionStorage.setItem('theme', newTheme);
     updateThemeIcons(newTheme);
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
 }
 
 function updateThemeIcons(theme) {
@@ -27,8 +41,13 @@ function updateThemeIcons(theme) {
     }
 }
 
-// Update icons once DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+darkQuery.addEventListener('change', function() {
+    if (sessionStorage.getItem('theme')) return; // user override wins for this session
+    var theme = effectiveTheme();
     updateThemeIcons(theme);
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: theme } }));
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateThemeIcons(effectiveTheme());
 });

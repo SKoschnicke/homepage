@@ -79,7 +79,7 @@
         latencyChart.update('none');
     }
 
-    // Re-apply chart colors when theme changes
+    // Re-apply chart colors when theme changes (toggle or OS-level).
     new MutationObserver(function(mutations) {
         mutations.forEach(function(m) {
             if (m.attributeName === 'data-theme') {
@@ -87,6 +87,7 @@
             }
         });
     }).observe(document.documentElement, { attributes: true });
+    document.addEventListener('themechange', updateChartColors);
 
     function initCharts() {
         if (rpsChart && latencyChart) return; // Already initialized
