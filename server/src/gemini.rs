@@ -117,6 +117,10 @@ pub async fn handle_connection(
         }
     }
 
+    // Flush any TLS buffer and send close_notify. Without this, large
+    // bodies (e.g. images) get truncated when the stream drops mid-flush.
+    let _ = stream.shutdown().await;
+
     Ok(())
 }
 
