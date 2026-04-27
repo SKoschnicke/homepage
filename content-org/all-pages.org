@@ -87,14 +87,14 @@ Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS
 
 Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
 
-** Imprint
+** Privacy Policy
 :PROPERTIES:
-:EXPORT_FILE_NAME: imprint
+:EXPORT_FILE_NAME: privacy
 :END:
 
-This website is operated by me, Sven Koschnicke, and I am responsible in terms of data protection rights (see my full address on the [[/about/][about page]]).
+This website is operated by me, Sven Koschnicke, and I am the data controller (see my full address on the [[/about/][about page]]).
 
-When using this website, no personal information about you is stored by me.
+When using this website, no personal information about you is stored.
 
 When your browser-software requests a part of this website, it sends some request information to the server providing the website. This request information includes:
 
@@ -103,13 +103,15 @@ When your browser-software requests a part of this website, it sends some reques
 - website, from which you reached the requested website if using a hyperlink (the so called [[https://en.wikipedia.org/wiki/HTTP_referer][referer-URL, its misspelling originated in the original proposal for the HTTP specification]])
 - date and time of the request
 
-The request information is required by the server to process your request of the website (Article 6.1(f) GDPR) and is discarded as soon as this request is fulfilled.
+The request information is required by the server to process your request of the website (Article 6.1(f) GDPR). It is not written to any log and is discarded as soon as the request is fulfilled.
 
-Your privacy is very important to me. For this reason, I do not use any third party services on my website, which would receive your request information. I also do not set any cookies which would allow to track you navigating my website. My website is only available over [[https://en.wikipedia.org/wiki/Transport_Layer_Security][TLS]], the standard for encrypted HTTP (called HTTPS), preventing others from seeing or changing the requested sites (only the hostname, sven.guru, for the request is not encrypted, which is a feature of the [[https://en.wikipedia.org/wiki/Server_Name_Indication][SNI extension]] to TLS and allows the server to serve more than one website over TLS).
+Your privacy is very important to me. For this reason, I do not use any third party services on my website, which would receive your request information. I also do not set any cookies which would allow to track you navigating my website.
 
-When you contact me, I store the personal information which is provided along with your message to me. I keep this data as long as necessary for our conversation (Article 6.1(b) GDPR) and as required by law (which is six years for business correspondence in Germany, Article 257(4) German commercial code, HGB). Conversations over e-mail are not encrypted by default and you should use PGP to encrypt e-mails. You can find [[https://keybase.io/skoschnicke][my PGP-key at keybase.io]].
+My website is only available over [[https://en.wikipedia.org/wiki/Transport_Layer_Security][TLS]], the standard for encrypted HTTP (called HTTPS), preventing others from seeing or changing the requested pages (only the hostname, sven.guru, for the request is not encrypted, which is a feature of the [[https://en.wikipedia.org/wiki/Server_Name_Indication][SNI extension]] to TLS and allows the server to serve more than one website over TLS).
 
-When I work for you, I store your contact data in my invoice system, which is called [[https://www.getharvest.com/privacy-policy][Harvest]] and is operated by Iridesco, LLC d/b/a Harvest, a New York (USA) limited liability company. Harvest is fully GDPR compliant ([[https://www.getharvest.com/privacy-policy][see Harvest's privacy policy]]). Invoices are stored for ten years as required by German law (Article 257(4) German commercial code, HGB).
+When you contact me, I store the personal information which is provided along with your message to me. I keep this data as long as needed to handle your request (Article 6.1(b) GDPR) and as required by law (which is six years for business correspondence in Germany, Article 257(4) German commercial code, HGB). Conversations over e-mail are not encrypted by default and you should use PGP to encrypt e-mails. You can find [[https://keybase.io/skoschnicke][my PGP-key at keybase.io]].
+
+When I work for you, I store your contact data in my invoice system, which is called [[https://www.getharvest.com/privacy-policy][Harvest]] and is operated by Iridesco, LLC d/b/a Harvest, a New York (USA) limited liability company. Harvest states that it is GDPR compliant ([[https://www.getharvest.com/privacy-policy][see Harvest's privacy policy]]). Invoices are stored for ten years as required by German law (Article 6.1(c) GDPR, Article 257(4) German commercial code, HGB).
 
 In addition to normal bank transfer, you can pay me using PayPal and Stripe. When using one of these third party services, the service receives your payment data. You can consult the [[https://www.paypal.com/de/webapps/mpp/ua/privacy-prev][PayPal privacy policy]] and the [[https://stripe.com/de/privacy][Stripe privacy policy]] for further details.
 

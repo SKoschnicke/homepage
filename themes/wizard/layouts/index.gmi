@@ -11,7 +11,7 @@
 
 => /about/ About
 => /posts/ All Posts
-=> /imprint/ Imprint
+=> /privacy/ Privacy
 
 ## Contact
 
