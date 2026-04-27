@@ -7,6 +7,8 @@
 }
 
 
+/* Defaults are dark, matching style.css. Light variants live in a
+   prefers-color-scheme media query plus a [data-theme="light"] override. */
 #memory-game {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -15,14 +17,14 @@
   margin: 20px auto;
   padding: 12px;
   border-radius: 0;
-  background-color: #d8e8f0;
+  background-color: #0a0a14;
   cursor: pointer;
   position: relative;
   /* Chunky pixel border effect */
   border: 4px solid #3AAFB9;
   box-shadow:
     4px 4px 0 0 #2d7a82,
-    inset 0 0 0 2px #b8c8d0;
+    inset 0 0 0 2px #050508;
   image-rendering: pixelated;
 }
 
@@ -51,11 +53,20 @@
 }
 
 
-[data-theme="dark"] #memory-game {
-  background-color: #0a0a14;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) #memory-game {
+    background-color: #d8e8f0;
+    box-shadow:
+      4px 4px 0 0 #2d7a82,
+      inset 0 0 0 2px #b8c8d0;
+  }
+}
+
+[data-theme="light"] #memory-game {
+  background-color: #d8e8f0;
   box-shadow:
     4px 4px 0 0 #2d7a82,
-    inset 0 0 0 2px #050508;
+    inset 0 0 0 2px #b8c8d0;
 }
 
 
@@ -95,9 +106,11 @@
 
 .front-face {
   transform: rotateY(180deg);
-  background: linear-gradient(135deg, #e8f0f8 0%, #d0e0e8 100%);
+  background: linear-gradient(135deg, #2a2a4a 0%, #1a1a2e 100%);
+  color: #3AAFB9;
   font-size: 22px;
   border: 3px solid #3AAFB9;
+  text-shadow: 0 0 8px #3AAFB9;
   box-shadow:
     inset 2px 2px 0 rgba(255, 255, 255, 0.8),
     inset -2px -2px 0 rgba(0, 0, 0, 0.15);
@@ -106,10 +119,10 @@
 .back-face {
   background: repeating-linear-gradient(
     45deg,
-    #4d9a50,
-    #4d9a50 4px,
-    #5dba60 4px,
-    #5dba60 8px
+    #2d5a30,
+    #2d5a30 4px,
+    #3d7a40 4px,
+    #3d7a40 8px
   );
   border: 3px solid #3AAFB9;
   box-shadow:
@@ -161,23 +174,39 @@
   image-rendering: pixelated;
 }
 
-/* Dark theme support */
-[data-theme="dark"] .front-face {
-  background: linear-gradient(135deg, #2a2a4a 0%, #1a1a2e 100%);
-  color: #3AAFB9;
-  border-color: #3AAFB9;
-  text-shadow: 0 0 8px #3AAFB9;
+/* Light variants for cards. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .front-face {
+    background: linear-gradient(135deg, #e8f0f8 0%, #d0e0e8 100%);
+    color: initial;
+    text-shadow: none;
+  }
+
+  :root:not([data-theme="dark"]) .back-face {
+    background: repeating-linear-gradient(
+      45deg,
+      #4d9a50,
+      #4d9a50 4px,
+      #5dba60 4px,
+      #5dba60 8px
+    );
+  }
 }
 
-[data-theme="dark"] .back-face {
+[data-theme="light"] .front-face {
+  background: linear-gradient(135deg, #e8f0f8 0%, #d0e0e8 100%);
+  color: initial;
+  text-shadow: none;
+}
+
+[data-theme="light"] .back-face {
   background: repeating-linear-gradient(
     45deg,
-    #2d5a30,
-    #2d5a30 4px,
-    #3d7a40 4px,
-    #3d7a40 8px
+    #4d9a50,
+    #4d9a50 4px,
+    #5dba60 4px,
+    #5dba60 8px
   );
-  border-color: #3AAFB9;
 }
 
 /* Final score overlay */
@@ -201,8 +230,8 @@
 .reset-button {
   margin: 10px auto;
   padding: 10px 20px;
-  background-color: #e8f0f8;
-  color: #1e5a60;
+  background-color: #0a0a14;
+  color: #3AAFB9;
   border: 3px solid #3AAFB9;
   border-radius: 0;
   cursor: pointer;
@@ -212,14 +241,14 @@
   letter-spacing: 1px;
   display: block;
   box-shadow:
-    3px 3px 0 0 #1e5a60,
-    inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+    3px 3px 0 0 #2d7a82,
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1);
   transition: none;
 }
 
 .reset-button:hover {
   background-color: #3AAFB9;
-  color: #ffffff;
+  color: #0a0a14;
   box-shadow:
     3px 3px 0 0 #59C265,
     inset 1px 1px 0 rgba(255, 255, 255, 0.3);
@@ -231,18 +260,32 @@
     1px 1px 0 0 #2d7a82;
 }
 
-[data-theme="dark"] .reset-button {
-  background-color: #0a0a14;
-  color: #3AAFB9;
-  border-color: #3AAFB9;
-  box-shadow:
-    3px 3px 0 0 #2d7a82,
-    inset 1px 1px 0 rgba(255, 255, 255, 0.1);
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .reset-button {
+    background-color: #e8f0f8;
+    color: #1e5a60;
+    box-shadow:
+      3px 3px 0 0 #1e5a60,
+      inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  :root:not([data-theme="dark"]) .reset-button:hover {
+    background-color: #3AAFB9;
+    color: #ffffff;
+  }
 }
 
-[data-theme="dark"] .reset-button:hover {
+[data-theme="light"] .reset-button {
+  background-color: #e8f0f8;
+  color: #1e5a60;
+  box-shadow:
+    3px 3px 0 0 #1e5a60,
+    inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .reset-button:hover {
   background-color: #3AAFB9;
-  color: #0a0a14;
+  color: #ffffff;
 }
 
 /* CRT scanline overlay for the whole game */
