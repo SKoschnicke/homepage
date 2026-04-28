@@ -1,8 +1,9 @@
 use hyper::service::{make_service_fn, service_fn};
 use hyper::Server;
+use std::collections::HashMap;
 use std::convert::Infallible;
-use std::net::SocketAddr;
-use std::sync::Arc;
+use std::net::{IpAddr, SocketAddr};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::Semaphore;
@@ -11,6 +12,38 @@ use tokio_rustls::TlsAcceptor;
 
 const GEMINI_TLS_HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
 const GEMINI_MAX_CONCURRENT: usize = 256;
+const GEMINI_MAX_PER_IP: usize = 4;
+
+/// RAII guard that decrements a per-IP connection counter on drop.
+struct PerIpGuard {
+    table: Arc<Mutex<HashMap<IpAddr, usize>>>,
+    ip: IpAddr,
+}
+
+impl PerIpGuard {
+    /// Try to acquire a slot for `ip`. Returns `None` if the per-IP cap is hit.
+    fn try_acquire(table: &Arc<Mutex<HashMap<IpAddr, usize>>>, ip: IpAddr) -> Option<Self> {
+        let mut t = table.lock().unwrap();
+        let count = t.entry(ip).or_insert(0);
+        if *count >= GEMINI_MAX_PER_IP {
+            return None;
+        }
+        *count += 1;
+        Some(Self { table: Arc::clone(table), ip })
+    }
+}
+
+impl Drop for PerIpGuard {
+    fn drop(&mut self) {
+        let mut t = self.table.lock().unwrap();
+        if let Some(c) = t.get_mut(&self.ip) {
+            *c -= 1;
+            if *c == 0 {
+                t.remove(&self.ip);
+            }
+        }
+    }
+}
 
 mod acme;
 mod assets;
@@ -91,6 +124,7 @@ async fn start_gemini_server(
     let listener = TcpListener::bind(&addr).await?;
     let tls_acceptor = TlsAcceptor::from(tls_config);
     let semaphore = Arc::new(Semaphore::new(GEMINI_MAX_CONCURRENT));
+    let per_ip: Arc<Mutex<HashMap<IpAddr, usize>>> = Arc::new(Mutex::new(HashMap::new()));
 
     loop {
         let (stream, peer_addr) = listener.accept().await?;
@@ -108,8 +142,21 @@ async fn start_gemini_server(
             }
         };
 
+        // Per-IP cap: cheap defense against a single peer hogging permits.
+        let ip_guard = match PerIpGuard::try_acquire(&per_ip, peer_addr.ip()) {
+            Some(g) => g,
+            None => {
+                if std::env::var("DEBUG_GEMINI").is_ok() {
+                    eprintln!("Gemini connection dropped (per-IP cap) from {}", peer_addr);
+                }
+                drop(stream);
+                continue;
+            }
+        };
+
         tokio::spawn(async move {
             let _permit = permit;
+            let _ip_guard = ip_guard;
             let tls_stream = match timeout(
                 GEMINI_TLS_HANDSHAKE_TIMEOUT,
                 tls_acceptor.accept(stream),

@@ -94,10 +94,9 @@ pub fn build_tls_config(
     }
     let private_key = PrivateKeyDer::Pkcs8(pkcs8_keys.remove(0));
 
-    let mut config = ServerConfig::builder()
+    let config = ServerConfig::builder()
         .with_no_client_auth()
         .with_single_cert(cert_chain, private_key)?;
-    config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
 
     Ok(Arc::new(config))
 }

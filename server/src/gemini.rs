@@ -26,7 +26,12 @@ lazy_static::lazy_static! {
 }
 
 const MAX_REQUEST_SIZE: usize = 1024;
-const REQUEST_READ_TIMEOUT: Duration = Duration::from_secs(10);
+// Total budget for reading a complete request. A well-behaved client sends
+// ~50 bytes in one segment; anything slower is either broken or hostile.
+const REQUEST_READ_TIMEOUT: Duration = Duration::from_secs(5);
+// Per-read deadline. A peer that can't deliver another byte within a second
+// of the previous read is wasting a permit; drop them.
+const REQUEST_CHUNK_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// Return the number of Gemini routes
 pub fn route_count() -> usize {
@@ -41,23 +46,30 @@ pub async fn handle_connection(
     let mut buf = [0u8; MAX_REQUEST_SIZE + 2]; // +2 for CRLF
     let mut pos = 0;
 
+    enum ReadOutcome {
+        Complete,
+        Closed,
+        TooLong,
+        Stalled,
+    }
+
     let read_result = timeout(REQUEST_READ_TIMEOUT, async {
         loop {
-            let n = stream.read(&mut buf[pos..]).await?;
+            let n = match timeout(REQUEST_CHUNK_TIMEOUT, stream.read(&mut buf[pos..])).await {
+                Ok(r) => r?,
+                Err(_) => return Ok::<ReadOutcome, std::io::Error>(ReadOutcome::Stalled),
+            };
             if n == 0 {
-                // Connection closed before complete request
-                return Ok::<Option<usize>, std::io::Error>(None);
+                return Ok(ReadOutcome::Closed);
             }
             pos += n;
 
-            // Check for CRLF
             if pos >= 2 && &buf[pos - 2..pos] == b"\r\n" {
-                return Ok(Some(pos));
+                return Ok(ReadOutcome::Complete);
             }
 
             if pos >= MAX_REQUEST_SIZE + 2 {
-                // Request too long
-                return Ok(Some(0));
+                return Ok(ReadOutcome::TooLong);
             }
         }
     })
@@ -65,16 +77,19 @@ pub async fn handle_connection(
 
     match read_result {
         Err(_) => {
-            // Timed out — best-effort status then drop
             let _ = stream.write_all(b"59 Request timeout\r\n").await;
             return Ok(());
         }
-        Ok(Ok(None)) => return Ok(()),
-        Ok(Ok(Some(0))) => {
+        Ok(Ok(ReadOutcome::Closed)) => return Ok(()),
+        Ok(Ok(ReadOutcome::Stalled)) => {
+            let _ = stream.write_all(b"59 Request timeout\r\n").await;
+            return Ok(());
+        }
+        Ok(Ok(ReadOutcome::TooLong)) => {
             stream.write_all(b"59 Request exceeds maximum size\r\n").await?;
             return Ok(());
         }
-        Ok(Ok(Some(_))) => {}
+        Ok(Ok(ReadOutcome::Complete)) => {}
         Ok(Err(e)) => return Err(e.into()),
     }
 
