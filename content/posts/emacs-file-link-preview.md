@@ -1,33 +1,54 @@
 +++
 title = "Inline Preview for Source File Links in Emacs"
-description = "How to show a snipped of a linked source file below a link in org-mode."
+description = "Teaching org-mode to inline a snippet of source code below a file link, the same way it already inlines images."
 date = 2026-05-11
 tags = ["emacs", "productivity", "org-mode"]
-draft = true
+draft = false
 +++
 
-Normal link to source file in org mode:
-![](/ox-hugo/emacs-link.png)
+I keep a lot of notes in org-mode, and a fair amount of those notes link into
+source files — something like `[[file:~/src/foo/bar.el::42][the bit that
+parses the header]]`. Org follows the link just fine when I hit `RET`, but
+reading the note itself the link is just a piece of underlined text. To
+remind myself what's actually on the other end I have to jump there, look,
+and jump back. Repeat that a few dozen times an afternoon and it gets old.
 
-Link with preview enabled:
-![](/ox-hugo/emacs-link-shown.png)
+What I really wanted was for org to show me the relevant lines _right below
+the link_, the way it already inlines images. Here is what the same link
+looks like before and after:
 
-Org 9.7 ships `org-link-preview` natively, but only for images. We hook into
-the same mechanism via the `:preview` link parameter to show a source snippet
-for file links that carry a `::N` or `::text` search option. This replaces the
-old post-command-hook overlay code: org now manages the overlay lifecycle,
-toggling, and clearing — we just produce the content.
+{{< figure src="/ox-hugo/emacs-link.png" >}}
 
-Trigger with `SPC m l p` on the link (bound to `my/org-link-preview-here`
-below, which calls `org-link-preview` with the prefix arg that makes it work
-for links with descriptions too). Use `C-u M-x org-link-preview` to clear.
+{{< figure src="/ox-hugo/emacs-link-shown.png" >}}
+
+<!--more-->
 
 
-## Helpers {#helpers}
+## The hook org already gives us {#the-hook-org-already-gives-us}
 
-These pure functions resolve a search option to a line number, derive the
-source-block language from the file extension, apply font-lock to a snippet,
-and format the result with a 👉 marker on the target line.
+Org 9.7 ships `org-link-preview` natively, but out of the box it only knows
+how to preview images. The good news is that the mechanism is generic: every
+link type can register a `:preview` function via `org-link-set-parameters`,
+and org will call it with an overlay it has already placed on top of the
+link. Whatever the function puts on that overlay is what the user sees.
+
+That is the entire trick. The rest of this post is just filling in the
+preview function for `file:` and `attachment:` links so that, when the link
+points at a specific line, we render a syntax-highlighted snippet around it.
+
+
+## Resolving the link to a snippet {#resolving-the-link-to-a-snippet}
+
+A file link in org can carry a _search option_ after `::`. It can be a line
+number (`foo.el::42`) or a piece of text (`foo.el::defun my-thing`) — org
+uses it when following the link to jump to the right spot, and we want to
+use it as the anchor for the preview.
+
+The helpers below do four things: turn a text search into a line number,
+guess the source-block language from the file extension (so the snippet gets
+the right fontification when re-inserted), apply font-lock to the extracted
+text, and finally format the result with a 👉 marker on the target line so
+it's obvious which line the link actually points at.
 
 ```emacs-lisp
 (defcustom my/org-link-preview-context-lines 5
@@ -112,17 +133,27 @@ Returns propertized string formatted as an org source block, or nil."
                   (propertize "#+end_src" 'face 'org-block-end-line)))))))
 ```
 
+There's nothing clever in there — the only thing worth pointing at is that
+the snippet is wrapped in a fake `#+begin_src` / `#+end_src` pair with the
+filename and line baked into the header. That way the rendered overlay looks
+exactly like a normal org source block, which means it slots into the
+surrounding buffer without screaming "I am a hack".
 
-## Hook into `org-link-preview` {#hook-into-org-link-preview}
 
-A `:preview` function receives `(OV PATH LINK)` — it should configure the
-overlay OV (we use `after-string` to render the snippet below the link
-without altering the link itself) and return non-nil to keep the overlay,
-nil to have org delete it.
+## Wiring it into org-link-preview {#wiring-it-into-org-link-preview}
 
-Our wrapper handles file links that carry a search option by producing a
-source snippet. For plain file links without a search option we fall back to
-the built-in image previewer, so PNGs etc. still inline as before.
+A `:preview` function receives `(OV PATH LINK)`. The contract is: configure
+the overlay `OV` however you like and return non-nil to keep it, or return
+nil to have org throw the overlay away. We render the snippet via
+`after-string` so it appears _below_ the link instead of replacing it —
+keeping the original link visible matters, because that's still the thing
+you want to follow with `RET`.
+
+The function only kicks in when the link has a search option. If there
+isn't one, there's nothing to anchor the preview to, so we fall through to
+org's built-in image previewer. That way PNGs and friends still inline as
+before, and we register the same dispatcher for both `file:` and
+`attachment:` links so org-attach works too.
 
 ```emacs-lisp
 (defun my/org-link-preview-source-file (ov path link)
@@ -152,11 +183,15 @@ option. Returns non-nil on success, nil to let org fall back."
 ```
 
 
-## Convenience command and binding {#convenience-command-and-binding}
+## One small papercut: links with descriptions {#one-small-papercut-links-with-descriptions}
 
-By default `org-link-preview` skips links that have a description, which is
-most of the source-file links we care about. This wrapper passes the
-`include-linked` prefix so the link at point always gets previewed.
+There's one last annoyance. By default `org-link-preview` skips links that
+have a description — which is, of course, most of the links I actually want
+previewed, because I tend to write `[[file:foo.el::42][the parser]]` rather
+than dumping the raw path into the buffer. The fix is a one-line wrapper
+that passes the `include-linked` prefix argument so the link at point always
+gets previewed, plus a Spacemacs binding under `SPC m l p`. To clear a
+preview, `C-u M-x org-link-preview` still works as usual.
 
 ```emacs-lisp
 (defun my/org-link-preview-here ()
@@ -167,3 +202,14 @@ most of the source-file links we care about. This wrapper passes the
 (with-eval-after-load 'org
   (spacemacs/set-leader-keys-for-major-mode 'org-mode "lp" 'my/org-link-preview-here))
 ```
+
+
+## Was it worth it? {#was-it-worth-it}
+
+This is maybe forty lines of elisp in total, and the payoff is real: I read
+my notes without context-switching to the source file, and when I do want to
+jump, the link is still right there. No new package, no minor mode, no
+configuration sprawl — just the extension point org already provides, used
+for the thing it was clearly designed for. Sometimes the editor really does
+just bend to your will, and that's still a nice feeling after all these
+years.
