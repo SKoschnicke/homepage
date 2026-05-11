@@ -1,6 +1,5 @@
 +++
 title = "Privacy Policy"
-author = ["Sven Koschnicke"]
 draft = false
 +++
 

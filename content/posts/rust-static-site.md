@@ -1,6 +1,5 @@
 +++
 title = "Overengineering a static website"
-author = ["Sven Koschnicke"]
 description = "A cautionary tale about building a Rube Goldberg machine when a hammer would do."
 date = 2026-02-23
 tags = ["web", "rust", "cloud", "unikernel"]

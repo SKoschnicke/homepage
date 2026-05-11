@@ -1,6 +1,5 @@
 +++
 title = "About"
-author = ["Sven Koschnicke"]
 draft = false
 +++
 
