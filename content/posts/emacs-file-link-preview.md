@@ -1,17 +1,13 @@
 +++
 title = "Inline Preview for Source File Links in Emacs"
 description = "Teaching org-mode to inline a snippet of source code below a file link, the same way it already inlines images."
-date = 2026-05-11
+date = 2026-05-13
 tags = ["emacs", "productivity", "org-mode"]
 draft = false
 +++
 
-I keep a lot of notes in org-mode, and a fair amount of those notes link into
-source files — something like `[[file:~/src/foo/bar.el::42][the bit that
-parses the header]]`. Org follows the link just fine when I hit `RET`, but
-reading the note itself the link is just a piece of underlined text. To
-remind myself what's actually on the other end I have to jump there, look,
-and jump back. Repeat that a few dozen times an afternoon and it gets old.
+While working, I constantly take notes using org-mode. Because I often work with code, I extensively use the ability of org-mode to link directly into code files when I need to reference where something can be found.
+Something like `[[file:~/src/foo/bar.el::42][the bit that parses the header]]`. I can easily follow this link and have the file open in emacs, but in the note itself the link is just some underlined text. To remind myself what is behind the link I have to jump there, look, and jump back. That gets annoying.
 
 What I really wanted was for org to show me the relevant lines _right below
 the link_, the way it already inlines images. Here is what the same link
@@ -136,8 +132,7 @@ Returns propertized string formatted as an org source block, or nil."
 There's nothing clever in there — the only thing worth pointing at is that
 the snippet is wrapped in a fake `#+begin_src` / `#+end_src` pair with the
 filename and line baked into the header. That way the rendered overlay looks
-exactly like a normal org source block, which means it slots into the
-surrounding buffer without screaming "I am a hack".
+exactly like a normal org source block, getting nice syntax highlighting in the process.
 
 
 ## Wiring it into org-link-preview {#wiring-it-into-org-link-preview}
@@ -146,8 +141,8 @@ A `:preview` function receives `(OV PATH LINK)`. The contract is: configure
 the overlay `OV` however you like and return non-nil to keep it, or return
 nil to have org throw the overlay away. We render the snippet via
 `after-string` so it appears _below_ the link instead of replacing it —
-keeping the original link visible matters, because that's still the thing
-you want to follow with `RET`.
+keeping the original link visible matters, because there might also be
+information in the link description.
 
 The function only kicks in when the link has a search option. If there
 isn't one, there's nothing to anchor the preview to, so we fall through to
@@ -204,12 +199,11 @@ preview, `C-u M-x org-link-preview` still works as usual.
 ```
 
 
-## Was it worth it? {#was-it-worth-it}
+## Another step towards a better editor {#another-step-towards-a-better-editor}
 
-This is maybe forty lines of elisp in total, and the payoff is real: I read
-my notes without context-switching to the source file, and when I do want to
-jump, the link is still right there. No new package, no minor mode, no
-configuration sprawl — just the extension point org already provides, used
-for the thing it was clearly designed for. Sometimes the editor really does
-just bend to your will, and that's still a nice feeling after all these
-years.
+There is room for improvement here. It doesn't work if there are multiple
+matching texts or no position in the link at all. But I can now read my notes
+without context switching to the source file. It's also satisfying to have used
+an extension point that was designed for this kind of thing instead of creating
+everything from scratch (which was what I had before). Just some small
+customization making the editor I spend most of my day in a bit more at home.
