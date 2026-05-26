@@ -417,6 +417,16 @@ a:hover {
     border-radius: 6px;
 }
 
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) .hero-subtitle {
+        color: #f3ece0;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        background: rgba(30, 20, 10, 0.4);
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+    }
+}
+
 .hero-actions {
     display: flex;
     gap: 1rem;
