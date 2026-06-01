@@ -1,5 +1,6 @@
 +++
 title = "Inline Preview for Source File Links in Emacs"
+author = ["Sven Koschnicke"]
 description = "Teaching org-mode to inline a snippet of source code below a file link, the same way it already inlines images."
 date = 2026-05-13
 tags = ["emacs", "productivity", "org-mode"]

@@ -1,0 +1,62 @@
+# UI-Strings für das Wizard-Theme (Deutsch).
+# In Templates über {{ i18n "key" }} eingebunden.
+
+[reset_game]
+other = "Spiel zurücksetzen"
+
+[footer_tagline]
+other = "// Keine Cookies. Kein Tracking. Nur gute Laune."
+
+[privacy]
+other = "Datenschutz"
+
+[powered_by]
+other = "Betrieben mit Rust + Hugo"
+
+[language_switcher]
+other = "Sprache"
+
+[hero_welcome]
+other = "Willkommen bei"
+
+[hero_subtitle]
+other = "Von der Hardware bis in die Cloud und alles dazwischen."
+
+[read_posts]
+other = "Beiträge lesen"
+
+[about_me]
+other = "Über mich"
+
+[about_label]
+other = "// Über mich"
+
+[about_heading]
+other = "Full-Stack seit den 90ern"
+
+[skill_hardware]
+other = "Hardware"
+
+[skill_backend]
+other = "Backend"
+
+[skill_devops]
+other = "DevOps"
+
+[skill_frontend]
+other = "Frontend"
+
+[learn_more]
+other = "Mehr erfahren →"
+
+[latest_posts_label]
+other = "// Neueste Beiträge"
+
+[blog]
+other = "Blog"
+
+[view_all]
+other = "Alle ansehen →"
+
+[min_read]
+other = "Min. Lesezeit"

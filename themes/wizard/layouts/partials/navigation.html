@@ -26,6 +26,41 @@
             {{ end }}
         </div>
 
+        {{ if gt (len .Site.Languages) 1 }}
+        <nav class="nav-lang" aria-label="{{ i18n "language_switcher" }}">
+            {{ $page := . }}
+            {{ range .Site.Languages }}
+            {{ $lang := . }}
+            {{ $current := eq $lang.Lang $page.Site.Language.Lang }}
+            {{/* Prefer the translated page. */}}
+            {{ $href := "" }}
+            {{ range $page.AllTranslations }}
+                {{ if eq .Language.Lang $lang.Lang }}{{ $href = .RelPermalink }}{{ end }}
+            {{ end }}
+            {{/* Current language always points at the current page. */}}
+            {{ if and (not $href) $current }}
+                {{ $href = $page.RelPermalink }}
+            {{ end }}
+            {{/* No translation: map the same logical path into the target language
+                 (e.g. /posts/ -> /de/posts/) so we land on the equivalent listing
+                 rather than dumping the visitor on the home page. Strip the current
+                 language's prefix, then prepend the target language's prefix. */}}
+            {{ if not $href }}
+                {{ $curPrefix := $page.Site.LanguagePrefix }}
+                {{ $bare := strings.TrimPrefix $curPrefix $page.RelPermalink }}
+                {{ $tgtPrefix := "" }}
+                {{ range $page.Sites }}
+                    {{ if eq .Language.Lang $lang.Lang }}{{ $tgtPrefix = .LanguagePrefix }}{{ end }}
+                {{ end }}
+                {{ $href = printf "%s%s" $tgtPrefix $bare }}
+            {{ end }}
+            <a href="{{ $href }}" lang="{{ $lang.Lang }}" hreflang="{{ $lang.Lang }}"
+               class="nav-lang-link{{ if $current }} is-current{{ end }}"
+               {{ if $current }}aria-current="true"{{ end }}>{{ $lang.Lang | upper }}</a>
+            {{ end }}
+        </nav>
+        {{ end }}
+
         <button onclick="toggleTheme()" class="nav-toggle-theme" title="Toggle light/dark mode" aria-label="Toggle theme">
             <i class="ph ph-moon moon" aria-hidden="true"></i>
             <i class="ph ph-sun sun" aria-hidden="true"></i>

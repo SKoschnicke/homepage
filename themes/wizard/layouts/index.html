@@ -17,31 +17,31 @@
          alt="" aria-hidden="true">
     <div class="hero-overlay" aria-hidden="true"></div>
     <div class="hero-content">
-        <span class="hero-label">Welcome to</span>
+        <span class="hero-label">{{ i18n "hero_welcome" }}</span>
         <h1 class="hero-title">{{ .Site.Params.brand }}</h1>
         <div class="hero-divider" aria-hidden="true"></div>
-        <p class="hero-subtitle">{{ .Site.Params.description }} — from hardware to the cloud and everything in between.</p>
+        <p class="hero-subtitle">{{ .Site.Params.description }} — {{ i18n "hero_subtitle" }}</p>
         <div class="hero-actions">
-            <a href="/posts/" class="btn-primary">Read Posts</a>
-            <a href="/about/" class="btn-secondary">About Me</a>
+            <a href="{{ "/posts/" | relLangURL }}" class="btn-primary">{{ i18n "read_posts" }}</a>
+            <a href="{{ "/about/" | relLangURL }}" class="btn-secondary">{{ i18n "about_me" }}</a>
         </div>
     </div>
 </section>
 
 <section class="about-preview">
     <div class="about-text">
-        <span class="section-label">// About</span>
-        <h2>Full-Stack Since The 90s</h2>
+        <span class="section-label">{{ i18n "about_label" }}</span>
+        <h2>{{ i18n "about_heading" }}</h2>
         <div class="homepage-content">
             {{ .Content }}
         </div>
         <div class="about-skills">
-            <span class="about-skill"><i class="ph ph-cpu" aria-hidden="true"></i> Hardware</span>
-            <span class="about-skill"><i class="ph ph-code" aria-hidden="true"></i> Backend</span>
-            <span class="about-skill"><i class="ph ph-cloud" aria-hidden="true"></i> DevOps</span>
-            <span class="about-skill"><i class="ph ph-browser" aria-hidden="true"></i> Frontend</span>
+            <span class="about-skill"><i class="ph ph-cpu" aria-hidden="true"></i> {{ i18n "skill_hardware" }}</span>
+            <span class="about-skill"><i class="ph ph-code" aria-hidden="true"></i> {{ i18n "skill_backend" }}</span>
+            <span class="about-skill"><i class="ph ph-cloud" aria-hidden="true"></i> {{ i18n "skill_devops" }}</span>
+            <span class="about-skill"><i class="ph ph-browser" aria-hidden="true"></i> {{ i18n "skill_frontend" }}</span>
         </div>
-        <a href="/about/" class="about-cta">Learn More →</a>
+        <a href="{{ "/about/" | relLangURL }}" class="about-cta">{{ i18n "learn_more" }}</a>
     </div>
 </section>
 
@@ -50,10 +50,10 @@
 <section class="latest-posts">
     <header class="latest-posts-header">
         <div>
-            <span class="section-label">// Latest Posts</span>
-            <h2>Blog</h2>
+            <span class="section-label">{{ i18n "latest_posts_label" }}</span>
+            <h2>{{ i18n "blog" }}</h2>
         </div>
-        <a href="/posts/" class="view-all">View All →</a>
+        <a href="{{ "/posts/" | relLangURL }}" class="view-all">{{ i18n "view_all" }}</a>
     </header>
     <div class="posts-grid">
         {{ range first 3 $posts }}
@@ -71,7 +71,7 @@
             </p>
             <div class="post-card-meta">
                 <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
-                {{ with .ReadingTime }}<span>{{ . }} min read</span>{{ end }}
+                {{ with .ReadingTime }}<span>{{ . }} {{ i18n "min_read" }}</span>{{ end }}
             </div>
         </article>
         {{ end }}

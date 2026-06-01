@@ -1,0 +1,62 @@
+# UI strings for the wizard theme (English).
+# Referenced in templates via {{ i18n "key" }}.
+
+[reset_game]
+other = "Reset Game"
+
+[footer_tagline]
+other = "// No cookies. No tracking. Just vibes."
+
+[privacy]
+other = "Privacy"
+
+[powered_by]
+other = "Powered by Rust + Hugo"
+
+[language_switcher]
+other = "Language"
+
+[hero_welcome]
+other = "Welcome to"
+
+[hero_subtitle]
+other = "From hardware to the cloud and everything in between."
+
+[read_posts]
+other = "Read Posts"
+
+[about_me]
+other = "About Me"
+
+[about_label]
+other = "// About"
+
+[about_heading]
+other = "Full-Stack Since The 90s"
+
+[skill_hardware]
+other = "Hardware"
+
+[skill_backend]
+other = "Backend"
+
+[skill_devops]
+other = "DevOps"
+
+[skill_frontend]
+other = "Frontend"
+
+[learn_more]
+other = "Learn More →"
+
+[latest_posts_label]
+other = "// Latest Posts"
+
+[blog]
+other = "Blog"
+
+[view_all]
+other = "View All →"
+
+[min_read]
+other = "min read"

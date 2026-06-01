@@ -331,6 +331,31 @@ a:hover {
     color: var(--color-bg-base);
 }
 
+.nav-lang {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-lang-link {
+    font-family: var(--heading-font);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--color-social);
+    text-decoration: none;
+    padding: 0.2rem 0.35rem;
+    transition: color 0.3s ease;
+}
+
+.nav-lang-link:hover {
+    color: var(--color-link-hover);
+}
+
+.nav-lang-link.is-current {
+    color: var(--color-text-accent);
+    border-bottom: 2px solid var(--color-text-accent);
+}
+
 /* ============================================
    Hero Section (Homepage only)
    ============================================ */

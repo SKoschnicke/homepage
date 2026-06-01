@@ -23,14 +23,14 @@
 <div class="memory-game-wrapper">
     <div id="memory-game"></div>
 </div>
-<button id="reset-game" class="reset-button">Reset Game</button>
+<button id="reset-game" class="reset-button">{{ i18n "reset_game" }}</button>
 
-<p class="footer-tagline">// No cookies. No tracking. Just vibes.</p>
+<p class="footer-tagline">{{ i18n "footer_tagline" }}</p>
 
 <p class="footer-info">
     <span>&copy; {{ now.Year }} {{ .Site.Title }}</span>
     <span>&middot;</span>
-    <a href="/privacy/">Privacy</a>
+    <a href="{{ "/privacy/" | relLangURL }}">{{ i18n "privacy" }}</a>
     <span>&middot;</span>
-    <span>Powered by Rust + Hugo</span>
+    <span>{{ i18n "powered_by" }}</span>
 </p>

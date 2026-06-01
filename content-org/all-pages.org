@@ -1,11 +1,19 @@
 #+hugo_base_dir: ../
 
-* Pages
+# Structure: language (en/de) -> content type (pages/posts) -> page.
+# The Hugo output section is driven by EXPORT_HUGO_SECTION (inherited from the
+# "pages"/"posts" grouping headings), NOT by the heading names. English lives at
+# the content root ("/"), German under "de". EXPORT_LANGUAGE is inherited from
+# the "* de" heading so every German page is tagged de.
+
+* en
 :PROPERTIES:
 :EXPORT_HUGO_SECTION: /
 :END:
 
-** Home                                                                          :ATTACH:
+** pages
+
+*** Home                                                                         :ATTACH:
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :ID:       9ef0075f-3e73-49a7-ab6d-ade5b436f7fa
@@ -19,7 +27,7 @@ Welcome to my little home on the interwebs. I'm Sven Koschnicke, a computer nerd
 
 Here you'll find my thoughts on technology, software development, and the occasional deep dive into interesting tools and techniques. Feel free to explore my [[/posts/][posts]] or learn more [[/about/][about me]].
 
-** About
+*** About
 :PROPERTIES:
 :EXPORT_FILE_NAME: about
 :ID:       1cf09891-23bf-4f31-a572-750cc9453778
@@ -47,7 +55,7 @@ exceed expectations in both performance and quality, let's connect.
 
 You can download my full [[/cv-en.pdf][resume in English]] or [[/cv-de.pdf][in German]].
 
-*** Contact
+**** Contact
 
 You can reach me by email: [[mailto:s.koschnicke@gfxpro.com][s.koschnicke@gfxpro.com]].
 
@@ -68,7 +76,7 @@ IBAN: NL02 BUNQ 2057 0845 58\\
 BIC: BUNQNL2A
 #+end_quote
 
-*** Legal / Imprint (in german)
+**** Legal / Imprint (in german)
 
 Anbieter und Verantwortlicher im Sinne des § 5 TMG und § 55 Absatz 2 RStV ist:
 
@@ -87,7 +95,7 @@ Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS
 
 Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
 
-** Privacy Policy
+*** Privacy Policy
 :PROPERTIES:
 :EXPORT_FILE_NAME: privacy
 :END:
@@ -122,9 +130,13 @@ If you want to access or change your personal data that I store, you may [[/abou
 If you are unhappy about how I handle your personal data, you may complain to any data privacy authority. For example to the [[https://www.datenschutzzentrum.de/][Independent Centre for Privacy Protection Schleswig-Holstein]].
 
 If you have any questions, feel free to [[/about/][contact me]].
-* Posts
 
-** DONE Hello World                                                             :personal:
+** posts
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: posts
+:END:
+
+*** DONE Hello World                                                            :personal:
 :PROPERTIES:
 :EXPORT_FILE_NAME: hello-world
 :EXPORT_DATE: 2025-01-02
@@ -132,7 +144,7 @@ If you have any questions, feel free to [[/about/][contact me]].
 
 Shipping is a feature, and because I don't have much time these days, I'll start with a minimal viable product and get this homepage published as fast as possible. You'll find my thoughts and insights here soon. Mostly about technology and software development. But I can't say how often or when.
 
-** DONE Magic Wormhole                                                         :software:
+*** DONE Magic Wormhole                                                         :software:
 :PROPERTIES:
 :EXPORT_FILE_NAME: magic-wormhole
 :EXPORT_DATE: 2025-05-07
@@ -225,18 +237,18 @@ And on the server the program exits with:
 
 That's it. Now I could access the server from my laptop. Easy, secure, straight forward.
 
-** DONE Overengineering a static website                                         :web:rust:cloud:unikernel:
+*** DONE Overengineering a static website                                        :web:rust:cloud:unikernel:
 :PROPERTIES:
 :EXPORT_FILE_NAME: rust-static-site
 :EXPORT_DATE: 2026-02-23
 :EXPORT_DESCRIPTION: A cautionary tale about building a Rube Goldberg machine when a hammer would do.
 :END:
 
-*** The Boring Way
+**** The Boring Way
 
 In the beginning, there was static HTML served by Apache. Then everyone wanted dynamic content, so we got CGI, then PHP, and suddenly every website was dynamic — even the ones that didn't need to be. Today, static site generators have brought us full circle. Write some Markdown (or org-mode, because it's better), let Hugo convert it to HTML, push to GitHub, done. I did exactly that with the first versions of this homepage. It works well. The Hugo conversion can even run in a GitHub workflow.
 
-*** The Custom Server
+**** The Custom Server
 
 But it's also a little bit boring. I thought about how a generic webserver like Nginx could never be optimized to such an extend for serving my static website because it needs to be usable for other use-cases, too. I wanted to try if it would be faster to keep all the pages in memory the way they need to be sent to the client. So I wrote a custom webserver in Rust which gets all the content compiled into the binary on build time. Then I did some benchmarks. The Rust server was over 16 times faster than a standard Nginx server.
 
@@ -260,7 +272,7 @@ To make the distance between server and client as short as possible, one uses a 
 
 But what a CDN can't do is serve dynamic content. So I added a dynamic component to my homepage in the form of live statistics about requests to the server. It is nothing really useful, but it is something a CDN cannot do. You can see the statistics in action below each page. Click on "Show more" to see some diagrams. I made sure to only use data that cannot identify or track you. For now, the number of concurrent page requests (in a one second window) and the response time (that is, how long the server needs to respond to the request, not how long it takes response to reach the client) are measured. No IPs or other information are stored.
 
-*** Going Full Unikernel
+**** Going Full Unikernel
 
 I could have stopped here. Deploy the Rust server to a virtual private server and be happy. But I didn't want to stop. The server was already a single binary also containing the content it should serve. So why not skip the whole operating system and deploy the server as a unikernel directly to the hypervisor? The most difficult thing was actually finding a cloud provider that supported that and understanding the API for deployment. I chose Hetzner, because they are based in Europe, but it shows that unikernels are a not so often used technology.
 
@@ -272,7 +284,7 @@ But now everything works. This website is served from a custom server running di
 
 It's still slower than using a CDN if you are not near the datacenter, but everything is properly optimized now and it was a fun learning experience.
 
-*** Recap
+**** Recap
 
 Is this kind of deployment actually better? Speed and reduced attack surface are the advantages. I can also add fun little gimmicks like the statistics, because I control the whole webserver, but there are also not so nice things:
 
@@ -282,7 +294,8 @@ Is this kind of deployment actually better? Speed and reduced attack surface are
 - I can't share the server resources to run other services like a Mastodon server or a Matrix server
 
 Should static sites be served like this? No, using something like GitHub pages is easier and faster. Maybe I will go from unikernel deployment back to a virtual private server where the binary runs and change the server so that it can dynamically update the in-memory content. That would make better use of the resources and reduce the time it takes to update the content drastically. But in the end, it's just some fun experiment.
-** DONE Inline Preview for Source File Links in Emacs                        :emacs:productivity:org_mode:
+
+*** DONE Inline Preview for Source File Links in Emacs                           :emacs:productivity:org_mode:
 :PROPERTIES:
 :EXPORT_FILE_NAME: emacs-file-link-preview
 :EXPORT_DATE: 2026-05-13
@@ -303,7 +316,7 @@ looks like before and after:
 
 #+hugo: more
 
-*** The hook org already gives us
+**** The hook org already gives us
 
 Org 9.7 ships =org-link-preview= natively, but out of the box it only knows
 how to preview images. The good news is that the mechanism is generic: every
@@ -315,7 +328,7 @@ That is the entire trick. The rest of this post is just filling in the
 preview function for =file:= and =attachment:= links so that, when the link
 points at a specific line, we render a syntax-highlighted snippet around it.
 
-*** Resolving the link to a snippet
+**** Resolving the link to a snippet
 
 A file link in org can carry a /search option/ after =::=. It can be a line
 number (=foo.el::42=) or a piece of text (=foo.el::defun my-thing=) — org
@@ -416,7 +429,7 @@ the snippet is wrapped in a fake =#+begin_src= / =#+end_src= pair with the
 filename and line baked into the header. That way the rendered overlay looks
 exactly like a normal org source block, getting nice syntax highlighting in the process.
 
-*** Wiring it into org-link-preview
+**** Wiring it into org-link-preview
 
 A =:preview= function receives =(OV PATH LINK)=. The contract is: configure
 the overlay =OV= however you like and return non-nil to keep it, or return
@@ -458,7 +471,7 @@ before, and we register the same dispatcher for both =file:= and
     (org-link-set-parameters "attachment" :preview #'my/org-link-preview-file-dispatch))
 #+end_src
 
-*** One small papercut: links with descriptions
+**** One small papercut: links with descriptions
 
 There's one last annoyance. By default =org-link-preview= skips links that
 have a description — which is, of course, most of the links I actually want
@@ -478,7 +491,7 @@ preview, =C-u M-x org-link-preview= still works as usual.
     (spacemacs/set-leader-keys-for-major-mode 'org-mode "lp" 'my/org-link-preview-here))
 #+end_src
 
-*** Another step towards a better editor
+**** Another step towards a better editor
 
 There is room for improvement here. It doesn't work if there are multiple
 matching texts or no position in the link at all. But I can now read my notes
@@ -486,3 +499,144 @@ without context switching to the source file. It's also satisfying to have used
 an extension point that was designed for this kind of thing instead of creating
 everything from scratch (which was what I had before). Just some small
 customization making the editor I spend most of my day in a bit more at home.
+
+* de
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: de
+:EXPORT_LANGUAGE: de
+:END:
+
+** pages
+
+*** Startseite
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+#+ATTR_HTML: :class homepage-image :alt Das bin ich in Pixeln
+[[file:/ox-hugo/2026-01-20_19-52-46_screenshot.png]]
+
+Willkommen in meinem kleinen Zuhause im Internet. Ich bin Sven Koschnicke, ein Computer-Nerd mit über 25 Jahren Erfahrung in der Softwareentwicklung über den gesamten Technologie-Stack hinweg – von Hardware-Design und Kernel-Modulen bis hin zu DevOps, Backend-Diensten und Frontend-Anwendungen.
+
+Hier findest du meine Gedanken zu Technik, Softwareentwicklung und gelegentlich einen tieferen Blick auf interessante Werkzeuge und Techniken. Stöbere gern in meinen [[/de/posts/][Beiträgen]] oder erfahre mehr [[/de/about/][über mich]].
+
+*** Ueber mich
+:PROPERTIES:
+:EXPORT_FILE_NAME: about
+:END:
+
+Hallo, ich bin Sven Koschnicke, ein Computer-Nerd mit über 25 Jahren
+praktischer Erfahrung über den gesamten Technologie-Stack hinweg. Vom Entwurf
+von Mikrochips und der Programmierung von FPGAs bis hin zur Entwicklung
+hochperformanter Kernel-Module bringe ich tiefes technisches Know-how auf jeder
+Ebene mit.
+
+Meine besondere Stärke liegt in echter Full-Stack-Beherrschung – ich verbinde
+Hardware, Systeme und Software nahtlos miteinander. Ob DevOps-Infrastruktur,
+anspruchsvolle Backend-Dienste oder ausgefeilte Frontend-Anwendungen: Ich habe
+über das gesamte Spektrum hinweg erfolgreich Lösungen geliefert.
+
+Ich bin darauf spezialisiert, komplexe technische Herausforderungen anzugehen,
+die innovatives Denken und Optimierung erfordern. Mit meinem breiten Wissen kann
+ich ein Team erfolgreich dabei anleiten, eine robuste und skalierbare
+Softwarelösung zu schaffen. Mein Fokus liegt auf hochperformanten,
+spezialisierten Systemen, die Grenzen verschieben und außergewöhnlichen Mehrwert
+liefern.
+
+Wenn du jemanden suchst, der deine technischen Herausforderungen nicht nur aus
+jedem Blickwinkel versteht, sondern auch Lösungen entwirft und umsetzt, die in
+puncto Leistung und Qualität die Erwartungen übertreffen, dann lass uns
+sprechen.
+
+Du kannst meinen vollständigen Lebenslauf [[/cv-de.pdf][auf Deutsch]] oder
+[[/cv-en.pdf][auf Englisch]] herunterladen.
+
+**** Kontakt
+
+Du erreichst mich per E-Mail: [[mailto:s.koschnicke@gfxpro.com][s.koschnicke@gfxpro.com]].
+
+Meine Postanschrift:
+
+#+begin_quote
+GFXpro, z. Hd. Sven Koschnicke\\
+Tannenstraße 16\\
+24229 Schwedeneck\\
+Germany
+#+end_quote
+
+Bankverbindung:
+
+#+begin_quote
+bunq\\
+IBAN: NL02 BUNQ 2057 0845 58\\
+BIC: BUNQNL2A
+#+end_quote
+
+**** Impressum
+
+Anbieter und Verantwortlicher im Sinne des § 5 TMG und § 55 Absatz 2 RStV ist:
+
+#+begin_quote
+Sven Koschnicke (Einzelunternehmer)\\
+Tannenstraße 16\\
+24229 Schwedeneck\\
+Germany\\
+E-Mail: [[mailto:s.koschnicke@gfxpro.com][s.koschnicke@gfxpro.com]]\\
+USt-IdNr.: DE235896138
+#+end_quote
+
+Hinweis für Verbraucher:
+
+Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: [[https://ec.europa.eu/consumers/odr]]
+
+Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+
+*** Datenschutzerklaerung
+:PROPERTIES:
+:EXPORT_FILE_NAME: privacy
+:END:
+
+Diese Website wird von mir, Sven Koschnicke, betrieben, und ich bin der Verantwortliche im Sinne des Datenschutzrechts (meine vollständige Anschrift findest du auf der [[/de/about/][Über-mich-Seite]]).
+
+Bei der Nutzung dieser Website werden keine personenbezogenen Daten über dich gespeichert.
+
+Wenn deine Browser-Software einen Teil dieser Website anfordert, sendet sie einige Anfrageinformationen an den Server, der die Website bereitstellt. Diese Anfrageinformationen umfassen:
+
+- deine aktuelle IP-Adresse, über die du mit dem Internet verbunden bist
+- Name und Version deiner Browser-Software und deines Betriebssystems
+- die Website, von der aus du die angeforderte Website über einen Hyperlink erreicht hast (die sogenannte [[https://de.wikipedia.org/wiki/Referrer][Referer-URL; der Schreibfehler stammt aus dem ursprünglichen Entwurf der HTTP-Spezifikation]])
+- Datum und Uhrzeit der Anfrage
+
+Die Anfrageinformationen werden vom Server benötigt, um deine Anfrage der Website zu verarbeiten (Art. 6 Abs. 1 lit. f DSGVO). Sie werden in kein Protokoll geschrieben und verworfen, sobald die Anfrage erfüllt ist.
+
+Deine Privatsphäre ist mir sehr wichtig. Aus diesem Grund verwende ich auf meiner Website keine Dienste Dritter, die deine Anfrageinformationen erhalten würden. Ich setze auch keine Cookies, die es erlauben würden, dich beim Navigieren auf meiner Website zu verfolgen.
+
+Meine Website ist ausschließlich über [[https://de.wikipedia.org/wiki/Transport_Layer_Security][TLS]] erreichbar, dem Standard für verschlüsseltes HTTP (genannt HTTPS), der verhindert, dass andere die angeforderten Seiten einsehen oder verändern können (lediglich der Hostname, sven.guru, der Anfrage ist nicht verschlüsselt, was eine Funktion der [[https://de.wikipedia.org/wiki/Server_Name_Indication][SNI-Erweiterung]] von TLS ist und es dem Server ermöglicht, mehr als eine Website über TLS auszuliefern).
+
+Wenn du mich kontaktierst, speichere ich die personenbezogenen Daten, die du zusammen mit deiner Nachricht an mich übermittelst. Ich bewahre diese Daten so lange auf, wie es zur Bearbeitung deiner Anfrage erforderlich ist (Art. 6 Abs. 1 lit. b DSGVO) und wie es gesetzlich vorgeschrieben ist (das sind in Deutschland sechs Jahre für Geschäftskorrespondenz, § 257 Abs. 4 HGB). E-Mail-Konversationen sind standardmäßig nicht verschlüsselt, und du solltest PGP zur Verschlüsselung von E-Mails verwenden. Du findest [[https://keybase.io/skoschnicke][meinen PGP-Schlüssel auf keybase.io]].
+
+Wenn ich für dich arbeite, speichere ich deine Kontaktdaten in meinem Rechnungssystem namens [[https://www.getharvest.com/privacy-policy][Harvest]], das von Iridesco, LLC d/b/a Harvest betrieben wird, einer Gesellschaft mit beschränkter Haftung aus New York (USA). Harvest gibt an, DSGVO-konform zu sein ([[https://www.getharvest.com/privacy-policy][siehe Harvests Datenschutzerklärung]]). Rechnungen werden zehn Jahre lang aufbewahrt, wie es das deutsche Recht vorschreibt (Art. 6 Abs. 1 lit. c DSGVO, § 257 Abs. 4 HGB).
+
+Zusätzlich zur normalen Banküberweisung kannst du mich über PayPal und Stripe bezahlen. Bei Nutzung eines dieser Dienste Dritter erhält der jeweilige Dienst deine Zahlungsdaten. Für weitere Einzelheiten kannst du die [[https://www.paypal.com/de/webapps/mpp/ua/privacy-prev][Datenschutzerklärung von PayPal]] und die [[https://stripe.com/de/privacy][Datenschutzerklärung von Stripe]] einsehen.
+
+In jedem Fall halte ich mich an branchenübliche technische, physische und administrative Sicherheitsstandards, um deine personenbezogenen Daten zu schützen.
+
+Wenn du auf deine bei mir gespeicherten personenbezogenen Daten zugreifen oder sie ändern möchtest, kannst du mich [[/de/about/][kontaktieren]]. Du hast das Recht auf Auskunft, Berichtigung, Löschung oder Einschränkung deiner personenbezogenen Daten, soweit gesetzlich zulässig.
+
+Wenn du damit unzufrieden bist, wie ich mit deinen personenbezogenen Daten umgehe, kannst du dich bei jeder Datenschutzbehörde beschweren. Zum Beispiel beim [[https://www.datenschutzzentrum.de/][Unabhängigen Landeszentrum für Datenschutz Schleswig-Holstein]].
+
+Wenn du Fragen hast, kannst du mich gern [[/de/about/][kontaktieren]].
+
+** posts
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: de/posts
+:END:
+
+*** Beiträge
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+Gedanken zu Technik, Softwareentwicklung und den Werkzeugen, die mir dabei
+begegnen. Bisher sind nur einige Beiträge auf Deutsch verfügbar – die meisten
+findest du in der [[/posts/][englischen Fassung]].

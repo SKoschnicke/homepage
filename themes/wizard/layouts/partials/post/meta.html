@@ -17,12 +17,14 @@
     {{ if .IsTranslated }}
     <div class="post-translations">
         {{ range .Translations }}
-        <a href="{{ .Permalink }}" class="translation-link" lang="{{ .Language.Lang }}">{{ .Language.LanguageName }}</a>
+        {{/* Label is phrased in the target language (the link leads there). */}}
+        {{ $label := index (dict "en" "Read english version" "de" "Deutsche Version lesen") .Language.Lang }}
+        <a href="{{ .Permalink }}" class="translation-link" lang="{{ .Language.Lang }}">{{ $label | default .Language.LanguageName }}</a>
         {{ end }}
     </div>
     {{ end }}
     
     {{ with .ReadingTime }}
-    <span class="reading-time">{{ . }} min read</span>
+    <span class="reading-time">{{ . }} {{ i18n "min_read" }}</span>
     {{ end }}
 </div> 

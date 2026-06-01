@@ -57,12 +57,40 @@ Detailed documentation for specific aspects of the project:
 
 ## Common Tasks
 
+### Org Outline Structure
+
+`all-pages.org` is organized **language → content type → page**:
+
+```org
+* en                       # EXPORT_HUGO_SECTION: /   (English at content root)
+  ** pages                 #   -> content/
+     *** Home / About / Privacy Policy
+  ** posts                 # EXPORT_HUGO_SECTION: posts  -> content/posts/
+     *** post subtrees
+* de                       # EXPORT_HUGO_SECTION: de, EXPORT_LANGUAGE: de
+  ** pages                 #   -> content/de/
+     *** Startseite / Ueber mich / Datenschutzerklaerung
+  ** posts                 # EXPORT_HUGO_SECTION: de/posts -> content/de/posts/
+     *** Beiträge (section index)
+```
+
+**The Hugo output path is driven entirely by `EXPORT_HUGO_SECTION`
+(inherited), NOT by heading names.** The `* en` / `* de` / `** pages` /
+`** posts` headings are organizational containers — they carry no
+`EXPORT_FILE_NAME`, so ox-hugo skips them as pages and only their leaf children
+(which DO have `EXPORT_FILE_NAME`) are exported. `EXPORT_LANGUAGE: de` on `* de`
+is inherited by every German page.
+
+Note: ox-hugo's `org-hugo-section` defaults to `"posts"` if no section is set
+anywhere — don't rely on that, always set `EXPORT_HUGO_SECTION` on the grouping
+heading.
+
 ### Adding a New Blog Post
 
 1. Open `content-org/all-pages.org` in Emacs
-2. Add a new heading under `* Posts`:
+2. Add a heading under `* en` → `** posts`:
    ```org
-   ** DONE Post Title                                              :tag1:tag2:
+   *** DONE Post Title                                            :tag1:tag2:
    :PROPERTIES:
    :EXPORT_FILE_NAME: post-slug
    :END:
@@ -70,7 +98,36 @@ Detailed documentation for specific aspects of the project:
    Post content here...
    ```
 3. Export with `C-c C-e` (or your ox-hugo export binding)
-4. Hugo will pick up the generated markdown
+4. Hugo picks up the generated markdown under `content/posts/`
+
+### Adding a German Translation
+
+The site is multilingual: **English at the root** (`/about/`), **German under
+`/de/`** (`/de/about/`). German uses Hugo's *directory method* — German content
+lives in `content/de/` (`languages.de.contentDir` in `hugo.toml`). Translations
+are linked automatically by matching path+basename across the two content dirs;
+no `translationKey` needed.
+
+To translate a page, add a subtree under `* de` → `** pages` (or `** posts` for
+a post) using the **same base slug** as the English page:
+
+```org
+*** Ueber mich
+:PROPERTIES:
+:EXPORT_FILE_NAME: about      # SAME base slug as the English page
+:END:
+German body...
+```
+
+Section (`de`) and language (`de`) are inherited from the `* de` heading, so the
+page lands in `content/de/about.md` and pairs with `content/about.md`.
+
+**GOTCHA — do NOT use a `.de` filename suffix** (e.g. `EXPORT_FILE_NAME:
+about.de`). ox-hugo runs `file-name-base` on the slug, which strips `.de` as if
+it were an extension, so `about.de` collapses to `about.md` and *overwrites the
+English page*. The language must come from the directory, never the filename.
+UI strings live in `i18n/{en,de}.toml`; the nav/footer reference them via
+`{{ i18n "key" }}` and `relLangURL`.
 
 ### Modifying Styles
 
