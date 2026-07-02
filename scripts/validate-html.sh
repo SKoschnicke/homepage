@@ -2,14 +2,16 @@
 # Validate the generated HTML for correctness AND semantic structure, so the
 # site stays readable with CSS disabled.
 #
-# Requires the nix dev shell (provides hugo, html5validator, node). The
-# jsdom/axe-core deps for the semantic checker are installed on first run via
-# `npm ci` (or `npm install` if there's no lockfile yet) into
-# scripts/node_modules, mirroring how lighthouse pulls its tooling.
+# Requires the nix dev shell (provides hugo, java, node). The jsdom/axe-core
+# deps for the semantic checker are installed on first run via `npm ci` (or
+# `npm install` if there's no lockfile yet) into scripts/node_modules, and a
+# current vnu.jar is downloaded into scripts/vendor/ — both mirroring how
+# lighthouse pulls its tooling.
 #
 # Two layers, run over every page Hugo emits in public/:
-#   1. W3C correctness  -> html5validator (wraps vnu.jar): nesting, bad/dupe
-#      attributes, duplicate ids, missing alt, stray tags. Handles minified HTML.
+#   1. W3C correctness  -> vnu.jar (auto-downloaded; html5validator fallback):
+#      nesting, bad/dupe attributes, duplicate ids, missing alt, stray tags.
+#      Handles minified HTML.
 #   2. Semantic + CSS-off + axe-core -> scripts/validate-html.mjs: one <main>,
 #      one <h1>, landmarks, no skipped heading levels, links/buttons/images that
 #      still make sense with the stylesheet off, plus axe accessibility rules.
@@ -34,15 +36,47 @@ need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing '$1'. Enter the nix 
 need hugo
 need node
 
-# Layer 1 (W3C correctness) prefers a vendored, up-to-date vnu.jar run directly
-# via `java -jar` — nixpkgs' html5validator bundles an ancient vnu (20.6.30)
-# that rejects valid modern attributes like `fetchpriority`, and its --vnu-jar
-# override is unreliable. Drop a current jar at scripts/vendor/vnu.jar (see
-# README / CLAUDE.md) to use it; otherwise we fall back to html5validator.
+# Layer 1 (W3C correctness) prefers an up-to-date vnu.jar run directly via
+# `java -jar` — nixpkgs' html5validator bundles an ancient vnu (20.6.30) that
+# rejects valid modern attributes like `fetchpriority`, and its --vnu-jar
+# override is unreliable. The jar isn't in nixpkgs, so we fetch it on first run
+# (mirroring how the semantic checker installs jsdom/axe-core below) into a
+# gitignored scripts/vendor/. If the download can't happen (offline, no
+# curl/wget) we fall back to the bundled html5validator with a warning.
 VNU_JAR="$SCRIPTS/vendor/vnu.jar"
+VNU_URL="https://github.com/validator/validator/releases/download/latest/vnu.jar"
+
+fetch() {  # fetch <url> <dest>; returns non-zero if no downloader / download fails
+  if command -v curl >/dev/null 2>&1; then curl -fsSL -o "$2" "$1"
+  elif command -v wget >/dev/null 2>&1; then wget -qO "$2" "$1"
+  else return 1; fi
+}
+
+if [ ! -f "$VNU_JAR" ]; then
+  echo "Fetching vnu.jar (W3C validator) -> scripts/vendor/vnu.jar ..."
+  mkdir -p "$SCRIPTS/vendor"
+  tmp="$VNU_JAR.download"
+  if fetch "$VNU_URL" "$tmp" && fetch "$VNU_URL.sha1" "$tmp.sha1"; then
+    want="$(tr -d '[:space:]' < "$tmp.sha1")"
+    got="$(sha1sum "$tmp" | cut -d' ' -f1)"
+    if [ -n "$want" ] && [ "$want" = "$got" ]; then
+      mv "$tmp" "$VNU_JAR"
+    else
+      echo "  vnu.jar checksum mismatch (want $want, got $got); discarding." >&2
+      rm -f "$tmp"
+    fi
+    rm -f "$tmp.sha1"
+  else
+    echo "  could not download vnu.jar (offline or no curl/wget)." >&2
+    rm -f "$tmp" "$tmp.sha1"
+  fi
+fi
+
 if [ -f "$VNU_JAR" ]; then
   need java
 else
+  echo "WARN: falling back to html5validator's bundled vnu, which is old enough" >&2
+  echo "      to reject valid attributes (e.g. fetchpriority). See scripts/vendor." >&2
   need html5validator
 fi
 

@@ -239,9 +239,14 @@ VALIDATE_STRICT=1 mise run validate        # treat warnings as errors
 Two layers, run over every page in `public/`; exits non-zero on any error so it
 doubles as a regression gate while editing templates:
 
-1. **W3C correctness** — `html5validator` (nixpkgs, wraps `vnu.jar`): bad/dupe
-   attributes, broken nesting, duplicate ids, missing `alt`, stray tags.
-   Handles minified HTML, reports `file:line.col`.
+1. **W3C correctness** — the Nu HTML checker (`vnu.jar`): bad/dupe attributes,
+   broken nesting, duplicate ids, missing `alt`, stray tags. Handles minified
+   HTML, reports `file:line.col`. nixpkgs only ships an ancient vnu (via
+   `html5validator`) that rejects valid modern attributes like `fetchpriority`,
+   so the script auto-downloads a current `vnu.jar` on first run into a
+   gitignored `scripts/vendor/` (sha1-verified) and runs it with `java -jar`.
+   If the download can't happen (offline / no `curl`/`wget`) it falls back to
+   the bundled `html5validator` with a warning.
 2. **Semantic + CSS-off + axe** — `scripts/validate-html.mjs` parses the
    **static DOM with jsdom (no browser)** and asserts: exactly one `<main>` and
    one `<h1>`, `<nav>`/`<footer>` landmarks, no skipped heading levels, every
@@ -250,11 +255,12 @@ doubles as a regression gate while editing templates:
    `alt`, and axe-core's structural/ARIA rules pass. ERROR fails the build;
    WARN is advisory (promote with `VALIDATE_STRICT=1`).
 
-Needs the nix dev shell for `hugo`, `html5validator`, and `node` (enter it via
-`direnv allow` / `nix develop`; the script fails fast if any is missing). The
-checker's deps (`jsdom`, `axe-core`, pinned in `scripts/package.json`) are
-installed on first run into a gitignored `scripts/node_modules`. Rebuild is not
-needed — it reads `public/` directly, not the Rust server.
+Needs the nix dev shell for `hugo`, `java` (to run the fetched `vnu.jar`), and
+`node` (enter it via `direnv allow` / `nix develop`; the script fails fast if
+any is missing). The checker's deps (`jsdom`, `axe-core`, pinned in
+`scripts/package.json`) are installed on first run into a gitignored
+`scripts/node_modules`, alongside the auto-downloaded `scripts/vendor/vnu.jar`.
+Rebuild is not needed — it reads `public/` directly, not the Rust server.
 
 When editing `validate-html.mjs`, self-check it against the fixtures:
 `node scripts/validate-html.mjs scripts/__fixtures__/good.html` must pass and
