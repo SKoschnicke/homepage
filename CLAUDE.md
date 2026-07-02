@@ -149,6 +149,8 @@ UI strings live in `i18n/{en,de}.toml`; the nav/footer reference them via
    - `index.html` - Homepage
 2. Partials are in `layouts/partials/`
 3. Assets are processed via Hugo pipes with fingerprinting and SRI
+4. Keep the markup semantic and CSS-off readable — run `mise run validate`
+   after template changes and keep it green (see [HTML Validation](#html-validation))
 
 ## Design System Summary
 
@@ -210,6 +212,19 @@ absolute numbers (especially LCP) can differ from production. Use the local
 runs for *deltas* while iterating, then confirm against `https://sven.guru`.
 
 ## HTML Validation
+
+**Intent — this is a project goal, not just a lint step.** The generated HTML
+must be *semantic and readable on its own*, so the page still makes sense with
+the stylesheet removed (CSS off, icon fonts gone, no JS): proper landmarks
+(`<main>`/`<nav>`/`<footer>`/`<article>`), a sane heading outline, and links,
+buttons, and images that carry real text, not icon-only affordances that vanish
+without CSS. Treat this as the bar the markup is held to.
+
+`mise run validate` is the mechanism that enforces it. **Run it after any change
+to the templates** (`themes/wizard/layouts/**`) or to content that affects
+structure, and keep it green — a failure means the output regressed on
+correctness or CSS-off readability. It doubles as the definition of "done" for
+work aimed at improving semantics.
 
 Validate that the generated HTML is correct AND semantically structured enough
 to stay readable with **CSS disabled**:
