@@ -235,9 +235,15 @@ doubles as a regression gate while editing templates:
    `alt`, and axe-core's structural/ARIA rules pass. ERROR fails the build;
    WARN is advisory (promote with `VALIDATE_STRICT=1`).
 
-The checker's deps (`jsdom`, `axe-core`, pinned in `scripts/package.json`) are
+Needs the nix dev shell for `hugo`, `html5validator`, and `node` (enter it via
+`direnv allow` / `nix develop`; the script fails fast if any is missing). The
+checker's deps (`jsdom`, `axe-core`, pinned in `scripts/package.json`) are
 installed on first run into a gitignored `scripts/node_modules`. Rebuild is not
 needed — it reads `public/` directly, not the Rust server.
+
+When editing `validate-html.mjs`, self-check it against the fixtures:
+`node scripts/validate-html.mjs scripts/__fixtures__/good.html` must pass and
+`…/bad.html` must fail (it exercises heading-skip, empty-link, missing-alt).
 
 ## Key Files Reference
 
