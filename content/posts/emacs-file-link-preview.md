@@ -14,9 +14,9 @@ What I really wanted was for org to show me the relevant lines _right below
 the link_, the way it already inlines images. Here is what the same link
 looks like before and after:
 
-{{< figure src="/ox-hugo/emacs-link.png" >}}
+{{< figure src="/ox-hugo/emacs-link.png" alt="An org-mode file link shown as plain underlined text, with no preview of the code it points to" >}}
 
-{{< figure src="/ox-hugo/emacs-link-shown.png" >}}
+{{< figure src="/ox-hugo/emacs-link-shown.png" alt="The same org-mode file link with the referenced source lines inlined as a preview directly below it" >}}
 
 <!--more-->
 

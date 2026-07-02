@@ -68,7 +68,9 @@
         <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}"></script>
     </head>
     <body>
-        {{ partial "navigation.html" . }}
+        <header class="site-header">
+            {{ partial "navigation.html" . }}
+        </header>
 
         <main>
             {{ block "main" . }}{{ end }}

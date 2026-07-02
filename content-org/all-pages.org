@@ -158,6 +158,7 @@ In a world where software gets more and more complex, and because of that also b
 One if these programs I just had the pleasure to use again is Magic Wormhole. A small command line utility which lets you transfer files between two computers.
 
 #+DOWNLOADED: screenshot @ 2025-05-07 16:41:33
+#+ATTR_HTML: :alt Terminal showing Magic Wormhole sending a file and printing a short human-readable wormhole code
 [[attachment:2025-05-07_16-41-33_screenshot.png]]
 [[https://xkcd.com/949/][XKCD "File transfer"]]
 
@@ -310,8 +311,10 @@ What I really wanted was for org to show me the relevant lines /right below
 the link/, the way it already inlines images. Here is what the same link
 looks like before and after:
 
+#+ATTR_HTML: :alt An org-mode file link shown as plain underlined text, with no preview of the code it points to
 [[attachment:emacs-link.png]]
 
+#+ATTR_HTML: :alt The same org-mode file link with the referenced source lines inlined as a preview directly below it
 [[attachment:emacs-link-shown.png]]
 
 #+hugo: more

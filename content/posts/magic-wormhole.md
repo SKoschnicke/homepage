@@ -12,7 +12,7 @@ In a world where software gets more and more complex, and because of that also b
 
 One if these programs I just had the pleasure to use again is Magic Wormhole. A small command line utility which lets you transfer files between two computers.
 
-![](/ox-hugo/2025-05-07_16-41-33_screenshot.png)
+![Terminal showing Magic Wormhole sending a file and printing a short human-readable wormhole code](/ox-hugo/2025-05-07_16-41-33_screenshot.png)
 [XKCD "File transfer"](https://xkcd.com/949/)
 
 So I wanted to give my laptop SSH access to a server I already had access to from my desktop computer. Of course, login through password is deactivated on the server. So I had to add the public SSH key of my laptop to the `authorized_keys` file on the server.

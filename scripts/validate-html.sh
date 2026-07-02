@@ -32,8 +32,19 @@ PATH_SUFFIX="${1:-}"
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "Missing '$1'. Enter the nix dev shell (direnv allow / nix develop)." >&2; exit 1; }; }
 need hugo
-need html5validator
 need node
+
+# Layer 1 (W3C correctness) prefers a vendored, up-to-date vnu.jar run directly
+# via `java -jar` — nixpkgs' html5validator bundles an ancient vnu (20.6.30)
+# that rejects valid modern attributes like `fetchpriority`, and its --vnu-jar
+# override is unreliable. Drop a current jar at scripts/vendor/vnu.jar (see
+# README / CLAUDE.md) to use it; otherwise we fall back to html5validator.
+VNU_JAR="$SCRIPTS/vendor/vnu.jar"
+if [ -f "$VNU_JAR" ]; then
+  need java
+else
+  need html5validator
+fi
 
 # --- Build (unless reusing an existing public/ or validating one page) --------
 if [ -z "$PATH_SUFFIX" ] && [ "${VALIDATE_SKIP_BUILD:-}" != "1" ]; then
@@ -77,8 +88,14 @@ echo ""
 fail=0
 
 # --- Layer 1: W3C correctness -----------------------------------------------
-echo "=== [1/2] W3C correctness (html5validator) ==="
-if html5validator --format gnu "${FILES[@]}"; then
+if [ -f "$VNU_JAR" ]; then
+  echo "=== [1/2] W3C correctness (vnu.jar, vendored) ==="
+  vnu_cmd=(java -jar "$VNU_JAR" --format gnu)
+else
+  echo "=== [1/2] W3C correctness (html5validator) ==="
+  vnu_cmd=(html5validator --format gnu)
+fi
+if "${vnu_cmd[@]}" "${FILES[@]}"; then
   echo "  all pages well-formed"
 else
   echo "  ^ correctness errors above"

@@ -18,6 +18,21 @@
   src: url('/fonts/monaspace-argon-variable.woff2') format('woff2-variations');
 }
 
+/* Visually hidden but exposed to assistive tech and readable with CSS off.
+   Used for icon-only links (e.g. nav social icons) so the markup still
+   carries real text. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ============================================
    Design System - Dark Theme (default)
    Indigo / Amber / Emerald palette
