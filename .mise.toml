@@ -68,6 +68,10 @@ PORT=8080 DOMAIN=localhost ./target/release/static-server
 description = "Run Lighthouse (mobile + desktop) against a local hugo server"
 run = "./scripts/lighthouse-audit.sh"
 
+[tasks.validate]
+description = "Validate generated HTML: W3C correctness + semantic structure + CSS-off readability"
+run = "./scripts/validate-html.sh"
+
 [tasks.deploy]
 description = "Cross-compile for aarch64 and deploy to VPS via SSH"
 run = """

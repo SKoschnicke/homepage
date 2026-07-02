@@ -1,0 +1,10 @@
+{
+  "name": "homepage-validate",
+  "private": true,
+  "description": "Dependencies for scripts/validate-html.mjs (semantic + CSS-off + axe-core HTML checks). Installed via `npm ci`; see scripts/validate-html.sh.",
+  "type": "module",
+  "dependencies": {
+    "axe-core": "^4.11.3",
+    "jsdom": "^26.1.0"
+  }
+}

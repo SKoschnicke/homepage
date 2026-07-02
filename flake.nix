@@ -32,6 +32,7 @@
           pkgs.nodejs  # for npx-launched lighthouse (web-perf tool, not the eth client)
           pkgs.chromium
           pkgs.jq
+          pkgs.html5validator  # W3C Nu HTML validator (wraps vnu.jar) for `mise run validate`
           crossPkgs.stdenv.cc
         ];
 
@@ -48,6 +49,7 @@
           echo "  hugo $(hugo version | grep -oP 'v\d+\.\d+\.\d+')"
           echo "  cargo $(cargo --version | cut -d' ' -f2)"
           echo "  node $(node --version)  (run lighthouse via 'mise run lighthouse')"
+          echo "  html5validator $(html5validator --version 2>/dev/null)  (run 'mise run validate')"
           echo "  cross-compile: cargo build --release --target aarch64-unknown-linux-musl"
         '';
       };

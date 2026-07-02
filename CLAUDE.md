@@ -15,6 +15,7 @@ Instructions for AI assistants working with this Hugo-based personal homepage.
 | Build for deploy (aarch64) | `mise run build aarch64` |
 | Deploy to VPS | `mise run deploy` |
 | Lighthouse audit (mobile + desktop) | `mise run lighthouse` |
+| Validate HTML (correctness + semantics) | `mise run validate` |
 
 ## Critical Rules
 
@@ -208,6 +209,36 @@ Note: localhost runs exercise Lighthouse's simulated slow-4G throttling, so
 absolute numbers (especially LCP) can differ from production. Use the local
 runs for *deltas* while iterating, then confirm against `https://sven.guru`.
 
+## HTML Validation
+
+Validate that the generated HTML is correct AND semantically structured enough
+to stay readable with **CSS disabled**:
+
+```bash
+mise run validate                          # build + validate every page
+./scripts/validate-html.sh /de/about/      # one already-built page (fast iteration)
+VALIDATE_SKIP_BUILD=1 ./scripts/validate-html.sh   # reuse existing public/
+VALIDATE_STRICT=1 mise run validate        # treat warnings as errors
+```
+
+Two layers, run over every page in `public/`; exits non-zero on any error so it
+doubles as a regression gate while editing templates:
+
+1. **W3C correctness** — `html5validator` (nixpkgs, wraps `vnu.jar`): bad/dupe
+   attributes, broken nesting, duplicate ids, missing `alt`, stray tags.
+   Handles minified HTML, reports `file:line.col`.
+2. **Semantic + CSS-off + axe** — `scripts/validate-html.mjs` parses the
+   **static DOM with jsdom (no browser)** and asserts: exactly one `<main>` and
+   one `<h1>`, `<nav>`/`<footer>` landmarks, no skipped heading levels, every
+   `<a href>` exposes real text with CSS off (an `aria-label` + `aria-hidden`
+   icon does **not** count — that's the nav-social-icons trap), images have
+   `alt`, and axe-core's structural/ARIA rules pass. ERROR fails the build;
+   WARN is advisory (promote with `VALIDATE_STRICT=1`).
+
+The checker's deps (`jsdom`, `axe-core`, pinned in `scripts/package.json`) are
+installed on first run into a gitignored `scripts/node_modules`. Rebuild is not
+needed — it reads `public/` directly, not the Rust server.
+
 ## Key Files Reference
 
 | File | Purpose |
@@ -223,3 +254,5 @@ runs for *deltas* while iterating, then confirm against `https://sven.guru`.
 | `flake.nix` | Nix dev shell with cross-compile toolchain |
 | `.mise.toml` | Build, dev, and deploy tasks |
 | `scripts/lighthouse-audit.sh` | Mobile + desktop Lighthouse runner (see Performance Auditing) |
+| `scripts/validate-html.sh` | HTML correctness + semantic structure runner (see HTML Validation) |
+| `scripts/validate-html.mjs` | Semantic / CSS-off / axe-core checker (jsdom, no browser) |
