@@ -57,7 +57,8 @@ if [ ! -f "$VNU_JAR" ]; then
   mkdir -p "$SCRIPTS/vendor"
   tmp="$VNU_JAR.download"
   if fetch "$VNU_URL" "$tmp" && fetch "$VNU_URL.sha1" "$tmp.sha1"; then
-    want="$(tr -d '[:space:]' < "$tmp.sha1")"
+    # The .sha1 asset is "<hash>  vnu.jar" (sha1sum format); take the hash only.
+    want="$(cut -d' ' -f1 < "$tmp.sha1")"
     got="$(sha1sum "$tmp" | cut -d' ' -f1)"
     if [ -n "$want" ] && [ "$want" = "$got" ]; then
       mv "$tmp" "$VNU_JAR"
