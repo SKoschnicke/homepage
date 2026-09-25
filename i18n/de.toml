@@ -63,3 +63,30 @@ other = "Min. Lesezeit"
 
 [reply_by_email]
 other = "Per E-Mail antworten"
+
+[not_found_title]
+other = "Seite nicht gefunden"
+
+[not_found_heading]
+other = "404 — Seite nicht gefunden"
+
+[not_found_text]
+other = "Unter dieser Adresse gibt es nichts."
+
+[not_found_language_hint]
+other = "Falls du gerade die Sprache umgeschaltet hast: Diesen Artikel gibt es (noch) nicht auf Deutsch. Nicht alles, was ich schreibe, erscheint in beiden Sprachen."
+
+[not_found_read_in]
+other = "Stattdessen auf {{ .Language }} lesen →"
+
+[not_found_home]
+other = "Zur Startseite"
+
+[not_found_posts]
+other = "Alle Beiträge ansehen"
+
+[lang_en]
+other = "Englisch"
+
+[lang_de]
+other = "Deutsch"

@@ -6,7 +6,8 @@
         <meta name="color-scheme" content="light dark">
         <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
 
-        <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+        <title>{{ if .IsHome }}{{ .Site.Title }}{{ else if eq .Kind "404" }}{{ i18n "not_found_title" }} | {{ .Site.Title }}{{ else }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+        {{ if eq .Kind "404" }}<meta name="robots" content="noindex">{{ end }}
 
         <link rel="icon" href="data:,">
 

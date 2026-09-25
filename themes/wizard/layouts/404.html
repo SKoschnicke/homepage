@@ -1,0 +1,63 @@
+{{ define "main" }}
+<div class="page-content">
+    <article class="page-content-inner not-found">
+        <header class="post-header">
+            <h1 class="post-title">{{ i18n "not_found_heading" }}</h1>
+        </header>
+
+        <div class="post-content">
+            <p>{{ i18n "not_found_text" }}</p>
+            <p>{{ i18n "not_found_language_hint" }}</p>
+
+            {{/* Progressive enhancement: if the same path exists in another
+                 language (the usual case after hitting the language switcher on
+                 an untranslated post), reveal a direct link to it. Without JS
+                 this stays hidden and the plain links below still work. */}}
+            {{ range .Sites }}
+            <p class="not-found-translation" data-lang-prefix="{{ .LanguagePrefix }}" hidden>
+                <a href="{{ .Home.RelPermalink }}" lang="{{ .Language.Lang }}" hreflang="{{ .Language.Lang }}">{{ i18n "not_found_read_in" (dict "Language" (i18n (printf "lang_%s" .Language.Lang))) }}</a>
+            </p>
+            {{ end }}
+
+            <ul class="not-found-links">
+                <li><a href="{{ .Site.Home.RelPermalink }}">{{ i18n "not_found_home" }}</a></li>
+                {{ with .Site.GetPage "/posts" }}
+                <li><a href="{{ .RelPermalink }}">{{ i18n "not_found_posts" }}</a></li>
+                {{ end }}
+            </ul>
+        </div>
+    </article>
+</div>
+<script>
+(function () {
+    // Strip whichever language prefix the requested URL carries. Don't assume
+    // it matches this page's language: `hugo server` serves the default-language
+    // 404 for every missing path.
+    var prefixes = [{{ range .Sites }}{{ with .LanguagePrefix }}{{ . }}, {{ end }}{{ end }}];
+    var path = location.pathname;
+    var bare = path;
+    var reqPrefix = "";
+    prefixes.forEach(function (p) {
+        if (path === p || path.indexOf(p + "/") === 0) {
+            reqPrefix = p;
+            bare = path.slice(p.length) || "/";
+        }
+    });
+    // The language switcher only knows this is "the 404 page"; point it at
+    // the requested path in each language so switching back works.
+    document.querySelectorAll(".nav-lang-link[data-lang-prefix]").forEach(function (a) {
+        a.href = a.getAttribute("data-lang-prefix") + bare;
+    });
+    document.querySelectorAll(".not-found-translation").forEach(function (el) {
+        var prefix = el.getAttribute("data-lang-prefix");
+        if (prefix === reqPrefix) return;
+        var target = prefix + bare;
+        fetch(target, { method: "HEAD" }).then(function (res) {
+            if (!res.ok) return;
+            el.querySelector("a").href = target;
+            el.hidden = false;
+        }).catch(function () {});
+    });
+})();
+</script>
+{{ end }}

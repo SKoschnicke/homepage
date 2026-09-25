@@ -63,12 +63,12 @@ pub async fn route(req: Request<Body>, metrics: Arc<Metrics>) -> Result<Response
                 serve_asset(asset, &req, without_slash)
             } else {
                 // 404
-                serve_404()
+                serve_404(path)
             }
         }
         // 404
         else {
-            serve_404()
+            serve_404(path)
         }
     };
 
@@ -78,9 +78,22 @@ pub async fn route(req: Request<Body>, metrics: Arc<Metrics>) -> Result<Response
     Ok(response)
 }
 
-fn serve_404() -> Response<Body> {
+/// Hugo renders one 404 page per language (`/404.html`, `/de/404.html`, ...).
+/// Pick the one matching the first path segment so a missing `/de/...` page
+/// gets the German 404, falling back to the root (default language) one.
+fn find_404(path: &str) -> Option<&'static Asset> {
+    let first_segment = path.trim_start_matches('/').split('/').next().unwrap_or("");
+    if !first_segment.is_empty() {
+        if let Some(asset) = ROUTES.get(format!("/{}/404.html", first_segment).as_str()) {
+            return Some(asset);
+        }
+    }
+    ROUTES.get("/404.html").copied()
+}
+
+fn serve_404(path: &str) -> Response<Body> {
     // Check if we have a custom 404.html
-    if let Some(not_found_asset) = ROUTES.get("/404.html") {
+    if let Some(not_found_asset) = find_404(path) {
         Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header(header::CONTENT_TYPE, not_found_asset.content_type)

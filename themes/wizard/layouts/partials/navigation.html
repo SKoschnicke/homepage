@@ -32,10 +32,23 @@
             {{ range .Site.Languages }}
             {{ $lang := . }}
             {{ $current := eq $lang.Lang $page.Site.Language.Lang }}
-            {{/* Prefer the translated page. */}}
             {{ $href := "" }}
-            {{ range $page.AllTranslations }}
-                {{ if eq .Language.Lang $lang.Lang }}{{ $href = .RelPermalink }}{{ end }}
+            {{ $tgtPrefix := "" }}
+            {{ $tgtHome := "" }}
+            {{ range $page.Sites }}
+                {{ if eq .Language.Lang $lang.Lang }}{{ $tgtPrefix = .LanguagePrefix }}{{ $tgtHome = .Home.RelPermalink }}{{ end }}
+            {{ end }}
+            {{/* On the 404 page the real URL is only known in the browser: point
+                 at the target language's home and let the 404 script rewrite the
+                 link to the same path in that language. */}}
+            {{ $is404 := eq $page.Kind "404" }}
+            {{ if $is404 }}
+                {{ $href = $tgtHome }}
+            {{ else }}
+                {{/* Prefer the translated page. */}}
+                {{ range $page.AllTranslations }}
+                    {{ if eq .Language.Lang $lang.Lang }}{{ $href = .RelPermalink }}{{ end }}
+                {{ end }}
             {{ end }}
             {{/* Current language always points at the current page. */}}
             {{ if and (not $href) $current }}
@@ -48,14 +61,11 @@
             {{ if not $href }}
                 {{ $curPrefix := $page.Site.LanguagePrefix }}
                 {{ $bare := strings.TrimPrefix $curPrefix $page.RelPermalink }}
-                {{ $tgtPrefix := "" }}
-                {{ range $page.Sites }}
-                    {{ if eq .Language.Lang $lang.Lang }}{{ $tgtPrefix = .LanguagePrefix }}{{ end }}
-                {{ end }}
                 {{ $href = printf "%s%s" $tgtPrefix $bare }}
             {{ end }}
             <a href="{{ $href }}" lang="{{ $lang.Lang }}" hreflang="{{ $lang.Lang }}"
                class="nav-lang-link{{ if $current }} is-current{{ end }}"
+               {{ if $is404 }}data-lang-prefix="{{ $tgtPrefix }}"{{ end }}
                {{ if $current }}aria-current="true"{{ end }}>{{ $lang.Lang | upper }}</a>
             {{ end }}
         </nav>

@@ -46,6 +46,14 @@ defaultContentLanguage = 'en'
           {Name = "Beiträge", URL = "/de/posts/", HasChildren = false},
       ]
 
+# `hugo server` only: serve the German 404 for missing /de/ paths. Without
+# this the dev server falls back to the English /404.html for every language.
+# Production (the Rust server) picks the per-language 404 on its own.
+[[server.redirects]]
+  from = '/de/**'
+  to = '/de/404.html'
+  status = 404
+
 [markup.goldmark.renderer]
   unsafe = true
 
