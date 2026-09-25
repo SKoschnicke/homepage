@@ -378,6 +378,23 @@
             }
         }
 
+        // Back/forward cache: an open WebSocket makes the page ineligible, so
+        // close it when the page is hidden and reconnect if it's restored.
+        window.addEventListener('pagehide', function() {
+            if (reconnectTimeout) clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+            if (ws) {
+                // Detach first: onclose would otherwise schedule a reconnect
+                ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
+                ws.close();
+                ws = null;
+            }
+        });
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted && !ws) connect();
+        });
+
         // Start connection
         connect();
     }
