@@ -3,6 +3,10 @@ languageCode = 'en-us'
 title = 'Sven Koschnicke'
 theme = 'wizard'
 
+# English at the root (/), German under /de/. Do NOT set
+# defaultContentLanguageInSubdir, otherwise English would move to /en/.
+defaultContentLanguage = 'en'
+
 # Gemini output format
 [mediaTypes."text/gemini"]
   suffixes = ["gmi"]
@@ -17,10 +21,6 @@ theme = 'wizard'
   home = ["HTML", "RSS", "gemini"]
   page = ["HTML", "gemini"]
   section = ["HTML", "RSS", "gemini"]
-
-# English at the root (/), German under /de/. Do NOT set
-# defaultContentLanguageInSubdir, otherwise English would move to /en/.
-defaultContentLanguage = 'en'
 
 [languages]
   [languages.en]
