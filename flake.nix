@@ -33,6 +33,8 @@
           pkgs.chromium
           pkgs.jq
           pkgs.html5validator  # W3C Nu HTML validator (wraps vnu.jar) for `mise run validate`
+          # fonttools (+ brotli for woff2) for scripts/subset-fonts.sh
+          (pkgs.python3.withPackages (ps: [ ps.fonttools ps.brotli ]))
           crossPkgs.stdenv.cc
         ];
 

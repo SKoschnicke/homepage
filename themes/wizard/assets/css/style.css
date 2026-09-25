@@ -13,7 +13,7 @@
 @font-face {
   font-family: 'Monaspace Argon';
   font-style: normal;
-  font-weight: 200 800;
+  font-weight: 400 700;  /* clamped by scripts/subset-fonts.sh */
   font-display: optional;
   src: url('/fonts/monaspace-argon-variable.woff2') format('woff2-variations');
 }

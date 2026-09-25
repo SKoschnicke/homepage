@@ -283,3 +283,4 @@ When editing `validate-html.mjs`, self-check it against the fixtures:
 | `scripts/lighthouse-audit.sh` | Mobile + desktop Lighthouse runner (see Performance Auditing) |
 | `scripts/validate-html.sh` | HTML correctness + semantic structure runner (see HTML Validation) |
 | `scripts/validate-html.mjs` | Semantic / CSS-off / axe-core checker (jsdom, no browser) |
+| `scripts/subset-fonts.sh` | Regenerates `static/fonts/monaspace-argon-variable.woff2` from the pristine `themes/wizard/fonts-src/` copy (axis pinning + Latin subset). Edit the source, never the served file |
