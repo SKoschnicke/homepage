@@ -4,31 +4,29 @@ author = ["Sven Koschnicke"]
 draft = false
 +++
 
-Hallo, ich bin Sven Koschnicke, ein Computer-Nerd mit über 25 Jahren
-praktischer Erfahrung über den gesamten Technologie-Stack hinweg. Vom Entwurf
-von Mikrochips und der Programmierung von FPGAs bis hin zur Entwicklung
-hochperformanter Kernel-Module bringe ich tiefes technisches Know-how auf jeder
-Ebene mit.
+Hallo, ich bin Sven Koschnicke – Computer-Nerd und seit über 25 Jahren in
+allen Bereichen der Technik zu Hause. Ich habe Mikrochips entworfen, FPGAs
+programmiert und hochperformante Kernel-Module geschrieben; wie ein System von
+ganz unten bis ganz oben funktioniert, weiß ich also nicht nur aus Büchern.
 
-Meine besondere Stärke liegt in echter Full-Stack-Beherrschung – ich verbinde
-Hardware, Systeme und Software nahtlos miteinander. Ob DevOps-Infrastruktur,
-anspruchsvolle Backend-Dienste oder ausgefeilte Frontend-Anwendungen: Ich habe
-über das gesamte Spektrum hinweg erfolgreich Lösungen geliefert.
+Genau das ist meine Stärke: Hardware, Betriebssystem und Software sind für mich
+keine getrennten Welten, sondern greifen ineinander. Ob DevOps-Infrastruktur,
+komplexe Backend-Dienste oder ein durchdachtes Frontend – ich habe Projekte aller
+Art erfolgreich umgesetzt.
 
-Ich bin darauf spezialisiert, komplexe technische Herausforderungen anzugehen,
-die innovatives Denken und Optimierung erfordern. Mit meinem breiten Wissen kann
-ich ein Team erfolgreich dabei anleiten, eine robuste und skalierbare
-Softwarelösung zu schaffen. Mein Fokus liegt auf hochperformanten,
-spezialisierten Systemen, die Grenzen verschieben und außergewöhnlichen Mehrwert
-liefern.
+Am meisten reizen mich die kniffligen Probleme, bei denen Lösungen von der
+Stange nicht mehr weiterhelfen und es auf kreative Ideen und echte
+Optimierungsarbeit ankommt. Mit meinem breiten Wissen kann ich Teams sicher
+durch solche Projekte führen – hin zu Software, die robust ist und mit den
+Anforderungen mitwächst. Besonders gern baue ich spezialisierte, schnelle
+Systeme, die ausloten, was technisch möglich ist.
 
-Wenn du jemanden suchst, der deine technischen Herausforderungen nicht nur aus
-jedem Blickwinkel versteht, sondern auch Lösungen entwirft und umsetzt, die in
-puncto Leistung und Qualität die Erwartungen übertreffen, dann lass uns
-sprechen.
+Du suchst jemanden, der deine technische Herausforderung von allen Seiten
+versteht und daraus eine Lösung baut, die in Leistung und Qualität überzeugt?
+Dann lass uns reden.
 
-Du kannst meinen vollständigen Lebenslauf [auf Deutsch](/cv-de.pdf) oder
-[auf Englisch](/cv-en.pdf) herunterladen.
+Meinen ausführlichen Lebenslauf gibt es [auf Deutsch](/cv-de.pdf) und
+[auf Englisch](/cv-en.pdf) zum Download.
 
 
 ## Kontakt {#kontakt}
