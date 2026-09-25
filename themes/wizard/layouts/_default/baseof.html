@@ -15,58 +15,43 @@
         <link rel="preload" href="/fonts/monaspace-argon-variable.woff2" as="font" type="font/woff2" crossorigin>
         <link rel="preload" href="/fonts/Phosphor.woff2" as="font" type="font/woff2" crossorigin>
 
-        {{ $phosphor := resources.Get "css/phosphor.css" }}
-        {{ $phosphor = $phosphor | resources.Minify | resources.Fingerprint }}
-        <link rel="stylesheet" href="{{ $phosphor.RelPermalink }}" integrity="{{ $phosphor.Data.Integrity }}">
-
-        {{ $style := resources.Get "css/style.css" }}
-        {{ $style = $style | resources.Minify | resources.Fingerprint }}
-        <link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">
-
-        {{ $headerCSS := resources.Get "css/header.css" }}
-        {{ $headerCSS = $headerCSS | resources.Minify | resources.Fingerprint }}
-        <link rel="stylesheet" href="{{ $headerCSS.RelPermalink }}" integrity="{{ $headerCSS.Data.Integrity }}">
-
-        <!-- Memory Game styles -->
-        {{ $memoryGameCSS := resources.Get "css/memory-game.css" }}
-        {{ $memoryGameCSS = $memoryGameCSS | resources.Minify | resources.Fingerprint }}
-        <link rel="stylesheet" href="{{ $memoryGameCSS.RelPermalink }}" integrity="{{ $memoryGameCSS.Data.Integrity }}">
-
-        <!-- Metrics Dashboard styles -->
-        {{ $metricsDashboardCSS := resources.Get "css/metrics-dashboard.css" }}
-        {{ $metricsDashboardCSS = $metricsDashboardCSS | resources.Minify | resources.Fingerprint }}
-        <link rel="stylesheet" href="{{ $metricsDashboardCSS.RelPermalink }}" integrity="{{ $metricsDashboardCSS.Data.Integrity }}">
+        <!-- All stylesheets in one bundle: one render-blocking request instead of five -->
+        {{ $css := slice
+            (resources.Get "css/phosphor.css")
+            (resources.Get "css/style.css")
+            (resources.Get "css/header.css")
+            (resources.Get "css/memory-game.css")
+            (resources.Get "css/metrics-dashboard.css")
+            | resources.Concat "css/bundle.css" | resources.Minify | resources.Fingerprint }}
+        <link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
 
         <link rel="canonical" href="{{ .Permalink }}">
         {{ range .AlternativeOutputFormats -}}
             {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
         {{ end -}}
 
-        <!-- Pixel art scaling (runs early to avoid layout flash) -->
-        {{ $pixelScale := resources.Get "js/pixel-scale.js" }}
-        {{ $pixelScale = $pixelScale | resources.Minify | resources.Fingerprint }}
-        <script src="{{ $pixelScale.RelPermalink }}" integrity="{{ $pixelScale.Data.Integrity }}"></script>
+        <!-- Pixel art scaling and theme bootstrap are inlined: they must run before
+             first paint to avoid a flash, and are too small to justify a blocking request. -->
+        {{ $pixelScale := resources.Get "js/pixel-scale.js" | resources.Minify }}
+        <script>{{ $pixelScale.Content | safeJS }}</script>
 
         <!-- Chart.js URL for lazy loading in metrics dashboard -->
         {{ $chartJS := resources.Get "js/chart.min.js" }}
         {{ $chartJS = $chartJS | resources.Fingerprint }}
         <script>window.CHART_JS_URL = "{{ $chartJS.RelPermalink }}"; window.CHART_JS_INTEGRITY = "{{ $chartJS.Data.Integrity }}";</script>
 
-        <!-- Theme toggle script -->
-        {{ $lightDark := resources.Get "js/light_dark.js" }}
-        {{ $lightDark = $lightDark | resources.Minify | resources.Fingerprint }}
-        <script src="{{ $lightDark.RelPermalink }}" integrity="{{ $lightDark.Data.Integrity }}"></script>
+        {{ $lightDark := resources.Get "js/light_dark.js" | resources.Minify }}
+        <script>{{ $lightDark.Content | safeJS }}</script>
         <noscript><style>.nav-toggle-theme{display:none}</style></noscript>
 
-        <!-- Memory Game script -->
+        <!-- Footer widgets: nothing above the fold depends on them -->
         {{ $memoryGame := resources.Get "js/memory-game.js" }}
         {{ $memoryGame = $memoryGame | resources.Minify | resources.Fingerprint }}
-        <script src="{{ $memoryGame.RelPermalink }}" integrity="{{ $memoryGame.Data.Integrity }}"></script>
+        <script src="{{ $memoryGame.RelPermalink }}" integrity="{{ $memoryGame.Data.Integrity }}" defer></script>
 
-        <!-- Metrics Dashboard script -->
         {{ $metricsDashboard := resources.Get "js/metrics-dashboard.js" }}
         {{ $metricsDashboard = $metricsDashboard | resources.Minify | resources.Fingerprint }}
-        <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}"></script>
+        <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}" defer></script>
     </head>
     <body>
         <header class="site-header">
