@@ -1,51 +1,31 @@
 /* Header image - used in hero section */
-/* Dark/light crossfade is handled by two <img> elements in the template,
-   toggled via data-theme. The old CSS background approach is gone. */
+/* The hero art is decorative, so it lives in CSS rather than an <img>: a
+   background is only fetched when its rule applies, so each visitor downloads
+   just the image for the active theme. Chromium crossfades the
+   background-image transition on theme toggle; other browsers swap instantly. */
 
-.hero-bg-light,
-.hero-bg-dark {
+.hero-bg {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    background: center / cover no-repeat url("/images/header-tower-light.webp");
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
-    transition: opacity 0.5s ease;
-}
-
-.hero-bg-light {
     opacity: 0.6;
+    transition: background-image 0.5s ease;
 }
 
-.hero-bg-dark {
-    opacity: 0;
-}
-
-[data-theme="dark"] .hero-bg-light {
-    opacity: 0;
-}
-
-[data-theme="dark"] .hero-bg-dark {
-    opacity: 0.6;
+[data-theme="dark"] .hero-bg {
+    background-image: url("/images/header-tower-dark.webp");
 }
 
 /* No data-theme set (JS disabled or pre-hydration): follow OS preference. */
-:root:not([data-theme]) .hero-bg-light {
-    opacity: 0;
-}
-
-:root:not([data-theme]) .hero-bg-dark {
-    opacity: 0.6;
+:root:not([data-theme]) .hero-bg {
+    background-image: url("/images/header-tower-dark.webp");
 }
 
 @media (prefers-color-scheme: light) {
-    :root:not([data-theme]) .hero-bg-light {
-        opacity: 0.6;
-    }
-
-    :root:not([data-theme]) .hero-bg-dark {
-        opacity: 0;
+    :root:not([data-theme]) .hero-bg {
+        background-image: url("/images/header-tower-light.webp");
     }
 }

@@ -15,6 +15,13 @@
         <link rel="preload" href="/fonts/monaspace-argon-variable.woff2" as="font" type="font/woff2" crossorigin>
         <link rel="preload" href="/fonts/Phosphor.woff2" as="font" type="font/woff2" crossorigin>
 
+        {{ if .IsHome }}
+        <!-- Hero art is a CSS background (see header.css); preload the OS-preferred
+             variant so it's discoverable in the HTML. Only the matching one is fetched. -->
+        <link rel="preload" as="image" href="/images/header-tower-light.webp" media="(prefers-color-scheme: light)" fetchpriority="high">
+        <link rel="preload" as="image" href="/images/header-tower-dark.webp" media="(prefers-color-scheme: dark)" fetchpriority="high">
+        {{ end }}
+
         <!-- All stylesheets in one bundle: one render-blocking request instead of five -->
         {{ $css := slice
             (resources.Get "css/phosphor.css")
