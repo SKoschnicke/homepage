@@ -6,6 +6,9 @@
 <!-- GEMINI_BODY -->
 
 ---
+{{ if and (eq .Type "posts") site.Params.comment_email }}
+=> mailto:{{ site.Params.comment_email }}?subject={{ replace (urlquery (printf "Re: %s" .Title)) "+" "%20" }} {{ i18n "reply_by_email" }}
+{{ end }}
 
 => / Home
 => /posts/ All Posts

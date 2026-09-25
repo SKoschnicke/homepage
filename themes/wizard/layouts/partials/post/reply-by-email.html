@@ -1,0 +1,7 @@
+{{- /* Mailto link for replying to a post. urlquery encodes spaces as "+",
+       which mail clients show literally, so swap them for %20 (a literal "+"
+       in the title is already %2B at that point). */ -}}
+{{- $subject := replace (urlquery (printf "Re: %s" .Title)) "+" "%20" -}}
+<p class="post-reply">
+    <a href="mailto:{{ site.Params.comment_email }}?subject={{ $subject | safeURL }}">{{ i18n "reply_by_email" }}</a>
+</p>

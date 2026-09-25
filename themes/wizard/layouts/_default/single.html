@@ -10,6 +10,10 @@
             {{ .Content }}
         </div>
 
+        {{ if and (eq .Type "posts") site.Params.comment_email }}
+        {{ partial "post/reply-by-email.html" . }}
+        {{ end }}
+
         {{ if .Site.Params.ShowPostNavLinks }}
         <nav class="post-nav">
             {{ with .PrevInSection }}

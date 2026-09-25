@@ -60,3 +60,6 @@ other = "Alle ansehen →"
 
 [min_read]
 other = "Min. Lesezeit"
+
+[reply_by_email]
+other = "Per E-Mail antworten"

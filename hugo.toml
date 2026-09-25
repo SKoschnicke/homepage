@@ -57,6 +57,8 @@ defaultContentLanguage = 'en'
 
     # Essential social links only
     email_url = "mailto:s.koschnicke@gfxpro.com"
+    # Target for the "reply by e-mail" link under each post.
+    comment_email = "comment@sven.guru"
     github_url = "https://github.com/SKoschnicke"
     linkedin_url = "https://www.linkedin.com/in/svenkoschnicke/"
     mastodon_url = "https://chaos.social/@darkunicorn"
