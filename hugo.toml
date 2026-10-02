@@ -29,6 +29,9 @@ defaultContentLanguage = 'en'
     title = 'Sven Koschnicke'
     weight = 1
     [languages.en.params]
+      # Label for links *to* this language's version of a page (phrased in
+      # this language, since that's where the link leads).
+      read_this_version = "Read English version"
       menu = [
           {Name = "About", URL = "/about/", HasChildren = false},
           {Name = "Posts", URL = "/posts/", HasChildren = false},
@@ -40,6 +43,7 @@ defaultContentLanguage = 'en'
     weight = 2
     contentDir = 'content/de'
     [languages.de.params]
+      read_this_version = "Deutsche Version lesen"
       description = "Gedanken über Technik"
       menu = [
           {Name = "Über mich", URL = "/de/about/", HasChildren = false},

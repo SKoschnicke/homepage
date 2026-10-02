@@ -39,6 +39,29 @@
   border: 0;
 }
 
+/* Skip link: first focusable element, off-screen until focused. With CSS
+   off it is simply the first link on the page. */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-card);
+  color: var(--color-text-accent);
+  border: 2px solid var(--color-border-strong);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* <main tabindex="-1"> only exists as a skip-link target */
+main:focus {
+  outline: none;
+}
+
 /* ============================================
    Design System - Dark Theme (default)
    Indigo / Amber / Emerald palette
@@ -319,12 +342,18 @@ a:hover {
 }
 
 .nav-social {
+    list-style: none;
+    margin-block: 0;
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-left: 1.5rem;
     padding-left: 1.5rem;
     border-left: 1px solid var(--color-border);
+}
+
+.nav-social li {
+    display: flex;
 }
 
 .nav-social a {
@@ -358,6 +387,9 @@ a:hover {
 }
 
 .nav-lang {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -371,6 +403,10 @@ a:hover {
     text-decoration: none;
     padding: 0.2rem 0.35rem;
     transition: color 0.3s ease;
+}
+
+.nav-lang-link abbr {
+    text-decoration: none;
 }
 
 .nav-lang-link:hover {
@@ -398,7 +434,9 @@ a:hover {
 }
 
 
-.hero-overlay {
+/* Gradient overlay over the background art (::before, in header.css) */
+.hero::after {
+    content: "";
     position: absolute;
     inset: 0;
     background: linear-gradient(
@@ -422,7 +460,16 @@ a:hover {
     max-width: 700px;
 }
 
+.hero-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    margin: 0;
+}
+
 .hero-label {
+    margin: 0;
     font-size: 1rem;
     letter-spacing: 4px;
     text-transform: uppercase;
@@ -440,8 +487,14 @@ a:hover {
     text-shadow: 0 0 40px rgba(251, 191, 36, 0.3);
 }
 
-.hero-divider {
+/* Divider under the title: decoration, so a pseudo-element. The 2rem top
+   margin matches the hgroup gap it used to sit in. */
+.hero-title::after {
+    content: "";
+    display: block;
+    margin: 2rem auto 0;
     width: 16rem;
+    max-width: 100%;
     height: 2px;
     background: linear-gradient(
         to right,
@@ -572,13 +625,32 @@ a:hover {
     gap: 1.5rem;
 }
 
+.section-heading {
+    margin: 0;
+}
+
+.about-text .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
 .section-label {
+    margin: 0;
     font-size: 0.85rem;
     letter-spacing: 4px;
     text-transform: uppercase;
     color: var(--color-text-accent);
     font-weight: bold;
     font-family: var(--body-font);
+}
+
+/* Code-comment flourish; alt text "" keeps screen readers from reading
+   the slashes (the first declaration is the fallback for old browsers). */
+.section-label::before,
+.footer-tagline::before {
+    content: "// ";
+    content: "// " / "";
 }
 
 .about-text h2 {
@@ -594,6 +666,9 @@ a:hover {
 }
 
 .about-skills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
@@ -691,6 +766,9 @@ a:hover {
 }
 
 .post-card-tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
@@ -797,6 +875,15 @@ a:hover {
     gap: 1rem;
     flex-wrap: wrap;
     margin-bottom: 0.75rem;
+}
+
+.post-tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
 }
 
 .post-tag {
@@ -976,6 +1063,7 @@ code.language-text {
 }
 
 .footer-divider {
+    border: 0;
     width: 12rem;
     height: 1px;
     margin: 1rem 0;

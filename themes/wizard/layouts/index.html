@@ -1,12 +1,13 @@
 {{ define "main" }}
+{{/* Background art, overlay and divider are pseudo-elements (header.css /
+     style.css): pure decoration, so no empty elements in the markup. */}}
 <section class="hero">
-    <div class="hero-bg" aria-hidden="true"></div>
-    <div class="hero-overlay" aria-hidden="true"></div>
     <div class="hero-content">
-        <span class="hero-label">{{ i18n "hero_welcome" }}</span>
-        <h1 class="hero-title">{{ .Site.Params.brand }}</h1>
-        <div class="hero-divider" aria-hidden="true"></div>
-        <p class="hero-subtitle">{{ .Site.Params.description }} — {{ i18n "hero_subtitle" }}</p>
+        <hgroup class="hero-heading">
+            <p class="hero-label">{{ i18n "hero_welcome" }}</p>
+            <h1 class="hero-title">{{ .Site.Params.brand }}</h1>
+            <p class="hero-subtitle">{{ .Site.Params.description }} — {{ i18n "hero_subtitle" }}</p>
+        </hgroup>
         <div class="hero-actions">
             <a href="{{ "/posts/" | relLangURL }}" class="btn-primary">{{ i18n "read_posts" }}</a>
             <a href="{{ "/about/" | relLangURL }}" class="btn-secondary">{{ i18n "about_me" }}</a>
@@ -16,17 +17,19 @@
 
 <section class="about-preview">
     <div class="about-text">
-        <span class="section-label">{{ i18n "about_label" }}</span>
-        <h2>{{ i18n "about_heading" }}</h2>
+        <hgroup class="section-heading">
+            <p class="section-label">{{ i18n "about_label" }}</p>
+            <h2>{{ i18n "about_heading" }}</h2>
+        </hgroup>
         <div class="homepage-content">
             {{ .Content }}
         </div>
-        <div class="about-skills">
-            <span class="about-skill"><i class="ph ph-cpu" aria-hidden="true"></i> {{ i18n "skill_hardware" }}</span>
-            <span class="about-skill"><i class="ph ph-code" aria-hidden="true"></i> {{ i18n "skill_backend" }}</span>
-            <span class="about-skill"><i class="ph ph-cloud" aria-hidden="true"></i> {{ i18n "skill_devops" }}</span>
-            <span class="about-skill"><i class="ph ph-browser" aria-hidden="true"></i> {{ i18n "skill_frontend" }}</span>
-        </div>
+        <ul class="about-skills">
+            <li class="about-skill"><i class="ph ph-cpu" aria-hidden="true"></i> {{ i18n "skill_hardware" }}</li>
+            <li class="about-skill"><i class="ph ph-code" aria-hidden="true"></i> {{ i18n "skill_backend" }}</li>
+            <li class="about-skill"><i class="ph ph-cloud" aria-hidden="true"></i> {{ i18n "skill_devops" }}</li>
+            <li class="about-skill"><i class="ph ph-browser" aria-hidden="true"></i> {{ i18n "skill_frontend" }}</li>
+        </ul>
         <a href="{{ "/about/" | relLangURL }}" class="about-cta">{{ i18n "learn_more" }}</a>
     </div>
 </section>
@@ -35,21 +38,21 @@
 {{ if $posts }}
 <section class="latest-posts">
     <header class="latest-posts-header">
-        <div>
-            <span class="section-label">{{ i18n "latest_posts_label" }}</span>
+        <hgroup class="section-heading">
+            <p class="section-label">{{ i18n "latest_posts_label" }}</p>
             <h2>{{ i18n "blog" }}</h2>
-        </div>
+        </hgroup>
         <a href="{{ "/posts/" | relLangURL }}" class="view-all">{{ i18n "view_all" }}</a>
     </header>
     <div class="posts-grid">
         {{ range first 3 $posts }}
         <article class="post-card">
             {{ with .Params.tags }}
-            <div class="post-card-tags">
+            <ul class="post-card-tags">
                 {{ range . }}
-                <span class="tag tag--amber">{{ . }}</span>
+                <li class="tag tag--amber">{{ . }}</li>
                 {{ end }}
-            </div>
+            </ul>
             {{ end }}
             <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
             <p class="post-card-summary">

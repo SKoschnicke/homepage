@@ -22,7 +22,7 @@
     {{ end }}
 </ul>
 
-<div class="footer-divider"></div>
+<hr class="footer-divider">
 
 {{- $memoryStrings := dict
     "cardHidden" (i18n "memory_card_hidden")
@@ -46,8 +46,8 @@
 
 <p class="footer-info">
     <span>&copy; {{ now.Year }} {{ .Site.Title }}</span>
-    <span>&middot;</span>
+    <span aria-hidden="true">&middot;</span>
     <a href="{{ "/privacy/" | relLangURL }}">{{ i18n "privacy" }}</a>
-    <span>&middot;</span>
+    <span aria-hidden="true">&middot;</span>
     <span>{{ i18n "powered_by" }}</span>
 </p>

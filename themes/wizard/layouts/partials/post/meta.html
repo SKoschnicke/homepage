@@ -7,19 +7,20 @@
     {{ end }}
     
     {{ with .Params.tags }}
-    <div class="post-tags">
+    <ul class="post-tags">
         {{ range . }}
-        <a href="{{ "tags/" | absURL }}{{ . | urlize }}" class="post-tag">#{{ . }}</a>
+        <li><a href="{{ "tags/" | absURL }}{{ . | urlize }}" class="post-tag">#{{ . }}</a></li>
         {{ end }}
-    </div>
+    </ul>
     {{ end }}
     
     {{ if .IsTranslated }}
     <div class="post-translations">
         {{ range .Translations }}
-        {{/* Label is phrased in the target language (the link leads there). */}}
-        {{ $label := index (dict "en" "Read english version" "de" "Deutsche Version lesen") .Language.Lang }}
-        <a href="{{ .Permalink }}" class="translation-link" lang="{{ .Language.Lang }}">{{ $label | default .Language.LanguageName }}</a>
+        {{/* Label is phrased in the target language (the link leads there),
+             so it comes from that language's params in hugo.toml: a
+             translation's .Site is the target-language site. */}}
+        <a href="{{ .Permalink }}" class="translation-link" lang="{{ .Language.Lang }}" hreflang="{{ .Language.Lang }}">{{ .Site.Params.read_this_version | default .Language.LanguageName }}</a>
         {{ end }}
     </div>
     {{ end }}

@@ -60,11 +60,12 @@
         <script src="{{ $metricsDashboard.RelPermalink }}" integrity="{{ $metricsDashboard.Data.Integrity }}" defer></script>
     </head>
     <body>
+        <a class="skip-link" href="#main">{{ i18n "skip_to_content" }}</a>
         <header class="site-header">
             {{ partial "navigation.html" . }}
         </header>
 
-        <main>
+        <main id="main" tabindex="-1">
             {{ block "main" . }}{{ end }}
         </main>
 

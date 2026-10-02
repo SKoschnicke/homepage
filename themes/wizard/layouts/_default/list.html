@@ -24,7 +24,7 @@
             </div>
 
             <footer>
-                <a href="{{ .RelPermalink }}" class="read-more" aria-label="Read more about {{ .Title }}">Read more →</a>
+                <a href="{{ .RelPermalink }}" class="read-more">{{ i18n "read_more" }}<span class="visually-hidden">: {{ .Title }}</span> <span aria-hidden="true">→</span></a>
             </footer>
         </article>
         {{ end }}

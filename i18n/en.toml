@@ -5,7 +5,7 @@
 other = "Reset Game"
 
 [footer_tagline]
-other = "// No cookies. No tracking. Just vibes."
+other = "No cookies. No tracking. Just vibes."
 
 [privacy]
 other = "Privacy"
@@ -29,7 +29,7 @@ other = "Read Posts"
 other = "About Me"
 
 [about_label]
-other = "// About"
+other = "About"
 
 [about_heading]
 other = "Full-Stack Since The 90s"
@@ -50,7 +50,7 @@ other = "Frontend"
 other = "Learn More →"
 
 [latest_posts_label]
-other = "// Latest Posts"
+other = "Latest Posts"
 
 [blog]
 other = "Blog"
@@ -129,3 +129,12 @@ other = "No match"
 
 [memory_status_won]
 other = "All pairs found! Score: {score}"
+
+[skip_to_content]
+other = "Skip to content"
+
+[read_more]
+other = "Read more"
+
+[post_navigation]
+other = "More posts"

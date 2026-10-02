@@ -5,7 +5,7 @@
 other = "Spiel zurücksetzen"
 
 [footer_tagline]
-other = "// Keine Cookies. Kein Tracking. Nur gute Laune."
+other = "Keine Cookies. Kein Tracking. Nur gute Laune."
 
 [privacy]
 other = "Datenschutz"
@@ -29,7 +29,7 @@ other = "Beiträge lesen"
 other = "Über mich"
 
 [about_label]
-other = "// Über mich"
+other = "Über mich"
 
 [about_heading]
 other = "Full-Stack seit den 90ern"
@@ -50,7 +50,7 @@ other = "Frontend"
 other = "Mehr erfahren →"
 
 [latest_posts_label]
-other = "// Neueste Beiträge"
+other = "Neueste Beiträge"
 
 [blog]
 other = "Blog"
@@ -129,3 +129,12 @@ other = "Kein Paar"
 
 [memory_status_won]
 other = "Alle Paare gefunden! Punkte: {score}"
+
+[skip_to_content]
+other = "Zum Inhalt springen"
+
+[read_more]
+other = "Weiterlesen"
+
+[post_navigation]
+other = "Weitere Beiträge"
