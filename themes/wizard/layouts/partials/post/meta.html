@@ -1,4 +1,6 @@
 {{ $dateFormat := "January 2, 2006" }}
+{{/* Only emit the wrapper if there is something to put in it. */}}
+{{ if or (not .Date.IsZero) .Params.tags .IsTranslated .ReadingTime }}
 <div class="post-meta">
     {{ with .Date }}
     <time datetime="{{ .Format "2006-01-02" }}" class="post-date">
@@ -28,4 +30,5 @@
     {{ with .ReadingTime }}
     <span class="reading-time">{{ . }} {{ i18n "min_read" }}</span>
     {{ end }}
-</div> 
+</div>
+{{ end }}
