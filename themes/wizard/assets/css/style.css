@@ -18,6 +18,12 @@
   src: url('/fonts/monaspace-argon-variable.woff2') format('woff2-variations');
 }
 
+/* Component rules like `.reset-button { display: block }` would otherwise
+   beat the UA's [hidden] rule and reveal JS-only widgets before JS runs. */
+[hidden] {
+  display: none !important;
+}
+
 /* Visually hidden but exposed to assistive tech and readable with CSS off.
    Used for icon-only links (e.g. nav social icons) so the markup still
    carries real text. */
@@ -39,6 +45,11 @@
    ============================================ */
 :root {
     color-scheme: light dark;
+
+    /* Sentinel read by JS (see cssActive() in light_dark.js): JS-only widgets
+       stay hidden unless this stylesheet actually applies, so CSS-off
+       readers don't get a pile of meaningless game/dashboard markup. */
+    --css-loaded: 1;
 
     /* Core palette */
     --color-bg-deep: #0a0a2e;

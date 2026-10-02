@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Memory game container not found!');
     return;
   }
+  // Without the stylesheet the "game" is just a list of emoji answers: keep
+  // it hidden and don't build it at all.
+  if (typeof cssActive !== 'function' || !cssActive()) return;
+  gameContainer.parentElement.hidden = false;
+  if (resetButton) resetButton.hidden = false;
 
   console.log('Memory game initialized');
   

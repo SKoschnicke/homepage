@@ -71,9 +71,12 @@
         </nav>
         {{ end }}
 
-        <button onclick="toggleTheme()" class="nav-toggle-theme" title="Toggle light/dark mode" aria-label="Toggle theme">
+        {{/* JS-only (and pointless without CSS): hidden until light_dark.js
+             reveals it. The label is real text, swapped to match the theme. */}}
+        <button type="button" onclick="toggleTheme()" class="nav-toggle-theme" title="{{ i18n "toggle_theme" }}" hidden>
             <i class="ph ph-moon moon" aria-hidden="true"></i>
             <i class="ph ph-sun sun" aria-hidden="true"></i>
+            <span class="nav-toggle-theme-label visually-hidden" data-label-dark="{{ i18n "switch_to_dark" }}" data-label-light="{{ i18n "switch_to_light" }}">{{ i18n "toggle_theme" }}</span>
         </button>
     </div>
 </nav>

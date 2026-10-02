@@ -49,7 +49,6 @@
 
         {{ $lightDark := resources.Get "js/light_dark.js" | resources.Minify }}
         <script>{{ $lightDark.Content | safeJS }}</script>
-        <noscript><style>.nav-toggle-theme{display:none}</style></noscript>
 
         <!-- Footer widgets: nothing above the fold depends on them -->
         {{ $memoryGame := resources.Get "js/memory-game.js" }}

@@ -174,6 +174,9 @@
     function initDashboard() {
         const container = document.getElementById('metrics-dashboard');
         if (!container) return;
+        // CSS off: stay hidden and skip the WebSocket entirely.
+        if (typeof cssActive !== 'function' || !cssActive()) return;
+        container.hidden = false;
 
         // Create dashboard HTML structure
         container.innerHTML = `

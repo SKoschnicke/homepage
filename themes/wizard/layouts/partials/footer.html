@@ -1,4 +1,6 @@
-<div id="metrics-dashboard"></div>
+{{/* JS-only widgets ship hidden; their scripts reveal them only when JS runs
+     and the stylesheet applies (see cssActive() in light_dark.js). */}}
+<div id="metrics-dashboard" hidden></div>
 
 <ul class="footer-social">
     {{ with .Site.Params.email_url }}
@@ -20,10 +22,10 @@
 
 <div class="footer-divider"></div>
 
-<div class="memory-game-wrapper">
+<div class="memory-game-wrapper" hidden>
     <div id="memory-game"></div>
 </div>
-<button id="reset-game" class="reset-button">{{ i18n "reset_game" }}</button>
+<button type="button" id="reset-game" class="reset-button" hidden>{{ i18n "reset_game" }}</button>
 
 <p class="footer-tagline">{{ i18n "footer_tagline" }}</p>
 

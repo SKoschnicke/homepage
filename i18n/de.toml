@@ -90,3 +90,12 @@ other = "Englisch"
 
 [lang_de]
 other = "Deutsch"
+
+[toggle_theme]
+other = "Hell-/Dunkelmodus umschalten"
+
+[switch_to_dark]
+other = "Zum dunklen Modus wechseln"
+
+[switch_to_light]
+other = "Zum hellen Modus wechseln"
