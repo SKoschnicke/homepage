@@ -1,6 +1,8 @@
 {{/* JS-only widgets ship hidden; their scripts reveal them only when JS runs
      and the stylesheet applies (see cssActive() in light_dark.js). */}}
-<div id="metrics-dashboard" hidden></div>
+<section id="metrics-dashboard" aria-labelledby="metrics-heading" hidden>
+    <h2 id="metrics-heading" class="visually-hidden">{{ i18n "metrics_heading" }}</h2>
+</section>
 
 <ul class="footer-social">
     {{ with .Site.Params.email_url }}
@@ -22,10 +24,23 @@
 
 <div class="footer-divider"></div>
 
-<div class="memory-game-wrapper" hidden>
-    <div id="memory-game"></div>
-</div>
-<button type="button" id="reset-game" class="reset-button" hidden>{{ i18n "reset_game" }}</button>
+{{- $memoryStrings := dict
+    "cardHidden" (i18n "memory_card_hidden")
+    "cardShown" (i18n "memory_card_shown")
+    "cardMatched" (i18n "memory_card_matched")
+    "started" (i18n "memory_status_started")
+    "match" (i18n "memory_status_match")
+    "miss" (i18n "memory_status_miss")
+    "won" (i18n "memory_status_won") }}
+<section class="memory-game" aria-labelledby="memory-game-heading" data-strings="{{ $memoryStrings | jsonify }}" hidden>
+    <h2 id="memory-game-heading" class="visually-hidden">{{ i18n "memory_game_heading" }}</h2>
+    <p id="memory-game-help" class="visually-hidden">{{ i18n "memory_game_help" }}</p>
+    <div class="memory-game-wrapper">
+        <div id="memory-game"></div>
+        <p class="visually-hidden" role="status" id="memory-game-status"></p>
+    </div>
+    <button type="button" id="reset-game" class="reset-button">{{ i18n "reset_game" }}</button>
+</section>
 
 <p class="footer-tagline">{{ i18n "footer_tagline" }}</p>
 

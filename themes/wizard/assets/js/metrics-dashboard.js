@@ -178,56 +178,64 @@
         if (typeof cssActive !== 'function' || !cssActive()) return;
         container.hidden = false;
 
-        // Create dashboard HTML structure
-        container.innerHTML = `
+        // Build the dashboard after the (static, visually hidden) <h2> that
+        // footer.html renders. Label/value pairs are <dl>s, the toggle is a
+        // real disclosure button, and the expanded panel uses the `hidden`
+        // attribute so its state doesn't depend on CSS.
+        container.insertAdjacentHTML('beforeend', `
             <div class="metrics-compact">
-                <span class="metric-compact-item">
-                    <span class="metric-compact-label">Req/s:</span>
-                    <span class="metric-compact-value" id="compact-rps">--</span>
-                </span>
-                <span class="metric-compact-item">
-                    <span class="metric-compact-label">Latency:</span>
-                    <span class="metric-compact-value" id="compact-latency">--μs</span>
-                </span>
-                <span class="metric-compact-item">
-                    <span class="metric-compact-label">Viewers:</span>
-                    <span class="metric-compact-value" id="compact-viewers">--</span>
-                </span>
-                <a href="#" class="metrics-toggle" id="metrics-toggle">Show more ▼</a>
+                <dl class="metrics-compact-list">
+                    <div class="metric-compact-item">
+                        <dt class="metric-compact-label">Req/s:</dt>
+                        <dd class="metric-compact-value" id="compact-rps">--</dd>
+                    </div>
+                    <div class="metric-compact-item">
+                        <dt class="metric-compact-label">Latency:</dt>
+                        <dd class="metric-compact-value" id="compact-latency">--μs</dd>
+                    </div>
+                    <div class="metric-compact-item">
+                        <dt class="metric-compact-label">Viewers:</dt>
+                        <dd class="metric-compact-value" id="compact-viewers">--</dd>
+                    </div>
+                </dl>
+                <button type="button" class="metrics-toggle" id="metrics-toggle"
+                        aria-expanded="false" aria-controls="metrics-expanded"></button>
             </div>
-            <div class="metrics-grid hidden" id="metrics-expanded">
+            <div class="metrics-grid" id="metrics-expanded" hidden>
                 <div class="metric-card">
                     <h3>Requests/Second</h3>
-                    <canvas id="rps-chart"></canvas>
-                    <div class="metric-value" id="rps-value">--</div>
+                    <canvas id="rps-chart" role="img" aria-label="Requests per second over the last minute"></canvas>
+                    <p class="metric-value" id="rps-value">--</p>
                 </div>
                 <div class="metric-card">
                     <h3>Response Latency (μs)</h3>
-                    <canvas id="latency-chart"></canvas>
-                    <div class="metric-labels">
-                        <span>p50: <span id="p50-value">--</span></span>
-                        <span>p95: <span id="p95-value">--</span></span>
-                        <span>p99: <span id="p99-value">--</span></span>
-                    </div>
+                    <canvas id="latency-chart" role="img" aria-label="Response latency percentiles in microseconds"></canvas>
+                    <dl class="metric-labels">
+                        <div><dt>p50:</dt> <dd id="p50-value">--</dd></div>
+                        <div><dt>p95:</dt> <dd id="p95-value">--</dd></div>
+                        <div><dt>p99:</dt> <dd id="p99-value">--</dd></div>
+                    </dl>
                 </div>
                 <div class="metric-card">
                     <h3>Server Stats</h3>
-                    <div class="metric-stat">
-                        <span class="stat-label">Dashboard Viewers:</span>
-                        <span class="stat-value" id="viewers-value">--</span>
-                    </div>
-                    <div class="metric-stat">
-                        <span class="stat-label">Uptime:</span>
-                        <span class="stat-value" id="uptime-value">--</span>
-                    </div>
-                    <div class="metric-stat">
-                        <span class="stat-label">Total Requests:</span>
-                        <span class="stat-value" id="total-requests-value">--</span>
-                    </div>
-                    <div class="connection-status" id="ws-status">Connecting...</div>
+                    <dl class="metric-stats">
+                        <div class="metric-stat">
+                            <dt class="stat-label">Dashboard Viewers:</dt>
+                            <dd class="stat-value" id="viewers-value">--</dd>
+                        </div>
+                        <div class="metric-stat">
+                            <dt class="stat-label">Uptime:</dt>
+                            <dd class="stat-value" id="uptime-value">--</dd>
+                        </div>
+                        <div class="metric-stat">
+                            <dt class="stat-label">Total Requests:</dt>
+                            <dd class="stat-value" id="total-requests-value">--</dd>
+                        </div>
+                    </dl>
+                    <p class="connection-status" id="ws-status" role="status">Connecting...</p>
                 </div>
             </div>
-        `;
+        `);
 
         // WebSocket connection
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -280,34 +288,37 @@
         const expandedView = document.getElementById('metrics-expanded');
         let isExpanded = localStorage.getItem('metricsExpanded') === 'true';
 
-        // If previously expanded, load Chart.js and initialize immediately
-        if (isExpanded) {
+        // Keep the panel, the button's ARIA state and its label in sync. The
+        // arrow is decoration; screen readers get the state from aria-expanded.
+        function renderToggle(expanded) {
+            expandedView.hidden = !expanded;
+            toggleBtn.setAttribute('aria-expanded', String(expanded));
+            toggleBtn.innerHTML = expanded
+                ? 'Show less <span aria-hidden="true">▲</span>'
+                : 'Show more <span aria-hidden="true">▼</span>';
+        }
+
+        function expand() {
+            // Load Chart.js if not already loaded, then show the view
             loadChartJs().then(() => {
                 initCharts();
-                expandedView.classList.remove('hidden');
-                toggleBtn.textContent = 'Show less ▲';
+                renderToggle(true);
             }).catch(err => {
                 console.error('Failed to load Chart.js:', err);
             });
         }
 
-        toggleBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        renderToggle(false);
+        // If previously expanded, load Chart.js and initialize immediately
+        if (isExpanded) expand();
+
+        toggleBtn.addEventListener('click', function() {
             isExpanded = !isExpanded;
             localStorage.setItem('metricsExpanded', isExpanded);
-
             if (isExpanded) {
-                // Load Chart.js if not already loaded, then show the view
-                loadChartJs().then(() => {
-                    initCharts();
-                    expandedView.classList.remove('hidden');
-                    toggleBtn.textContent = 'Show less ▲';
-                }).catch(err => {
-                    console.error('Failed to load Chart.js:', err);
-                });
+                expand();
             } else {
-                expandedView.classList.add('hidden');
-                toggleBtn.textContent = 'Show more ▼';
+                renderToggle(false);
             }
         });
 

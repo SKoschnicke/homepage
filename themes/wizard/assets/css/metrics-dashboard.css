@@ -13,6 +13,19 @@
     border: none;
 }
 
+/* Label/value pairs are <dl>/<dt>/<dd>: drop the UA list spacing */
+#metrics-dashboard dl,
+#metrics-dashboard dd {
+    margin: 0;
+}
+
+.metrics-compact-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
 .metric-compact-item {
     display: inline-flex;
     align-items: center;
@@ -29,6 +42,13 @@
 }
 
 .metrics-toggle {
+    /* A <button> dressed as a link */
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
     margin-left: auto;
     font-size: 0.75rem;
     color: var(--color-link, #0066cc);
@@ -56,10 +76,6 @@
     gap: 1rem;
 }
 
-.metrics-grid.hidden {
-    display: none;
-}
-
 .metric-card {
     background: var(--color-bg-elevated, white);
     padding: 1rem;
@@ -80,7 +96,7 @@
 }
 
 .metric-value {
-    margin-top: 0.75rem;
+    margin: 0.75rem 0 0;
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--color-text-accent, #fbbf24);
@@ -94,8 +110,13 @@
     font-size: 0.85rem;
 }
 
-.metric-labels span {
+.metric-labels div {
     color: var(--color-text-muted, #818cf8);
+}
+
+.metric-labels dt,
+.metric-labels dd {
+    display: inline;
 }
 
 .metric-stat {
@@ -120,7 +141,7 @@
 }
 
 .connection-status {
-    margin-top: 0.75rem;
+    margin: 0.75rem 0 0;
     padding: 0.4rem;
     border-radius: 4px;
     text-align: center;
@@ -151,6 +172,11 @@
         flex-wrap: wrap;
         gap: 0.75rem;
         font-size: 0.85rem;
+    }
+
+    .metrics-compact-list {
+        flex-wrap: wrap;
+        gap: 0.75rem;
     }
 
     .metrics-toggle {

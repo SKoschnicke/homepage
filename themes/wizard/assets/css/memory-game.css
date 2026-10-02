@@ -1,5 +1,14 @@
 /* Memory Game Styles - Retro 8-bit aesthetic */
 
+/* Section wrapping board + reset button: lay them out like the footer's
+   flex column they used to sit in directly. */
+.memory-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .memory-game-wrapper {
   position: relative;
   width: fit-content;
@@ -71,6 +80,15 @@
 
 
 .memory-card {
+  /* Cards are <button>s: strip the UA button chrome */
+  appearance: none;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
   position: relative;
   height: 55px;
   cursor: pointer;
@@ -85,6 +103,15 @@
   transition: transform 0.05s step-end;
 }
 
+.memory-card:focus-visible {
+  outline: 3px solid #fcfc00;
+  outline-offset: 2px;
+}
+
+.memory-card[aria-disabled="true"] {
+  cursor: default;
+}
+
 .memory-card.flipped {
   transform: rotateY(180deg);
 }
@@ -92,6 +119,10 @@
 .front-face,
 .back-face {
   position: absolute;
+  /* Explicit anchor: cards are <button>s, which vertically center their
+     content, so an un-anchored absolute face would start mid-card. */
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   border-radius: 0;
@@ -176,6 +207,10 @@
 
 /* Light variants for cards. */
 @media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .memory-card:focus-visible {
+    outline-color: #1e5a60;
+  }
+
   :root:not([data-theme="dark"]) .front-face {
     background: linear-gradient(135deg, #e8f0f8 0%, #d0e0e8 100%);
     color: initial;
@@ -191,6 +226,10 @@
       #5dba60 8px
     );
   }
+}
+
+[data-theme="light"] .memory-card:focus-visible {
+  outline-color: #1e5a60;
 }
 
 [data-theme="light"] .front-face {

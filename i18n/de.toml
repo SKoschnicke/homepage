@@ -99,3 +99,33 @@ other = "Zum dunklen Modus wechseln"
 
 [switch_to_light]
 other = "Zum hellen Modus wechseln"
+
+[metrics_heading]
+other = "Live-Servermetriken"
+
+[memory_game_heading]
+other = "Memory-Spiel"
+
+[memory_game_help]
+other = "Finde alle passenden Paare. Wähle eine beliebige Karte zum Starten: Alle Karten werden kurz aufgedeckt und dann umgedreht."
+
+[memory_card_hidden]
+other = "Karte {n}, verdeckt"
+
+[memory_card_shown]
+other = "Karte {n}: {symbol}"
+
+[memory_card_matched]
+other = "Karte {n}: {symbol}, Paar gefunden"
+
+[memory_status_started]
+other = "Karten aufgedeckt. Merk sie dir!"
+
+[memory_status_match]
+other = "Paar gefunden: {symbol}"
+
+[memory_status_miss]
+other = "Kein Paar"
+
+[memory_status_won]
+other = "Alle Paare gefunden! Punkte: {score}"
