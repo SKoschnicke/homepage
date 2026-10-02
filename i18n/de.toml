@@ -90,3 +90,15 @@ other = "Englisch"
 
 [lang_de]
 other = "Deutsch"
+
+[theme]
+other = "Farbschema"
+
+[theme_system]
+other = "System"
+
+[theme_light]
+other = "Hell"
+
+[theme_dark]
+other = "Dunkel"

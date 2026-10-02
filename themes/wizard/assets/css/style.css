@@ -346,6 +346,17 @@ a:hover {
     color: var(--color-bg-base);
 }
 
+/* The icon shows the current preference; no data-theme means "follow the OS". */
+.nav-toggle-theme .ph {
+    display: none;
+}
+
+:root:not([data-theme]) .theme-icon-system,
+[data-theme="light"] .theme-icon-light,
+[data-theme="dark"] .theme-icon-dark {
+    display: inline;
+}
+
 .nav-lang {
     display: flex;
     align-items: center;

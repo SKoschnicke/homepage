@@ -1,53 +1,67 @@
-// Theme handling.
+// Theme handling. Three preferences: 'system', 'light', 'dark'.
 //
-// No explicit choice: leave data-theme off so CSS media queries drive the scheme,
+// 'system': data-theme is left off so CSS media queries drive the scheme,
 // which means OS changes take effect live.
-// Explicit choice (via toggle): data-theme is set and persisted to sessionStorage,
+// 'light' / 'dark': data-theme is set and persisted to sessionStorage,
 // overriding the OS preference for the current tab only.
+//
+// The toggle's icon is picked by CSS from data-theme, so it is correct on first
+// paint; JS only maintains the button's text label.
 
 var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+function themePreference() {
+    return document.documentElement.getAttribute('data-theme') || 'system';
+}
+
 function effectiveTheme() {
-    var attr = document.documentElement.getAttribute('data-theme');
-    if (attr) return attr;
+    var pref = themePreference();
+    if (pref !== 'system') return pref;
     return darkQuery.matches ? 'dark' : 'light';
 }
 
 (function() {
     var savedTheme = sessionStorage.getItem('theme');
-    if (savedTheme) {
+    if (savedTheme === 'light' || savedTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', savedTheme);
     }
 })();
 
-function toggleTheme() {
-    var newTheme = effectiveTheme() === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    sessionStorage.setItem('theme', newTheme);
-    updateThemeIcons(newTheme);
-    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
+function dispatchThemeChange() {
+    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: effectiveTheme() } }));
 }
 
-function updateThemeIcons(theme) {
-    var moon = document.querySelector('.moon');
-    var sun = document.querySelector('.sun');
-    if (!moon || !sun) return;
-    if (theme === 'dark') {
-        moon.style.display = 'none';
-        sun.style.display = 'inline';
+// Cycle system -> opposite of OS -> same as OS -> system, so that the first
+// click from 'system' always visibly changes something.
+function toggleTheme() {
+    var osTheme = darkQuery.matches ? 'dark' : 'light';
+    var otherTheme = osTheme === 'dark' ? 'light' : 'dark';
+    var pref = themePreference();
+    var next = pref === 'system' ? otherTheme : pref === otherTheme ? osTheme : 'system';
+
+    if (next === 'system') {
+        document.documentElement.removeAttribute('data-theme');
+        sessionStorage.removeItem('theme');
     } else {
-        moon.style.display = 'inline';
-        sun.style.display = 'none';
+        document.documentElement.setAttribute('data-theme', next);
+        sessionStorage.setItem('theme', next);
     }
+    updateThemeLabel();
+    dispatchThemeChange();
+}
+
+function updateThemeLabel() {
+    var button = document.querySelector('.nav-toggle-theme');
+    if (!button) return;
+    var name = button.getAttribute('data-label-' + themePreference());
+    var text = button.getAttribute('data-label-prefix') + ': ' + name;
+    button.querySelector('.theme-label').textContent = text;
+    button.title = text;
 }
 
 darkQuery.addEventListener('change', function() {
-    if (sessionStorage.getItem('theme')) return; // user override wins for this session
-    var theme = effectiveTheme();
-    updateThemeIcons(theme);
-    document.dispatchEvent(new CustomEvent('themechange', { detail: { theme: theme } }));
+    if (themePreference() !== 'system') return; // explicit choice wins
+    dispatchThemeChange();
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    updateThemeIcons(effectiveTheme());
-});
+document.addEventListener('DOMContentLoaded', updateThemeLabel);

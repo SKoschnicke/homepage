@@ -90,3 +90,15 @@ other = "English"
 
 [lang_de]
 other = "German"
+
+[theme]
+other = "Theme"
+
+[theme_system]
+other = "System"
+
+[theme_light]
+other = "Light"
+
+[theme_dark]
+other = "Dark"

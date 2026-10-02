@@ -71,9 +71,16 @@
         </nav>
         {{ end }}
 
-        <button onclick="toggleTheme()" class="nav-toggle-theme" title="Toggle light/dark mode" aria-label="Toggle theme">
-            <i class="ph ph-moon moon" aria-hidden="true"></i>
-            <i class="ph ph-sun sun" aria-hidden="true"></i>
+        <button type="button" onclick="toggleTheme()" class="nav-toggle-theme"
+                title="{{ i18n "theme" }}: {{ i18n "theme_system" }}"
+                data-label-prefix="{{ i18n "theme" }}"
+                data-label-system="{{ i18n "theme_system" }}"
+                data-label-light="{{ i18n "theme_light" }}"
+                data-label-dark="{{ i18n "theme_dark" }}">
+            <i class="ph ph-monitor theme-icon-system" aria-hidden="true"></i>
+            <i class="ph ph-sun theme-icon-light" aria-hidden="true"></i>
+            <i class="ph ph-moon theme-icon-dark" aria-hidden="true"></i>
+            <span class="theme-label visually-hidden">{{ i18n "theme" }}: {{ i18n "theme_system" }}</span>
         </button>
     </div>
 </nav>
