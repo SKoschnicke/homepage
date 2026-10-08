@@ -14,7 +14,10 @@
 #      Handles minified HTML.
 #   2. Semantic + CSS-off + axe-core -> scripts/validate-html.mjs: one <main>,
 #      one <h1>, landmarks, no skipped heading levels, links/buttons/images that
-#      still make sense with the stylesheet off, plus axe accessibility rules.
+#      still make sense with the stylesheet off, no run-together inline items or
+#      empty decorative elements, JS-only controls shipped hidden, plus axe
+#      accessibility rules. Then it runs each page's scripts in jsdom: with CSS
+#      off nothing may change, with CSS on the widget markup gets the same rules.
 #
 # Exits non-zero if either layer reports an error on any page, so it doubles as
 # a regression gate while editing templates.
@@ -140,7 +143,7 @@ echo ""
 
 # --- Layer 2: semantic structure + CSS-off + axe ----------------------------
 echo "=== [2/2] Semantic structure, CSS-off readability, axe-core ==="
-if node "$SCRIPTS/validate-html.mjs" "${FILES[@]}"; then
+if VALIDATE_SITE_ROOT="$PUBLIC" node "$SCRIPTS/validate-html.mjs" "${FILES[@]}"; then
   :
 else
   fail=1

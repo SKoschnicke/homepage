@@ -14,6 +14,16 @@ function themePreference() {
     return document.documentElement.getAttribute('data-theme') || 'system';
 }
 
+// True when the site stylesheet applies (it sets the --css-loaded sentinel on
+// :root). JS-only widgets ship with the `hidden` attribute and are revealed
+// only if this holds, so with CSS off the page stays plain, readable markup.
+// Global on purpose: this file is inlined in <head>, so the deferred widget
+// scripts can rely on it.
+function cssActive() {
+    return getComputedStyle(document.documentElement)
+        .getPropertyValue('--css-loaded').trim() !== '';
+}
+
 function effectiveTheme() {
     var pref = themePreference();
     if (pref !== 'system') return pref;
@@ -64,4 +74,8 @@ darkQuery.addEventListener('change', function() {
     dispatchThemeChange();
 });
 
-document.addEventListener('DOMContentLoaded', updateThemeLabel);
+document.addEventListener('DOMContentLoaded', function() {
+    updateThemeLabel();
+    var toggle = document.querySelector('.nav-toggle-theme');
+    if (toggle && cssActive()) toggle.hidden = false;
+});

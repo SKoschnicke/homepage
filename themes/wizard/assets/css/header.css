@@ -4,7 +4,8 @@
    just the image for the active theme. Chromium crossfades the
    background-image transition on theme toggle; other browsers swap instantly. */
 
-.hero-bg {
+.hero::before {
+    content: "";
     position: absolute;
     inset: 0;
     background: center / cover no-repeat url("/images/header-tower-light.webp");
@@ -15,17 +16,17 @@
     transition: background-image 0.5s ease;
 }
 
-[data-theme="dark"] .hero-bg {
+[data-theme="dark"] .hero::before {
     background-image: url("/images/header-tower-dark.webp");
 }
 
 /* No data-theme set (JS disabled or pre-hydration): follow OS preference. */
-:root:not([data-theme]) .hero-bg {
+:root:not([data-theme]) .hero::before {
     background-image: url("/images/header-tower-dark.webp");
 }
 
 @media (prefers-color-scheme: light) {
-    :root:not([data-theme]) .hero-bg {
+    :root:not([data-theme]) .hero::before {
         background-image: url("/images/header-tower-light.webp");
     }
 }

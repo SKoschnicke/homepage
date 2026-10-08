@@ -1,12 +1,35 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><title>Good</title></head>
 <body>
-<header><nav aria-label="Main"><a href="/">Home</a> <a href="/posts/">Posts</a></nav></header>
+<header><nav aria-label="Main">
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="/posts/">Posts</a></li>
+  </ul>
+  <ul aria-label="Language">
+    <li><a href="/" aria-current="page"><abbr title="English">EN</abbr></a></li>
+    <li><a href="/de/" lang="de" hreflang="de"><abbr title="Deutsch">DE</abbr></a></li>
+  </ul>
+  <button type="button" class="theme-toggle" hidden><i class="icon" aria-hidden="true"></i><span class="visually-hidden">Switch to dark mode</span></button>
+</nav></header>
 <main>
   <h1>Title</h1>
   <h2>Section</h2>
   <p>Body text with a <a href="https://example.com">real link</a>.</p>
   <img src="/pic.png" alt="A descriptive alt">
   <img src="/deco.png" alt="" aria-hidden="true">
+  <p><a href="/post/">Read more<span class="visually-hidden">: Post</span> <span aria-hidden="true">→</span></a></p>
+  <!-- JS-only widget: ships hidden, revealed only when the stylesheet applies -->
+  <section class="widget" aria-labelledby="widget-heading" hidden>
+    <h2 id="widget-heading">Widget</h2>
+    <button type="button" aria-expanded="false" aria-controls="widget-panel">Show more <span aria-hidden="true">▼</span></button>
+    <div id="widget-panel" hidden><p>Details</p></div>
+  </section>
+  <script>
+    if (getComputedStyle(document.documentElement).getPropertyValue("--css-loaded").trim()) {
+      document.querySelector(".widget").hidden = false;
+      document.querySelector(".theme-toggle").hidden = false;
+    }
+  </script>
 </main>
-<footer><a href="https://github.com/x"><span>GitHub</span></a></footer>
+<footer><a href="https://github.com/x"><span>GitHub</span></a> <span aria-hidden="true">·</span> <a href="/privacy/">Privacy</a> <span aria-hidden="true">·</span> <span>© 2026</span></footer>
 </body></html>

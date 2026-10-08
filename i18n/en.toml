@@ -5,7 +5,7 @@
 other = "Reset Game"
 
 [footer_tagline]
-other = "// No cookies. No tracking. Just vibes."
+other = "No cookies. No tracking. Just vibes."
 
 [privacy]
 other = "Privacy"
@@ -29,7 +29,7 @@ other = "Read Posts"
 other = "About Me"
 
 [about_label]
-other = "// About"
+other = "About"
 
 [about_heading]
 other = "Full-Stack Since The 90s"
@@ -50,7 +50,7 @@ other = "Frontend"
 other = "Learn More →"
 
 [latest_posts_label]
-other = "// Latest Posts"
+other = "Latest Posts"
 
 [blog]
 other = "Blog"
@@ -102,3 +102,42 @@ other = "Light"
 
 [theme_dark]
 other = "Dark"
+
+[metrics_heading]
+other = "Live server metrics"
+
+[memory_game_heading]
+other = "Memory game"
+
+[memory_game_help]
+other = "Find all matching pairs. Select any card to start: all cards are shown briefly, then turned face down."
+
+[memory_card_hidden]
+other = "Card {n}, face down"
+
+[memory_card_shown]
+other = "Card {n}: {symbol}"
+
+[memory_card_matched]
+other = "Card {n}: {symbol}, pair found"
+
+[memory_status_started]
+other = "Cards shown. Memorize them!"
+
+[memory_status_match]
+other = "Pair found: {symbol}"
+
+[memory_status_miss]
+other = "No match"
+
+[memory_status_won]
+other = "All pairs found! Score: {score}"
+
+[skip_to_content]
+other = "Skip to content"
+
+[read_more]
+other = "Read more"
+
+[post_navigation]
+other = "More posts"

@@ -5,7 +5,7 @@
 other = "Spiel zurücksetzen"
 
 [footer_tagline]
-other = "// Keine Cookies. Kein Tracking. Nur gute Laune."
+other = "Keine Cookies. Kein Tracking. Nur gute Laune."
 
 [privacy]
 other = "Datenschutz"
@@ -29,7 +29,7 @@ other = "Beiträge lesen"
 other = "Über mich"
 
 [about_label]
-other = "// Über mich"
+other = "Über mich"
 
 [about_heading]
 other = "Full-Stack seit den 90ern"
@@ -50,7 +50,7 @@ other = "Frontend"
 other = "Mehr erfahren →"
 
 [latest_posts_label]
-other = "// Neueste Beiträge"
+other = "Neueste Beiträge"
 
 [blog]
 other = "Blog"
@@ -102,3 +102,42 @@ other = "Hell"
 
 [theme_dark]
 other = "Dunkel"
+
+[metrics_heading]
+other = "Live-Servermetriken"
+
+[memory_game_heading]
+other = "Memory-Spiel"
+
+[memory_game_help]
+other = "Finde alle passenden Paare. Wähle eine beliebige Karte zum Starten: Alle Karten werden kurz aufgedeckt und dann umgedreht."
+
+[memory_card_hidden]
+other = "Karte {n}, verdeckt"
+
+[memory_card_shown]
+other = "Karte {n}: {symbol}"
+
+[memory_card_matched]
+other = "Karte {n}: {symbol}, Paar gefunden"
+
+[memory_status_started]
+other = "Karten aufgedeckt. Merk sie dir!"
+
+[memory_status_match]
+other = "Paar gefunden: {symbol}"
+
+[memory_status_miss]
+other = "Kein Paar"
+
+[memory_status_won]
+other = "Alle Paare gefunden! Punkte: {score}"
+
+[skip_to_content]
+other = "Zum Inhalt springen"
+
+[read_more]
+other = "Weiterlesen"
+
+[post_navigation]
+other = "Weitere Beiträge"

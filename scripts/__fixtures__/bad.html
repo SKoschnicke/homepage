@@ -1,9 +1,38 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><title>Bad</title></head>
 <body>
-<nav aria-label="Main"><a href="https://github.com/x" aria-label="GitHub"><i class="icon" aria-hidden="true"></i></a></nav>
+<nav aria-label="Main">
+  <a href="https://github.com/x" aria-label="GitHub"><i class="icon" aria-hidden="true"></i></a>
+  <!-- run-together: icon links with visually-hidden text in a plain div -->
+  <div class="nav-social">
+    <a href="https://github.com/x"><span class="visually-hidden">GitHub</span></a>
+    <a href="https://linkedin.com/x"><span class="visually-hidden">LinkedIn</span></a>
+    <a href="https://mastodon.social/x"><span class="visually-hidden">Mastodon</span></a>
+  </div>
+  <!-- nested nav -->
+  <nav class="nav-lang" aria-label="Language"><a href="/">EN</a> <a href="/de/">DE</a></nav>
+  <!-- icon-only, visible-without-JS button -->
+  <button onclick="toggleTheme()" aria-label="Toggle theme"><i class="icon" aria-hidden="true"></i></button>
+</nav>
 <main>
   <h1>Title</h1>
+  <!-- empty decorative elements -->
+  <div class="hero-bg" aria-hidden="true"></div>
   <h3>Skipped h2</h3>
   <img src="/noalt.png">
+  <!-- placeholder link, aria-label overriding visible text -->
+  <a href="#" class="metrics-toggle">Show more</a>
+  <a href="/post/" aria-label="Read more about Post">Read more →</a>
+  <!-- JS-only widget revealed without checking for CSS -->
+  <button type="button" id="widget" hidden>Play</button>
+  <script>document.getElementById("widget").hidden = false;</script>
+  <!-- widget that builds bad markup once CSS is on (caught by the js: pass) -->
+  <div id="dashboard" hidden></div>
+  <script>
+    if (getComputedStyle(document.documentElement).getPropertyValue("--css-loaded").trim()) {
+      const d = document.getElementById("dashboard");
+      d.innerHTML = '<a href="#" id="toggle">Toggle</a>';
+      d.hidden = false;
+    }
+  </script>
 </main>
 </body></html>

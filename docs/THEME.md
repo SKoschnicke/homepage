@@ -78,9 +78,8 @@ The foundation for all pages. Defines the HTML structure:
 
             <footer class="site-footer">
                 {{ partial "sidebar/socials.html" . }}
-                <div id="metrics-dashboard"></div>
-                <div id="memory-game"></div>
-                <button id="reset-game">Reset Game</button>
+                <section id="metrics-dashboard" hidden>…</section>
+                <section class="memory-game" hidden>…</section>
                 <p class="copyright">...</p>
             </footer>
         </div>
@@ -172,6 +171,26 @@ document.head.appendChild(script);
 | `metrics-dashboard.js` | Real-time server metrics | ~150 lines |
 | `chart.min.js` | Chart.js library (lazy-loaded) | ~200KB |
 | `mermaid.esm.min.mjs` | Diagram rendering (lazy-loaded) | ~1MB |
+
+## JS-only Widgets (CSS-off Readability)
+
+The theme toggle, the metrics dashboard and the memory game only make sense
+with both JS and the stylesheet. Convention:
+
+- They ship with the `hidden` attribute. `style.css` has a global
+  `[hidden] { display: none !important }` so component `display` rules can't
+  reveal them early.
+- Their script reveals them only if `cssActive()` (defined in `light_dark.js`,
+  inlined in `<head>`) returns true. It reads the `--css-loaded` sentinel set
+  on `:root` in `style.css`. With CSS or JS off they never appear, and the
+  widget scripts skip their setup entirely (no cards, no WebSocket).
+- Whatever they render uses proper elements: `<section>` + heading,
+  `<button>` (never `<a href="#">`) for controls, `aria-expanded` for
+  disclosures, `<dl>` for label/value pairs, `role="status"` for live
+  messages, and the `hidden` attribute (not a CSS class) for toggled panels.
+- Memory game strings come from i18n via the section's `data-strings` JSON;
+  card symbols live in JS (a `WeakMap`) and only enter the DOM while a card
+  is face up, so screen readers can't read the answers.
 
 ## Site Configuration
 

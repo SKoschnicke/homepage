@@ -15,16 +15,16 @@
                 {{ partial "post/meta.html" . }}
             </header>
 
-            <div class="post-summary-text">
-                {{ with .Description }}
-                    <p>{{ . }}</p>
-                {{ else }}
-                    {{ .Summary }}
-                {{ end }}
-            </div>
+            {{/* Taxonomy terms (/tags/) have no summary: skip the wrapper
+                 rather than emit an empty div. */}}
+            {{ with .Description }}
+            <div class="post-summary-text"><p>{{ . }}</p></div>
+            {{ else }}{{ with .Summary }}
+            <div class="post-summary-text">{{ . }}</div>
+            {{ end }}{{ end }}
 
             <footer>
-                <a href="{{ .RelPermalink }}" class="read-more" aria-label="Read more about {{ .Title }}">Read more →</a>
+                <a href="{{ .RelPermalink }}" class="read-more">{{ i18n "read_more" }}<span class="visually-hidden">: {{ .Title }}</span> <span aria-hidden="true">→</span></a>
             </footer>
         </article>
         {{ end }}

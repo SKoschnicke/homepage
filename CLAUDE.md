@@ -29,6 +29,10 @@ Instructions for AI assistants working with this Hugo-based personal homepage.
 
 5. **Self-hosted assets**: All fonts and JS libraries are self-hosted. No CDN dependencies.
 
+6. **Markup must stand on its own**: Every page has to read sensibly with CSS
+   off and with JS off. Follow the [Semantic Markup Guidelines](#semantic-markup-guidelines)
+   and keep `mise run validate` green.
+
 ## Project Structure
 
 ```
@@ -149,8 +153,10 @@ UI strings live in `i18n/{en,de}.toml`; the nav/footer reference them via
    - `index.html` - Homepage
 2. Partials are in `layouts/partials/`
 3. Assets are processed via Hugo pipes with fingerprinting and SRI
-4. Keep the markup semantic and CSS-off readable — run `mise run validate`
-   after template changes and keep it green (see [HTML Validation](#html-validation))
+4. Keep the markup semantic and CSS-off readable — follow the
+   [Semantic Markup Guidelines](#semantic-markup-guidelines), run
+   `mise run validate` after template changes and keep it green (see
+   [HTML Validation](#html-validation))
 
 ## Design System Summary
 
@@ -211,6 +217,57 @@ Note: localhost runs exercise Lighthouse's simulated slow-4G throttling, so
 absolute numbers (especially LCP) can differ from production. Use the local
 runs for *deltas* while iterating, then confirm against `https://sven.guru`.
 
+## Semantic Markup Guidelines
+
+The HTML is the product; CSS and JS are enhancements. Before adding or changing
+markup (templates *and* DOM built by JS), check it against these rules:
+
+**Structure**
+- Landmarks: one `<main>`, `<header>`/`<nav>`/`<footer>`, `<article>` for posts.
+  Don't nest a `<nav>` inside another `<nav>`.
+- Exactly one `<h1>` per page, no skipped heading levels. A kicker/label above
+  a heading goes in an `<hgroup>` as a `<p>`, not a loose `<span>`.
+- Group things by meaning: a run of links or labels is a `<ul>`, label/value
+  pairs are a `<dl>`, a separator that means something is an `<hr>`. If it
+  reads as "word word word" with CSS off, it should be a list.
+
+**Decoration lives in CSS**
+- No empty elements for visuals: backgrounds, overlays, dividers and similar
+  go in `::before`/`::after`.
+- Decorative glyphs (the `//` label prefix, arrows) belong in CSS `content`
+  with empty alt text (`content: "// " / ""`) or in an `aria-hidden` span,
+  never in the i18n string or the text content.
+- Phosphor icons (`<i class="ph …">`) are always `aria-hidden="true"` and sit
+  next to real text, either visible or in a `.visually-hidden` span. An
+  `aria-label` on its own doesn't count, because it disappears with CSS off.
+
+**Controls**
+- `<a href>` is only for navigation, `<button type="button">` is for actions.
+  Never use `href="#"`.
+- Disclosures use `aria-expanded` + `aria-controls`. Toggle visibility with
+  the `hidden` attribute, not a CSS class, so the state is right without CSS.
+- Prefer visible text to `aria-label`. Add context for screen readers with a
+  `.visually-hidden` span (e.g. "Read more<span class="visually-hidden">:
+  Post title</span>"), which also shows up when CSS is off.
+
+**JS-only UI** (theme toggle, metrics dashboard, memory game)
+- Ship it with `hidden`, reveal it from JS only if `cssActive()` returns true,
+  and skip the setup entirely otherwise. Details:
+  [docs/THEME.md → JS-only Widgets](docs/THEME.md#js-only-widgets-css-off-readability).
+- Status messages use `role="status"`. Don't put hidden state (e.g. face-down
+  card values) in the DOM where assistive tech can read it.
+
+**Language**
+- All user-facing strings come from `i18n/{en,de}.toml`, including strings
+  rendered by JS (pass them in via a `data-*` attribute from the template).
+  Mark text in another language with `lang`/`hreflang`.
+
+**Checking it**
+- Look at the page with CSS off (Firefox: View → Page Style → No Style) and
+  with JS off. Don't rely on w3m/lynx for this: they ignore the `hidden`
+  attribute and show JS-only widgets that browsers hide.
+- Then run `mise run validate` (below).
+
 ## HTML Validation
 
 **Intent — this is a project goal, not just a lint step.** The generated HTML
@@ -250,10 +307,27 @@ doubles as a regression gate while editing templates:
 2. **Semantic + CSS-off + axe** — `scripts/validate-html.mjs` parses the
    **static DOM with jsdom (no browser)** and asserts: exactly one `<main>` and
    one `<h1>`, `<nav>`/`<footer>` landmarks, no skipped heading levels, every
-   `<a href>` exposes real text with CSS off (an `aria-label` + `aria-hidden`
-   icon does **not** count — that's the nav-social-icons trap), images have
-   `alt`, and axe-core's structural/ARIA rules pass. ERROR fails the build;
-   WARN is advisory (promote with `VALIDATE_STRICT=1`).
+   `<a href>` and `<button>` exposes real text with CSS off (an `aria-label` +
+   `aria-hidden` icon does **not** count — that's the nav-social-icons trap),
+   no `href="#"`/`javascript:` links, every `<button>` outside a form ships
+   inside a `[hidden]` subtree (it's dead without JS), images have `alt`, and
+   axe-core's structural/ARIA rules pass. Advisory (WARN) rules flag
+   `aria-label` overriding visible text, nested `<nav>`, 3+ inline items
+   running together without a separator ("make it a list"), and empty
+   `<div>`/`<span>` decoration (id'd elements are exempt as JS mount points).
+
+   It then **runs each page's own scripts in jsdom** (stubbed `matchMedia`,
+   `fetch`, `WebSocket`; no stylesheet is loaded, "CSS on" is simulated via the
+   `--css-loaded` sentinel `cssActive()` reads):
+   - *JS on, CSS off* — the CSS-off rendering (text outside `[hidden]` plus
+     visible controls) must be identical to the static one
+     (`js-css-off-changed`). This is what keeps JS-only widgets out of the
+     CSS-off view.
+   - *JS on, CSS on* — the DOM the widgets build gets the same structural +
+     axe rules; new findings are reported with a `js:` prefix. Script errors
+     show up as `js-error` warnings.
+
+   ERROR fails the build; WARN is advisory (promote with `VALIDATE_STRICT=1`).
 
 Needs the nix dev shell for `hugo`, `java` (to run the fetched `vnu.jar`), and
 `node` (enter it via `direnv allow` / `nix develop`; the script fails fast if
@@ -264,7 +338,13 @@ Rebuild is not needed — it reads `public/` directly, not the Rust server.
 
 When editing `validate-html.mjs`, self-check it against the fixtures:
 `node scripts/validate-html.mjs scripts/__fixtures__/good.html` must pass and
-`…/bad.html` must fail (it exercises heading-skip, empty-link, missing-alt).
+`…/bad.html` must fail. `bad.html` reproduces the old defects of this site
+(icon-only links/buttons, run-together nav links, nested `<nav>`, empty hero
+divs, `href="#"`, `aria-label` overriding text, a widget revealed without
+checking CSS, a widget that builds bad markup); `good.html` has the corrected
+patterns, including a widget gated on `--css-loaded`. When you add a rule, add
+a case to both. The checker defaults to `public/` (relative to the cwd) as the
+site root for the JS passes; override with `VALIDATE_SITE_ROOT`.
 
 ## Key Files Reference
 

@@ -15,12 +15,12 @@
         {{ end }}
 
         {{ if .Site.Params.ShowPostNavLinks }}
-        <nav class="post-nav">
+        <nav class="post-nav" aria-label="{{ i18n "post_navigation" }}">
             {{ with .PrevInSection }}
-            <a class="prev-post" href="{{ .RelPermalink }}">← {{ .Title }}</a>
+            <a class="prev-post" href="{{ .RelPermalink }}" rel="prev"><span aria-hidden="true">←</span> {{ .Title }}</a>
             {{ end }}
             {{ with .NextInSection }}
-            <a class="next-post" href="{{ .RelPermalink }}">{{ .Title }} →</a>
+            <a class="next-post" href="{{ .RelPermalink }}" rel="next">{{ .Title }} <span aria-hidden="true">→</span></a>
             {{ end }}
         </nav>
         {{ end }}

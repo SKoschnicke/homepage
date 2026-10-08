@@ -11,23 +11,23 @@
             {{ end }}
         </ul>
 
-        <div class="nav-social">
+        <ul class="nav-social">
             {{ with .Site.Params.github_url }}
-            <a href="{{ . }}"><i class="ph ph-github-logo" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+            <li><a href="{{ . }}"><i class="ph ph-github-logo" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a></li>
             {{ end }}
             {{ with .Site.Params.linkedin_url }}
-            <a href="{{ . }}"><i class="ph ph-linkedin-logo" aria-hidden="true"></i><span class="visually-hidden">LinkedIn</span></a>
+            <li><a href="{{ . }}"><i class="ph ph-linkedin-logo" aria-hidden="true"></i><span class="visually-hidden">LinkedIn</span></a></li>
             {{ end }}
             {{ with .Site.Params.mastodon_url }}
-            <a href="{{ . }}" rel="me"><i class="ph ph-mastodon-logo" aria-hidden="true"></i><span class="visually-hidden">Mastodon</span></a>
+            <li><a href="{{ . }}" rel="me"><i class="ph ph-mastodon-logo" aria-hidden="true"></i><span class="visually-hidden">Mastodon</span></a></li>
             {{ end }}
             {{ with .Site.Params.email_url }}
-            <a href="{{ . }}"><i class="ph ph-envelope" aria-hidden="true"></i><span class="visually-hidden">Email</span></a>
+            <li><a href="{{ . }}"><i class="ph ph-envelope" aria-hidden="true"></i><span class="visually-hidden">Email</span></a></li>
             {{ end }}
-        </div>
+        </ul>
 
         {{ if gt (len .Site.Languages) 1 }}
-        <nav class="nav-lang" aria-label="{{ i18n "language_switcher" }}">
+        <ul class="nav-lang" aria-label="{{ i18n "language_switcher" }}">
             {{ $page := . }}
             {{ range .Site.Languages }}
             {{ $lang := . }}
@@ -63,20 +63,25 @@
                 {{ $bare := strings.TrimPrefix $curPrefix $page.RelPermalink }}
                 {{ $href = printf "%s%s" $tgtPrefix $bare }}
             {{ end }}
-            <a href="{{ $href }}" lang="{{ $lang.Lang }}" hreflang="{{ $lang.Lang }}"
+            {{/* Short code visually; <abbr> carries the full name for CSS-off
+                 readers and hover. */}}
+            <li><a href="{{ $href }}" lang="{{ $lang.Lang }}" hreflang="{{ $lang.Lang }}"
                class="nav-lang-link{{ if $current }} is-current{{ end }}"
                {{ if $is404 }}data-lang-prefix="{{ $tgtPrefix }}"{{ end }}
-               {{ if $current }}aria-current="true"{{ end }}>{{ $lang.Lang | upper }}</a>
+               {{ if $current }}aria-current="page"{{ end }}><abbr title="{{ $lang.LanguageName }}">{{ $lang.Lang | upper }}</abbr></a></li>
             {{ end }}
-        </nav>
+        </ul>
         {{ end }}
 
+        {{/* JS-only (and pointless without CSS): hidden until light_dark.js
+             reveals it. The label is real text, kept in sync with the theme. */}}
         <button type="button" onclick="toggleTheme()" class="nav-toggle-theme"
                 title="{{ i18n "theme" }}: {{ i18n "theme_system" }}"
                 data-label-prefix="{{ i18n "theme" }}"
                 data-label-system="{{ i18n "theme_system" }}"
                 data-label-light="{{ i18n "theme_light" }}"
-                data-label-dark="{{ i18n "theme_dark" }}">
+                data-label-dark="{{ i18n "theme_dark" }}"
+                hidden>
             <i class="ph ph-monitor theme-icon-system" aria-hidden="true"></i>
             <i class="ph ph-sun theme-icon-light" aria-hidden="true"></i>
             <i class="ph ph-moon theme-icon-dark" aria-hidden="true"></i>
